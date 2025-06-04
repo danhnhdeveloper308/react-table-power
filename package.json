@@ -1,5 +1,5 @@
 {
-  "name": "react-power-table",
+  "name": "react-table-power",
   "version": "1.0.0",
   "description": "A powerful, modern, and highly reusable DataTable component for React with TypeScript support",
   "main": "./dist/index.cjs",
@@ -76,11 +76,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/danhnhdeveloper308/react-datatable-kit"
+    "url": "https://github.com/danhnhdeveloper308/react-table-power"
   },
-  "homepage": "https://github.com/danhnhdeveloper308/react-datatable-kit#readme",
+  "homepage": "https://github.com/danhnhdeveloper308/react-table-power#readme",
   "bugs": {
-    "url": "https://github.com/danhnhdeveloper308/react-datatable-kit/issues"
+    "url": "https://github.com/danhnhdeveloper308/react-table-power/issues"
   },
   "dependencies": {
     "clsx": "^2.1.1",
