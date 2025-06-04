@@ -1,0 +1,270 @@
+/**
+ * React Power Table - Column Visibility Toggle Styles
+ * Styles for the column visibility component
+ */
+
+/* Container */
+.rpt-column-visibility {
+  position: relative;
+  display: inline-flex;
+  z-index: 20;
+}
+
+/* Toggle button */
+.rpt-column-visibility-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 36px;
+  padding: 0 12px;
+  background-color: var(--rpt-btn-secondary-bg, #f1f5f9);
+  color: var(--rpt-btn-secondary-text, #1e293b);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color var(--rpt-transition-duration) ease,
+              border-color var(--rpt-transition-duration) ease,
+              color var(--rpt-transition-duration) ease,
+              box-shadow var(--rpt-transition-duration) ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rpt-column-visibility-button:hover {
+  background-color: var(--rpt-btn-secondary-hover-bg, #e2e8f0);
+}
+
+.rpt-column-visibility-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+/* Button variants */
+.rpt-column-visibility-button.rpt-button-default {
+  background-color: var(--rpt-primary);
+  color: white;
+  border-color: var(--rpt-primary);
+}
+
+.rpt-column-visibility-button.rpt-button-default:hover {
+  background-color: var(--rpt-primary-dark);
+}
+
+.rpt-column-visibility-button.rpt-button-outline {
+  background-color: transparent;
+  color: var(--rpt-text-color);
+  border-color: var(--rpt-border-color);
+}
+
+.rpt-column-visibility-button.rpt-button-outline:hover {
+  border-color: var(--rpt-border-hover-color);
+  background-color: var(--rpt-bg-hover);
+}
+
+.rpt-column-visibility-button.rpt-button-ghost {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.rpt-column-visibility-button.rpt-button-ghost:hover {
+  background-color: var(--rpt-bg-hover);
+}
+
+/* Button sizes */
+.rpt-column-visibility-button.rpt-button-sm {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+}
+
+.rpt-column-visibility-button.rpt-button-md {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 0.875rem;
+}
+
+.rpt-column-visibility-button.rpt-button-lg {
+  height: 42px;
+  padding: 0 16px;
+  font-size: 1rem;
+}
+
+/* Button icon */
+.rpt-column-visibility-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpt-column-visibility-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+/* Button text */
+.rpt-column-visibility-text {
+  display: flex;
+  align-items: center;
+}
+
+.rpt-column-count {
+  opacity: 0.8;
+}
+
+/* Dropdown */
+.rpt-column-visibility-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0; 
+  min-width: 200px;
+  max-width: 280px;
+  padding: 0.75rem;
+  background-color: var(--rpt-bg-color);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  transition: all var(--rpt-transition-duration) ease; /* Added transition for smooth appearance */
+}
+
+/* Dropdown positioning */
+.rpt-dropdown-right {
+  right: 0;
+}
+
+.rpt-dropdown-left {
+  left: 0;
+}
+
+/* Dropdown header */
+.rpt-column-visibility-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rpt-border-color);
+}
+
+.rpt-column-visibility-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--rpt-text-color);
+  margin: 0;
+}
+
+.rpt-column-visibility-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rpt-column-visibility-action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--rpt-primary);
+  cursor: pointer;
+  transition: color var(--rpt-transition-duration) ease;
+  text-decoration: underline;
+}
+
+.rpt-column-visibility-action-btn:hover {
+  color: var(--rpt-primary-dark);
+}
+
+/* Dropdown list */
+.rpt-column-visibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.rpt-column-visibility-empty {
+  font-size: 0.875rem;
+  color: var(--rpt-muted-text);
+  margin: 0;
+  padding: 0.5rem 0;
+  text-align: center;
+}
+
+/* Column item */
+.rpt-column-visibility-item {
+  display: flex;
+  align-items: center;
+}
+
+.rpt-column-visibility-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--rpt-border-radius);
+  cursor: pointer;
+  transition: background-color var(--rpt-transition-duration) ease;
+}
+
+.rpt-column-visibility-label:hover {
+  background-color: var(--rpt-row-hover-bg);
+}
+
+/* Checkbox */
+.rpt-column-visibility-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--rpt-primary);
+}
+
+/* Label text */
+.rpt-column-visibility-label-text {
+  font-size: 0.875rem;
+  color: var(--rpt-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* RTL support */
+[dir="rtl"] .rpt-dropdown-right {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .rpt-dropdown-left {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .rpt-column-visibility-label {
+  flex-direction: row-reverse;
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .rpt-column-visibility-button {
+    border: 1px solid CanvasText;
+  }
+  
+  .rpt-column-visibility-dropdown {
+    border: 1px solid CanvasText;
+  }
+  
+  .rpt-column-visibility-action-btn {
+    text-decoration: underline;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .rpt-column-visibility * {
+    transition: none !important;
+  }
+}

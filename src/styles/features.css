@@ -1,0 +1,129 @@
+/**
+ * React Power Table - Essential Features CSS
+ * Special CSS for key features that override default styling
+ */
+
+/* FIXED/STICKY HEADER CONTAINER - Critical for proper sticky behavior */
+.rpt-table-container.rpt-fixed-header {
+  position: relative;
+  max-height: 70vh !important; /* Limit height to enable scrolling */
+  overflow: hidden !important; /* Important: container should not scroll */
+}
+
+.rpt-table-container.rpt-fixed-header .rpt-scroll-container {
+  max-height: 70vh !important; /* Scroll container handles vertical scroll */
+  overflow: auto !important; /* Both horizontal and vertical scrolling */
+}
+
+/* Separate wrapper for sticky header */
+.rpt-fixed-header .rpt-table-wrapper {
+  overflow: visible !important; /* Allow header to stick out */
+}
+
+/* STICKY HEADER - Force header to be sticky */
+.rpt-fixed-header thead,
+.rpt-fixed-header .rpt-table-head {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: var(--rpt-header-bg) !important;
+}
+
+.rpt-fixed-header thead th,
+.rpt-fixed-header .rpt-table-head th,
+.rpt-fixed-header .rpt-head-cell {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: var(--rpt-header-bg) !important;
+  /* Ensure header cells don't collapse */
+  box-sizing: border-box !important;
+  border-bottom: 1px solid var(--rpt-border-color) !important;
+}
+
+/* Fix for horizontal scrolling with sticky header */
+.rpt-fixed-header thead th::after,
+.rpt-fixed-header .rpt-table-head th::after,
+.rpt-fixed-header .rpt-head-cell::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--rpt-border-color);
+}
+
+/* ZEBRA STRIPING - Force alternate rows to be different color */
+.rpt-zebra-striping tbody tr:nth-of-type(even),
+.rpt-table.rpt-zebra-striping tbody tr:nth-of-type(even) {
+  background-color: var(--rpt-row-bg-alt) !important;
+}
+
+/* HOVER EFFECT - Force row highlight on hover */
+.rpt-table-hover tbody tr:hover,
+.rpt-table.rpt-table-hover tbody tr:hover {
+  background-color: var(--rpt-row-hover-bg) !important;
+  cursor: pointer;
+}
+
+/* Make sure hover effect takes precedence over zebra striping */
+.rpt-table.rpt-zebra-striping.rpt-table-hover tbody tr:hover,
+.rpt-zebra-striping.rpt-table-hover tbody tr:hover {
+  background-color: var(--rpt-row-hover-bg) !important;
+}
+
+/* BORDERED TABLE - Ensure borders are visible */
+.rpt-table-bordered,
+.rpt-table.rpt-table-bordered {
+  border: 1px solid var(--rpt-border-color) !important;
+}
+
+.rpt-table-bordered th,
+.rpt-table-bordered td,
+.rpt-table.rpt-table-bordered th,
+.rpt-table.rpt-table-bordered td {
+  border: 1px solid var(--rpt-border-color) !important;
+}
+
+/* Ensure these styles apply even when nested within other containers */
+table.rpt-table.rpt-zebra-striping tbody tr:nth-of-type(even) {
+  background-color: var(--rpt-row-bg-alt) !important;
+}
+
+table.rpt-table.rpt-table-hover tbody tr:hover {
+  background-color: var(--rpt-row-hover-bg) !important;
+}
+
+/* Add styles for Firefox which handles sticky differently */
+@-moz-document url-prefix() {
+  .rpt-fixed-header thead,
+  .rpt-fixed-header .rpt-table-head {
+    position: -moz-sticky !important;
+  }
+  
+  .rpt-fixed-header thead th,
+  .rpt-fixed-header .rpt-table-head th,
+  .rpt-fixed-header .rpt-head-cell {
+    position: -moz-sticky !important;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .rpt-fixed-header thead th,
+  .rpt-fixed-header .rpt-head-cell {
+    position: sticky !important;
+    top: 0 !important;
+  }
+  .rpt-table-container.rpt-fixed-header {
+    width: 100% !important; /* Allow full width on small screens */
+  }
+  
+  /* .rpt-table-container.rpt-fixed-header {
+    max-height: 50vh !important; 
+  }
+  
+  .rpt-table-container.rpt-fixed-header .rpt-scroll-container {
+    max-height: 50vh !important;
+  } */
+}

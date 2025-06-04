@@ -1,0 +1,240 @@
+/**
+ * React Power Table - Checkbox Component Styles
+ * Dedicated styling for checkbox components that works for both light and dark themes
+ */
+
+/* Checkbox container and wrapper */
+.rpt-checkbox-container {
+  display: inline-flex;
+  flex-direction: column;
+  position: relative;
+  margin: 0.25rem 0;
+}
+
+.rpt-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Checkbox control - the visible part */
+.rpt-checkbox-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--rpt-input-border, #d1d5db);
+  border-radius: 4px;
+  background-color: var(--rpt-bg, #ffffff);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* States for the checkbox control */
+.rpt-checkbox-control-checked {
+  background-color: var(--rpt-primary, #3b82f6);
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+.rpt-checkbox-control-indeterminate {
+  background-color: var(--rpt-primary, #3b82f6);
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+.rpt-checkbox-control-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Actual checkbox input (visually hidden but accessible) */
+.rpt-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Checkbox sizes */
+.rpt-checkbox-sm ~ .rpt-checkbox-control {
+  width: 14px;
+  height: 14px;
+}
+
+.rpt-checkbox-md ~ .rpt-checkbox-control {
+  width: 16px;
+  height: 16px;
+}
+
+.rpt-checkbox-lg ~ .rpt-checkbox-control {
+  width: 18px;
+  height: 18px;
+}
+
+/* Focus styles for better accessibility */
+.rpt-checkbox:focus-visible ~ .rpt-checkbox-control {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rpt-primary-focus, rgba(59, 130, 246, 0.2));
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+/* Hover styles */
+.rpt-checkbox-wrapper:hover .rpt-checkbox-control:not(.rpt-checkbox-control-checked):not(.rpt-checkbox-control-indeterminate) {
+  border-color: var(--rpt-border-hover, #9ca3af);
+}
+
+.rpt-checkbox:hover ~ .rpt-checkbox-control:not(.rpt-checkbox-control-checked):not(.rpt-checkbox-control-indeterminate) {
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+/* Disabled state */
+.rpt-checkbox:disabled ~ .rpt-checkbox-control {
+  background-color: var(--rpt-bg-secondary, #f3f4f6);
+  border-color: var(--rpt-border, #e5e7eb);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Label styles */
+.rpt-checkbox-label {
+  font-size: 0.875rem;
+  color: var(--rpt-text, #171717);
+  cursor: pointer;
+  user-select: none;
+}
+
+.rpt-checkbox-label-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Description text */
+.rpt-checkbox-description {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--rpt-text-secondary, #6b7280);
+  margin-top: 0.125rem;
+}
+
+/* Error and help message */
+.rpt-checkbox-message {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.rpt-checkbox-error-message {
+  color: var(--rpt-error-text, #ef4444);
+}
+
+.rpt-checkbox-help-message {
+  color: var(--rpt-text-secondary, #6b7280);
+}
+
+/* Error state */
+.rpt-checkbox-error ~ .rpt-checkbox-control {
+  border-color: var(--rpt-error-text, #ef4444);
+}
+
+/* Dark mode support */
+.rpt-dark .rpt-checkbox-control,
+[data-theme="dark"] .rpt-checkbox-control {
+  border-color: var(--rpt-border, #374151);
+  background-color: var(--rpt-bg, #1f2937);
+}
+
+.rpt-dark .rpt-checkbox-control-checked,
+.rpt-dark .rpt-checkbox-control-indeterminate,
+[data-theme="dark"] .rpt-checkbox-control-checked,
+[data-theme="dark"] .rpt-checkbox-control-indeterminate {
+  background-color: var(--rpt-primary, #3b82f6);
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+.rpt-dark .rpt-checkbox-label,
+[data-theme="dark"] .rpt-checkbox-label {
+  color: var(--rpt-text, #f3f4f6);
+}
+
+.rpt-dark .rpt-checkbox-description,
+[data-theme="dark"] .rpt-checkbox-description {
+  color: var(--rpt-text-secondary, #9ca3af);
+}
+
+/* Special case for data tables - ensure checkboxes are visible in both header and rows */
+.rpt-table .rpt-checkbox-control {
+  background-color: var(--rpt-input-bg, #ffffff);
+  border: 1.5px solid var(--rpt-input-border, #d1d5db);
+}
+
+.rpt-table .rpt-checkbox-control-checked,
+.rpt-table .rpt-checkbox-control-indeterminate {
+  background-color: var(--rpt-primary, #3b82f6);
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+/* Ensure visibility in table header cells */
+.rpt-head-cell .rpt-checkbox-control {
+  background-color: var(--rpt-input-bg, #ffffff);
+  border: 1.5px solid var(--rpt-input-border, #d1d5db);
+}
+
+.rpt-head-cell .rpt-checkbox-control-checked,
+.rpt-head-cell .rpt-checkbox-control-indeterminate {
+  background-color: var(--rpt-primary, #3b82f6);
+  border-color: var(--rpt-primary, #3b82f6);
+}
+
+/* Fix for toolbar checkboxes */
+.rpt-column-dropdown .rpt-checkbox-control {
+  border: 1.5px solid var(--rpt-input-border-color);
+  background-color: var(--rpt-input-bg);
+}
+
+.rpt-column-dropdown .rpt-checkbox-control-checked {
+  background-color: var(--rpt-primary);
+  border-color: var(--rpt-primary);
+}
+
+/* SVG Checkmark and Indeterminate */
+.rpt-checkbox-check,
+.rpt-checkbox-dash {
+  display: block;
+  color: white;
+  width: 80%;
+  height: 80%;
+}
+
+/* Ensure accessibility in all color schemes */
+@media (forced-colors: active) {
+  .rpt-checkbox-control {
+    border: 1.5px solid CanvasText;
+  }
+  
+  .rpt-checkbox-control-checked,
+  .rpt-checkbox-control-indeterminate {
+    border: 1.5px solid Highlight;
+    background-color: Highlight;
+  }
+  
+  .rpt-checkbox:focus-visible ~ .rpt-checkbox-control {
+    outline: 2px solid CanvasText;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .rpt-checkbox-control,
+  .rpt-checkbox-indicator {
+    transition: none;
+  }
+}

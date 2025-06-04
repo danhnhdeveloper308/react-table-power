@@ -1,0 +1,486 @@
+/**
+ * React Power Table - Button Styles
+ * Styling for buttons and button states
+ */
+
+/* Base button styles */
+.rpt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  border-radius: var(--rpt-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.rpt-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+.rpt-btn:disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* Text content of button */
+.rpt-btn-text {
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.2s;
+}
+
+/* Start and end icons */
+.rpt-btn-start-icon,
+.rpt-btn-end-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.rpt-btn:hover .rpt-btn-start-icon {
+  transform: translateX(-2px);
+}
+
+.rpt-btn:hover .rpt-btn-end-icon {
+  transform: translateX(2px);
+}
+
+/* Button variants */
+.rpt-btn--default {
+  background-color: var(--rpt-input-bg);
+  border-color: var(--rpt-border-color);
+  color: var(--rpt-text-color);
+}
+
+.rpt-btn--default:hover:not(:disabled) {
+  background-color: var(--rpt-btn-default-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-btn--primary {
+  background-color: var(--rpt-primary);
+  border-color: var(--rpt-primary);
+  color: white;
+}
+
+.rpt-btn--primary:hover:not(:disabled) {
+  background-color: var(--rpt-primary-dark);
+  border-color: var(--rpt-primary-dark);
+}
+
+.rpt-btn--destructive {
+  background-color: var(--rpt-danger);
+  border-color: var(--rpt-danger);
+  color: white;
+}
+
+.rpt-btn--destructive:hover:not(:disabled) {
+  background-color: var(--rpt-btn-danger-hover-bg);
+  border-color: var(--rpt-btn-danger-hover-bg);
+}
+
+.rpt-btn--secondary {
+  background-color: var(--rpt-btn-secondary-bg);
+  border-color: var(--rpt-btn-secondary-bg);
+  color: var(--rpt-btn-secondary-text);
+}
+
+.rpt-btn--secondary:hover:not(:disabled) {
+  background-color: var(--rpt-btn-secondary-hover-bg);
+  border-color: var(--rpt-btn-secondary-hover-bg);
+}
+
+.rpt-btn--outline {
+  background-color: transparent;
+  border-color: var(--rpt-border-color);
+  color: var(--rpt-text-color);
+}
+
+.rpt-btn--outline:hover:not(:disabled) {
+  background-color: var(--rpt-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-btn--ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--rpt-text-color);
+}
+
+.rpt-btn--ghost:hover:not(:disabled) {
+  background-color: var(--rpt-hover-bg);
+  color: var(--rpt-text-accent);
+}
+
+.rpt-btn--link {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--rpt-primary);
+  padding-left: 0;
+  padding-right: 0;
+  text-decoration: none;
+}
+
+.rpt-btn--link:hover:not(:disabled) {
+  text-decoration: underline;
+  background-color: transparent;
+}
+
+/* Button sizes */
+.rpt-btn--xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.rpt-btn--sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.rpt-btn--md {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.rpt-btn--lg {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.rpt-btn--xl {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Button full width */
+.rpt-btn--block {
+  width: 100%;
+  display: flex;
+}
+
+/* Elevated buttons */
+.rpt-btn--elevated {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.rpt-btn--elevated:hover:not(:disabled) {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.rpt-btn--elevated:active:not(:disabled) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+}
+
+/* Button group */
+.rpt-btn-group {
+  display: inline-flex;
+}
+
+.rpt-btn-group .rpt-btn {
+  border-radius: 0;
+  position: relative;
+  margin-left: -1px;
+}
+
+.rpt-btn-group .rpt-btn:first-child {
+  border-top-left-radius: var(--rpt-border-radius);
+  border-bottom-left-radius: var(--rpt-border-radius);
+  margin-left: 0;
+}
+
+.rpt-btn-group .rpt-btn:last-child {
+  border-top-right-radius: var(--rpt-border-radius);
+  border-bottom-right-radius: var(--rpt-border-radius);
+}
+
+.rpt-btn-group .rpt-btn:focus {
+  z-index: 1;
+}
+
+/* Loading states - base */
+.rpt-btn--loading {
+  position: relative;
+  cursor: wait;
+}
+
+.rpt-btn--loading .rpt-btn-text {
+  visibility: visible;
+  opacity: 0.6;
+}
+
+.rpt-btn--loading .rpt-btn-start-icon,
+.rpt-btn--loading .rpt-btn-end-icon {
+  opacity: 0;
+}
+
+/* Basic loader */
+.rpt-btn-loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* Spinner loading (default) */
+.rpt-btn--loading-spinner .rpt-btn-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: rpt-btn-spin 0.7s linear infinite;
+}
+
+.rpt-btn--xs.rpt-btn--loading-spinner .rpt-btn-loader,
+.rpt-btn--sm.rpt-btn--loading-spinner .rpt-btn-loader {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+
+.rpt-btn--lg.rpt-btn--loading-spinner .rpt-btn-loader,
+.rpt-btn--xl.rpt-btn--loading-spinner .rpt-btn-loader {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+}
+
+@keyframes rpt-btn-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Dots loading animation */
+.rpt-btn--loading-dots .rpt-btn-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpt-btn--loading-dots .rpt-btn-loader span {
+  width: 4px;
+  height: 4px;
+  margin: 0 1px;
+  background-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  animation: rpt-btn-dots 1.4s infinite ease-in-out both;
+}
+
+.rpt-btn--loading-dots .rpt-btn-loader span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.rpt-btn--loading-dots .rpt-btn-loader span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes rpt-btn-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Progress bar loading animation */
+.rpt-btn--loading-progress::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.4);
+  animation: rpt-btn-progress 1.5s ease-in-out infinite;
+  width: 100%;
+}
+
+@keyframes rpt-btn-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Slide loading animation */
+.rpt-btn--loading-slide::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 300%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: rpt-btn-slide 1.5s infinite linear;
+}
+
+@keyframes rpt-btn-slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+/* Circle loading animation */
+.rpt-btn--loading-circle .rpt-btn-loader {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpt-btn--loading-circle .rpt-btn-loader::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: rpt-btn-circle 0.75s linear infinite;
+}
+
+@keyframes rpt-btn-circle {
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse loading animation */
+.rpt-btn--loading-pulse .rpt-btn-loader {
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: rpt-btn-pulse 1s infinite alternate;
+}
+
+@keyframes rpt-btn-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Wave loading animation */
+.rpt-btn--loading-wave .rpt-btn-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.rpt-btn--loading-wave .rpt-btn-loader span {
+  display: inline-block;
+  width: 2px;
+  height: 10px;
+  margin: 0 1px;
+  background-color: currentColor;
+  border-radius: 1px;
+  animation: rpt-btn-wave 1s ease-in-out infinite;
+}
+
+.rpt-btn--loading-wave .rpt-btn-loader span:nth-child(1) {
+  animation-delay: -0.45s;
+}
+
+.rpt-btn--loading-wave .rpt-btn-loader span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.rpt-btn--loading-wave .rpt-btn-loader span:nth-child(3) {
+  animation-delay: -0.15s;
+}
+
+@keyframes rpt-btn-wave {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1.2);
+  }
+}
+
+/* Style for loading text, slightly dimmed compared to normal text */
+.rpt-btn--loading .rpt-btn-text {
+  opacity: 0.8;
+}
+
+/* Make sure action buttons in dialog are properly styled */
+.rpt-dialog-actions .rpt-btn {
+  min-width: 90px;
+  font-weight: 500;
+}
+
+.rpt-dialog-actions .rpt-btn--primary,
+.rpt-dialog-actions .rpt-btn--destructive {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rpt-dialog-actions .rpt-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.rpt-dialog-actions .rpt-btn:active:not(:disabled) {
+  transform: translateY(0px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive styles */
+@media (max-width: 640px) {
+  .rpt-dialog-actions .rpt-btn {
+    width: 100%;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .rpt-btn--loading-spinner .rpt-btn-loader,
+  .rpt-btn--loading-circle .rpt-btn-loader::before,
+  .rpt-btn--loading-dots .rpt-btn-loader span,
+  .rpt-btn--loading-progress::after,
+  .rpt-btn--loading-slide::before,
+  .rpt-btn--loading-pulse .rpt-btn-loader,
+  .rpt-btn--loading-wave .rpt-btn-loader span {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

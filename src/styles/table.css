@@ -1,0 +1,555 @@
+/**
+ * React Power Table - Table Styles
+ * Core styling for table structure and layout
+ */
+
+.rpt-table-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: var(--rpt-border-width) solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  background-color: var(--rpt-bg-color);
+  min-width: 280px; /* Base minimum width */
+}
+
+/* Table wrapper to enable horizontal scrolling */
+.rpt-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  margin-bottom: -1px; /* Compensate for bottom border */
+  /* Show scrollbar shadows to indicate more content */
+  background-image: 
+    /* Right shadow */
+    linear-gradient(to right, transparent, transparent),
+    /* Left shadow */
+    linear-gradient(to left, transparent, transparent);
+  background-position: right center, left center;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-size: 15px 100%, 15px 100%;
+  background-attachment: local, local;
+  /* Don't restrict the wrapper width to allow natural table expansion */
+  min-width: 0; /* Reset min-width */
+}
+
+/* Core table styling */
+.rpt-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  table-layout: fixed; /* Fixed layout for better column control */
+  /* Allow table to grow beyond container width if needed */
+  min-width: 100%; /* Ensure table takes at least full width */
+}
+
+/* Table size variants */
+.rpt-table-compact {
+  font-size: 0.75rem; /* Smaller font */
+}
+
+.rpt-table-compact .rpt-head-cell,
+.rpt-table-compact .rpt-cell {
+  padding: 0.5rem 0.75rem; /* Reduced padding */
+}
+
+.rpt-table-large {
+  font-size: 1rem; /* Larger font */
+}
+
+.rpt-table-large .rpt-head-cell,
+.rpt-table-large .rpt-cell {
+  padding: 1rem 1.25rem; /* Increased padding */
+}
+
+/* Table head styling */
+.rpt-table-head {
+  position: relative;
+  background-color: var(--rpt-header-bg);
+  border-bottom: var(--rpt-border-width) solid var(--rpt-border-color);
+}
+
+.rpt-table-head-row {
+  background-color: var(--rpt-header-bg);
+}
+
+.rpt-head-cell.rpt-select-cell {
+  text-align: center;
+}
+
+.rpt-head-cell.rpt-select-cell .rpt-cell-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpt-head-cell {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--rpt-header-text-color);
+  white-space: nowrap;
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 180px !important; /* Force minimum width for all head cells */
+  width: auto !important; /* Ensure width is auto and respects min-width */
+}
+
+/* Alignment variants for head cells */
+.rpt-head-cell.rpt-align-left {
+  text-align: left;
+}
+
+.rpt-head-cell.rpt-align-center {
+  text-align: center;
+}
+
+.rpt-head-cell.rpt-align-right {
+  text-align: right;
+}
+
+/* Table head cell content */
+.rpt-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Head cell with sorting */
+.rpt-head-cell.rpt-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.rpt-head-cell.rpt-sortable:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .rpt-head-cell.rpt-sortable:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.rpt-sort-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+/* Table body styling */
+.rpt-table-body {
+  position: relative;
+}
+
+.rpt-row {
+  background-color: var(--rpt-row-bg);
+  border-bottom: var(--rpt-border-width) solid var(--rpt-border-color);
+  transition: background-color var(--rpt-transition-duration) ease;
+}
+
+.rpt-row:last-child {
+  border-bottom: none;
+}
+
+.rpt-row:hover {
+  background-color: var(--rpt-row-hover-bg);
+}
+
+/* Row variants */
+.rpt-row-alt {
+  background-color: var(--rpt-row-bg-alt);
+}
+
+.rpt-row-selected {
+  background-color: var(--rpt-row-selected-bg);
+}
+
+.rpt-row-selected:hover {
+  background-color: var(--rpt-row-selected-bg);
+  filter: brightness(0.98);
+}
+
+.rpt-row-updated {
+  animation: highlight-row 2s ease-out;
+}
+
+@keyframes highlight-row {
+  0% {
+    background-color: var(--rpt-row-updated-bg);
+  }
+  100% {
+    background-color: var(--rpt-row-bg);
+  }
+}
+
+.rpt-row.rpt-clickable {
+  cursor: pointer;
+}
+
+/* Table cell styling */
+.rpt-cell {
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+  border-right: var(--rpt-border-width) solid transparent;
+  vertical-align: middle;
+  position: relative;
+  height: 100%; /* Ensure all cells have the same height */
+  overflow: hidden; /* Prevent overflow */
+  min-width: 180px !important; /* Force minimum width for all cells */
+  width: auto !important; /* Ensure width is auto and respects min-width */
+}
+
+/* Cell alignment variants */
+.rpt-cell.rpt-align-left {
+  text-align: left;
+}
+
+.rpt-cell.rpt-align-center {
+  text-align: center;
+}
+
+.rpt-cell.rpt-align-right {
+  text-align: right;
+}
+
+/* Cell truncation */
+.rpt-cell-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px; /* Default max width, can be overridden */
+}
+
+/* Action cell styling */
+.rpt-action-header-cell {
+  width: 225px !important; /* Fixed width for action header */
+  max-width: 225px !important;
+  min-width: 225px !important;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.rpt-action-cell {
+  width: 225px !important; /* Fixed width for action cell */
+  max-width: 225px !important;
+  min-width: 225px !important;
+  text-align: center;
+  padding: 0.5rem !important;
+  white-space: normal;
+  vertical-align: middle;
+  box-sizing: border-box;
+  height: 100% !important; /* Ensure action cells match row height */
+  display: table-cell; /* Ensure proper display mode */
+}
+
+/* Selection cell styles */
+.rpt-select-cell {
+  width: 48px !important; /* Fixed width for selection column */
+  min-width: 48px !important; /* Match fixed width */
+  max-width: 48px !important; /* Match fixed width */
+  padding: 0.5rem 0.25rem !important;
+  text-align: center;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* Table footer */
+.rpt-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: var(--rpt-footer-bg);
+  border-top: var(--rpt-border-width) solid var(--rpt-border-color);
+}
+
+/* Fix for table layout to enforce cell width */
+.rpt-table-wrapper table {
+  width: 100%; /* Ensure table takes full width */
+  min-width: 100%; /* Ensure table can expand beyond container width */
+}
+
+.rpt-table colgroup col {
+  min-width: 180px; /* Set column minimum width */
+}
+
+.rpt-table colgroup col.rpt-select-col {
+  min-width: 48px;
+  width: 48px;
+}
+
+.rpt-table colgroup col.rpt-action-col {
+  min-width: 225px;
+  width: 225px;
+}
+
+.rpt-table {
+  border-collapse: separate; /* Important for fixed layout */
+  border-spacing: 0;
+}
+
+/* Ensure width distribution */
+.rpt-table-body {
+  width: 100%;
+}
+
+/* Responsive table styles - maintain minimum widths */
+@media (min-width: 768px) {
+  .rpt-head-cell,
+  .rpt-cell {
+    min-width: 180px !important; /* Force minimum width for tablet */
+  }
+  
+  .rpt-action-cell {
+    max-width: 180px !important;
+    min-width: 180px !important;
+    width: 180px !important;
+    padding: 0.375rem !important;
+  }
+  
+  .rpt-action-header-cell {
+    max-width: 180px !important;
+    min-width: 180px !important;
+    width: 180px !important;
+  }
+  
+  .rpt-select-cell {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rpt-head-cell,
+  .rpt-cell {
+    min-width: 200px !important; /* Force minimum width for desktop */
+  }
+}
+
+@media (max-width: 640px) {
+  .rpt-head-cell,
+  .rpt-cell {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    min-width: 160px !important; /* Force minimum width for mobile */
+  }
+  
+  .rpt-table-footer {
+    padding: 0.5rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .rpt-cell-truncate {
+    max-width: 150px;
+  }
+  
+  .rpt-action-cell {
+    max-width: 120px !important;
+    min-width: 120px !important;
+    width: 120px !important;
+    padding: 0.25rem !important;
+  }
+  
+  .rpt-action-header-cell {
+    max-width: 120px !important;
+    min-width: 120px !important;
+    width: 120px !important;
+  }
+  
+  .rpt-select-cell {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    padding: 0.25rem 0.125rem !important;
+  }
+}
+
+/* Empty state styling */
+.rpt-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--rpt-muted-text);
+}
+
+.rpt-empty-icon {
+  margin-bottom: 1rem;
+  color: var(--rpt-border-color);
+}
+
+.rpt-empty-text {
+  font-size: 0.875rem;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Column resizer */
+.rpt-column-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  user-select: none;
+  background-color: transparent;
+  z-index: 10;
+}
+
+.rpt-column-resizer:hover,
+.rpt-column-resizer:active {
+  background-color: var(--rpt-primary);
+  opacity: 0.5;
+}
+
+/* Status cell styling */
+.rpt-status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpt-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rpt-status-badge--success {
+  background-color: var(--rpt-status-success-bg);
+  color: var(--rpt-status-success-text);
+}
+
+.rpt-status-badge--warning {
+  background-color: var(--rpt-status-warning-bg);
+  color: var(--rpt-status-warning-text);
+}
+
+.rpt-status-badge--danger {
+  background-color: var(--rpt-status-danger-bg);
+  color: var(--rpt-status-danger-text);
+}
+
+.rpt-status-badge--info {
+  background-color: var(--rpt-status-info-bg);
+  color: var(--rpt-status-info-text);
+}
+
+.rpt-status-badge--neutral {
+  background-color: var(--rpt-status-neutral-bg);
+  color: var(--rpt-status-neutral-text);
+}
+
+/* High-contrast mode adjustments */
+@media (forced-colors: active) {
+  .rpt-table-container {
+    border: 1px solid CanvasText;
+  }
+  
+  .rpt-table-head,
+  .rpt-row {
+    border-bottom: 1px solid CanvasText;
+  }
+  
+  .rpt-status-badge {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Print-friendly styles */
+@media print {
+  .rpt-table-container {
+    overflow: visible;
+    border: 1px solid #000;
+  }
+  
+  .rpt-table-wrapper {
+    overflow: visible;
+  }
+  
+  .rpt-table {
+    font-size: 10pt;
+    border-collapse: collapse !important;
+    table-layout: auto;
+  }
+  
+  .rpt-head-cell,
+  .rpt-cell {
+    border: 1px solid #000 !important;
+    padding: 4pt 8pt !important;
+  }
+  
+  .rpt-sort-indicator,
+  .rpt-column-resizer,
+  .rpt-select-cell,
+  .rpt-action-cell {
+    display: none !important;
+  }
+}
+
+/* Sticky header functionality */
+.rpt-table-head.rpt-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* RTL Support */
+[dir="rtl"] .rpt-head-cell,
+[dir="rtl"] .rpt-cell {
+  text-align: right;
+}
+
+[dir="rtl"] .rpt-head-cell.rpt-align-left {
+  text-align: right;
+}
+
+[dir="rtl"] .rpt-head-cell.rpt-align-right {
+  text-align: left;
+}
+
+[dir="rtl"] .rpt-cell.rpt-align-left {
+  text-align: right;
+}
+
+[dir="rtl"] .rpt-cell.rpt-align-right {
+  text-align: left;
+}
+
+/* Accessibility focus styles */
+.rpt-table:focus-visible {
+  outline: 2px solid var(--rpt-focus-color);
+  outline-offset: 2px;
+}
+
+.rpt-row.rpt-focus-visible {
+  outline: 2px solid var(--rpt-focus-color);
+  outline-offset: -2px;
+  position: relative;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .rpt-row,
+  .rpt-row-updated {
+    transition: none !important;
+    animation: none !important;
+  }
+}

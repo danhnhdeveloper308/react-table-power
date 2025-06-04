@@ -1,0 +1,434 @@
+/**
+ * React Power Table - Dialog Styles
+ * Styling for modal dialogs and their content
+ */
+
+/* Backdrop overlay */
+.rpt-dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease-out;
+}
+
+/* Dialog window */
+.rpt-dialog {
+  background-color: var(--rpt-bg-color);
+  border-radius: var(--rpt-border-radius);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+/* Dialog animation states */
+.rpt-dialog-open {
+  animation: rpt-dialog-fade-in 0.2s ease-out;
+}
+
+.rpt-dialog-closing {
+  animation: rpt-dialog-fade-out 0.2s ease-out;
+}
+
+/* Dialog header */
+.rpt-dialog-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--rpt-border-color);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+}
+
+/* Dialog title */
+.rpt-dialog-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--rpt-title-color);
+  line-height: 1.4;
+}
+
+/* Dialog description */
+.rpt-dialog-description {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--rpt-description-color);
+  line-height: 1.5;
+}
+
+/* Close button */
+.rpt-dialog-close {
+  padding: 0.5rem;
+  margin: -0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--rpt-muted-text);
+  cursor: pointer;
+  border-radius: var(--rpt-border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.rpt-dialog-close:hover {
+  background-color: var(--rpt-row-hover-bg);
+  color: var(--rpt-text-color);
+}
+
+.rpt-dialog-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+/* Close icon */
+.rpt-dialog-close-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Dialog content */
+.rpt-dialog-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  max-height: calc(90vh - 150px);
+}
+
+/* Dialog footer */
+.rpt-dialog-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--rpt-border-color);
+  background-color: var(--rpt-footer-bg);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+/* Dialog error message */
+.rpt-dialog-error {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background-color: var(--rpt-status-danger-bg);
+  color: var(--rpt-status-danger-text);
+  border-radius: var(--rpt-border-radius);
+  font-size: 0.875rem;
+  border-left: 4px solid var(--rpt-danger);
+}
+
+/* Dialog loading overlay */
+.rpt-dialog-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(1px);
+}
+
+.dark .rpt-dialog-loading-overlay {
+  background-color: rgba(15, 23, 42, 0.6);
+}
+
+/* Dialog spinner */
+.rpt-dialog-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--rpt-primary);
+  animation: rpt-spin 0.8s linear infinite;
+}
+
+/* Delete confirmation dialog */
+.rpt-dialog-delete-confirmation {
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+
+.rpt-dialog-delete-warning {
+  color: var(--rpt-danger);
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+/* Dialog types */
+.rpt-dialog-create {
+  border-top: 4px solid var(--rpt-primary);
+}
+
+.rpt-dialog-edit {
+  border-top: 4px solid var(--rpt-info);
+}
+
+.rpt-dialog-delete {
+  border-top: 4px solid var(--rpt-danger);
+}
+
+.rpt-dialog-view {
+  border-top: 4px solid var(--rpt-success);
+}
+
+/* Dialog Form Styling */
+.rpt-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rpt-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.rpt-form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rpt-text-color);
+}
+
+.rpt-form-input {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--rpt-text-color);
+  background-color: var(--rpt-input-bg);
+  border: 1px solid var(--rpt-input-border-color);
+  border-radius: var(--rpt-border-radius);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.rpt-form-input::placeholder {
+  color: var(--rpt-input-placeholder-color);
+  opacity: 1;
+}
+
+.rpt-form-input:focus {
+  outline: none;
+  border-color: var(--rpt-primary);
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+.rpt-form-error {
+  font-size: 0.75rem;
+  color: var(--rpt-danger);
+  margin-top: 0.25rem;
+}
+
+/* Dialog actions - Fixed positioning at the bottom right */
+.rpt-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  width: 100%;
+  position: relative; /* Ensure proper stacking context */
+}
+
+/* Button styles specific for dialog actions - Make buttons more prominent */
+.rpt-dialog-actions .rpt-btn {
+  min-width: 90px;
+  padding: 0.5rem 1rem;
+  border-radius: calc(var(--rpt-border-radius) - 2px);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.rpt-dialog-actions .rpt-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rpt-dialog-actions .rpt-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Dialog action positions */
+.rpt-dialog-actions--right {
+  justify-content: flex-end;
+}
+
+.rpt-dialog-actions--left {
+  justify-content: flex-start;
+}
+
+.rpt-dialog-actions--center {
+  justify-content: center;
+}
+
+.rpt-dialog-actions--split {
+  justify-content: space-between;
+}
+
+/* Animation keyframes */
+@keyframes rpt-dialog-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rpt-dialog-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes rpt-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dialog width variants */
+.rpt-dialog-sm {
+  max-width: 400px;
+}
+
+.rpt-dialog-md {
+  max-width: 500px;
+}
+
+.rpt-dialog-lg {
+  max-width: 640px;
+}
+
+.rpt-dialog-xl {
+  max-width: 768px;
+}
+
+.rpt-dialog-2xl {
+  max-width: 896px;
+}
+
+.rpt-dialog-full {
+  max-width: 96vw;
+}
+
+/* For mobile devices */
+@media (max-width: 640px) {
+  .rpt-dialog {
+    width: 100%;
+    max-width: none !important;
+    max-height: 96vh;
+    margin: 1rem;
+    height: auto;
+  }
+
+  .rpt-dialog-backdrop{ 
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+
+  
+  .rpt-dialog-header {
+    padding: 1rem;
+  }
+  
+  .rpt-dialog-content {
+    padding: 1rem;
+  }
+  
+  .rpt-dialog-footer {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .rpt-dialog-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    width: 100%;
+  }
+  
+  .rpt-dialog-actions--left,
+  .rpt-dialog-actions--right,
+  .rpt-dialog-actions--center,
+  .rpt-dialog-actions--split {
+    justify-content: stretch;
+  }
+  
+  .rpt-dialog {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+/* RTL support */
+[dir="rtl"] .rpt-dialog-header,
+[dir="rtl"] .rpt-dialog-footer,
+[dir="rtl"] .rpt-dialog-actions {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .rpt-dialog-actions--right {
+  justify-content: flex-start;
+}
+
+[dir="rtl"] .rpt-dialog-actions--left {
+  justify-content: flex-end;
+}
+
+/* Dialog with sticky footer */
+.rpt-dialog-with-footer .rpt-dialog-content {
+  max-height: calc(90vh - 210px);
+}
+
+.rpt-dialog-footer--sticky {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--rpt-bg-color);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  z-index: 2;
+}
+
+/* Make footer buttons better aligned always to the right */
+.rpt-dialog-footer {
+  justify-content: flex-end !important;
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .rpt-dialog {
+    border: 2px solid ButtonText;
+  }
+  
+  .rpt-dialog-close {
+    border: 1px solid ButtonText;
+  }
+}

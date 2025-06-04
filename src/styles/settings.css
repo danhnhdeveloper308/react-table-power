@@ -1,0 +1,581 @@
+/**
+ * React Power Table - Settings Panel Styles
+ * Styling for table settings panel with theme support
+ */
+
+/* Settings dropdown container */
+.rpt-settings-dropdown {
+  position: relative;
+}
+
+/* Settings button */
+.rpt-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rpt-settings-btn--active {
+  background-color: var(--rpt-row-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-settings-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.rpt-settings-btn:hover .rpt-settings-icon {
+  transform: rotate(30deg);
+}
+
+/* Settings panel */
+.rpt-settings-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 50;
+  min-width: 280px;
+  max-width: 320px;
+  background-color: var(--rpt-bg-color);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  box-shadow: var(--rpt-shadow);
+  margin-top: 0.25rem;
+  overflow: hidden;
+  width: 280px;
+  right: 0;
+  z-index: 60;
+  max-height: 80vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Settings content */
+.rpt-settings-content {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Settings section */
+.rpt-settings-section {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--rpt-border-color);
+}
+
+.rpt-settings-section:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.rpt-settings-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--rpt-title-color);
+}
+
+/* Settings group */
+.rpt-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rpt-settings-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--rpt-title-color);
+  margin: 0;
+}
+
+/* Options group */
+.rpt-settings-options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rpt-settings-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Settings options (buttons) */
+.rpt-settings-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.rpt-settings-option {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  border-radius: var(--rpt-border-radius);
+  border: 1px solid var(--rpt-border-color);
+  background-color: var(--rpt-input-bg);
+  color: var(--rpt-text-color);
+  cursor: pointer;
+  transition: all var(--rpt-transition-duration) ease;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--rpt-border-radius);
+  background-color: var(--rpt-input-bg);
+  border: 1px solid var(--rpt-input-border-color);
+  cursor: pointer;
+  transition: background-color var(--rpt-transition-duration) ease,
+              border-color var(--rpt-transition-duration) ease;
+  user-select: none;
+  min-width: 70px;
+  justify-content: center;
+  position: relative;
+}
+
+.rpt-settings-option:hover {
+  background-color: var(--rpt-row-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-settings-option--active {
+  background-color: var(--rpt-primary);
+  color: #fff;
+  border-color: var(--rpt-primary);
+}
+
+.rpt-settings-option--active:hover {
+  background-color: var(--rpt-primary-dark);
+  border-color: var(--rpt-primary-dark);
+}
+
+/* Radio options */
+.rpt-settings-radio {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--rpt-primary);
+  position: relative;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--rpt-input-border-color);
+  background-color: var(--rpt-input-bg);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  border-radius: 50%;
+}
+
+.rpt-settings-radio:checked {
+  background-color: var(--rpt-primary);
+  border-color: var(--rpt-primary);
+}
+
+.rpt-settings-radio:checked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.rpt-settings-option-text {
+  font-size: 0.8125rem;
+  color: var(--rpt-text-color);
+  font-size: 0.875rem;
+}
+
+/* Checkbox options */
+.rpt-settings-option-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: var(--rpt-border-radius);
+  cursor: pointer;
+  transition: background-color var(--rpt-transition-duration) ease;
+  user-select: none;
+  padding: 0.25rem;
+}
+
+.rpt-settings-option-checkbox:hover {
+  background-color: var(--rpt-row-hover-bg);
+}
+
+.rpt-settings-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--rpt-primary);
+  position: relative;
+  appearance: none;
+  border: 1px solid var(--rpt-input-border-color);
+  background-color: var(--rpt-input-bg);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  border-radius: 4px;
+}
+
+.rpt-settings-checkbox:checked {
+  background-color: var(--rpt-primary);
+  border-color: var(--rpt-primary);
+}
+
+.rpt-settings-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -40%) rotate(45deg);
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+}
+
+/* Toggle switches */
+.rpt-settings-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rpt-settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.rpt-toggle-label {
+  font-size: 0.875rem;
+  color: var(--rpt-text-color);
+}
+
+.rpt-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.rpt-toggle-slider {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background-color: var(--rpt-border-color);
+  transition: background-color var(--rpt-transition-duration) ease;
+  display: inline-block;
+}
+
+.rpt-toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background-color: white;
+  transition: transform var(--rpt-transition-duration) ease;
+}
+
+.rpt-toggle-input:checked + .rpt-toggle-slider {
+  background-color: var(--rpt-primary);
+}
+
+.rpt-toggle-input:checked + .rpt-toggle-slider:before {
+  transform: translateX(16px);
+}
+
+.rpt-toggle-input:focus + .rpt-toggle-slider {
+  box-shadow: 0 0 1px var(--rpt-primary);
+}
+
+/* Table Identifier input styles */
+.rpt-settings-identifier-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rpt-settings-identifier-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--rpt-input-border-color);
+  border-radius: var(--rpt-border-radius);
+  background-color: var(--rpt-input-bg);
+  color: var(--rpt-text-color);
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.rpt-settings-identifier-input:focus {
+  border-color: var(--rpt-primary);
+  outline: none;
+}
+
+.rpt-settings-input-error {
+  border-color: var(--rpt-error-color);
+}
+
+.rpt-settings-identifier-error {
+  font-size: 0.75rem;
+  color: var(--rpt-error-color);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+.rpt-settings-identifier-help {
+  font-size: 0.75rem;
+  color: var(--rpt-muted-text);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+/* Load Saved Configurations */
+.rpt-saved-configurations {
+  margin-top: 0.75rem;
+}
+
+.rpt-load-config-btn {
+  background-color: var(--rpt-btn-secondary-bg);
+  color: var(--rpt-text-color);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.rpt-load-config-btn:hover {
+  background-color: var(--rpt-btn-secondary-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-settings-configurations-panel {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--rpt-bg-color);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  box-shadow: var(--rpt-shadow);
+}
+
+.rpt-empty-configurations {
+  padding: 1rem;
+  text-align: center;
+  color: var(--rpt-muted-text);
+}
+
+.rpt-configuration-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rpt-border-color);
+  text-align: left;
+  font-size: 0.875rem;
+  color: var(--rpt-text-color);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rpt-configuration-item:hover {
+  background-color: var(--rpt-row-hover-bg);
+}
+
+.rpt-configuration-item:last-child {
+  border-bottom: none;
+}
+
+.rpt-configuration-item-active {
+  background-color: rgba(var(--rpt-primary-rgb), 0.1);
+  font-weight: 500;
+}
+
+.rpt-configuration-active-indicator {
+  font-size: 0.75rem;
+  color: var(--rpt-primary);
+  background-color: rgba(var(--rpt-primary-rgb), 0.1);
+  padding: 0.25rem 0.4rem;
+  border-radius: var(--rpt-border-radius);
+  font-weight: 500;
+}
+
+/* Save Settings section styles */
+.rpt-settings-actions {
+  border-top: 2px solid var(--rpt-border-color);
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+}
+
+.rpt-settings-save-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.rpt-settings-save-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background-color: var(--rpt-primary);
+  color: white;
+  border: none;
+  border-radius: var(--rpt-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 120px;
+}
+
+.rpt-settings-save-as-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background-color: var(--rpt-btn-secondary-bg);
+  color: var(--rpt-text-color);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 120px;
+}
+
+.rpt-settings-save-btn:hover:not(:disabled) {
+  background-color: var(--rpt-primary-dark);
+}
+
+.rpt-settings-save-as-btn:hover:not(:disabled) {
+  background-color: var(--rpt-btn-secondary-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-settings-save-btn:disabled,
+.rpt-settings-save-as-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rpt-settings-save-help {
+  font-size: 0.75rem;
+  color: var(--rpt-muted-text);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 480px) {
+  .rpt-settings-panel {
+    width: 260px;
+  }
+  
+  .rpt-settings-options {
+    gap: 0.25rem;
+  }
+  
+  .rpt-settings-option {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .rpt-settings-panel {
+    width: 260px;
+  }
+
+  .rpt-settings-options-group {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .rpt-settings-option {
+    width: 100%;
+  }
+}
+
+/* Animations */
+.rpt-settings-panel {
+  animation: rpt-fade-in 0.2s ease-out;
+}
+
+@keyframes rpt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus styles for accessibility */
+.rpt-settings-option:focus-visible {
+  outline: 2px solid var(--rpt-focus-color);
+  outline-offset: 1px;
+}
+
+.rpt-toggle-input:focus-visible + .rpt-toggle-slider {
+  outline: 2px solid var(--rpt-focus-color);
+  outline-offset: 1px;
+}
+
+/* RTL support */
+[dir="rtl"] .rpt-settings-panel {
+  left: 0;
+  right: auto;
+}
+
+[dir="rtl"] .rpt-settings-radio,
+[dir="rtl"] .rpt-settings-checkbox {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .rpt-settings-option {
+    border: 1px solid ButtonText;
+  }
+  
+  .rpt-settings-option--active {
+    border: 2px solid Highlight;
+    color: Highlight;
+  }
+  
+  .rpt-toggle-slider {
+    border: 1px solid ButtonText;
+  }
+  
+  .rpt-toggle-input:checked + .rpt-toggle-slider {
+    background-color: Highlight;
+  }
+}

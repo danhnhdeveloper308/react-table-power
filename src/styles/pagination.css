@@ -1,0 +1,387 @@
+/**
+ * React Power Table - Pagination Styles
+ * Styling for pagination controls with various sizes and states
+ */
+
+/* Pagination container */
+.rpt-pagination-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 100%; /* Ensure the pagination takes full width like table */
+  gap: 1rem;
+  padding: 1rem;
+  margin-top: auto;
+  background-color: var(--rpt-footer-bg);
+  color: var(--rpt-text-color);
+  border-top: 1px solid var(--rpt-border-color);
+  border-bottom-left-radius: var(--rpt-border-radius);
+  border-bottom-right-radius: var(--rpt-border-radius);
+  transition: background-color var(--rpt-transition-duration) ease,
+              color var(--rpt-transition-duration) ease,
+              border-color var(--rpt-transition-duration) ease;
+  overflow-x: auto; /* Add horizontal scrolling capability */
+  box-sizing: border-box;
+  /* Force pagination to take the same width as the table when sticky header is enabled */
+  position: relative;
+  left: 0;
+  right: 0;
+}
+
+/* When sticky header is enabled, ensure pagination aligns with table width */
+.rpt-table-container .rpt-pagination-container {
+  min-width: fit-content;
+  width: 100%;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+/* Ensure the pagination takes the same width as the table wrapper */
+.rpt-table-wrapper + .rpt-pagination-container {
+  min-width: fit-content !important;
+  width: 100% !important;
+}
+
+/* Pagination info section */
+.rpt-pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--rpt-muted-text);
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Page size selector */
+.rpt-page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.rpt-page-size-label {
+  color: var(--rpt-muted-text);
+  white-space: nowrap;
+}
+
+.rpt-page-size-select {
+  min-width: 80px;
+  padding: 0.375rem 0.75rem;
+  padding-right: 2rem;
+  font-size: 0.875rem;
+  border-radius: var(--rpt-border-radius);
+  border: 1px solid var(--rpt-input-border-color);
+  background-color: var(--rpt-input-bg);
+  color: var(--rpt-text-color);
+  cursor: pointer;
+  appearance: none;
+  transition: border-color var(--rpt-transition-duration) ease,
+              box-shadow var(--rpt-transition-duration) ease,
+              background-color var(--rpt-transition-duration) ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+}
+
+.rpt-page-size-select:hover {
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-page-size-select:focus {
+  outline: none;
+  border-color: var(--rpt-primary);
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+/* Pagination controls */
+.rpt-pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Page buttons */
+.rpt-page-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.25rem;
+  border-radius: var(--rpt-border-radius);
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--rpt-text-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--rpt-transition-duration) ease,
+              border-color var(--rpt-transition-duration) ease,
+              color var(--rpt-transition-duration) ease,
+              box-shadow var (--rpt-transition-duration) ease;
+}
+
+.rpt-page-button:hover {
+  background-color: var(--rpt-row-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+/* Previous and next page buttons */
+.rpt-prev-button,
+.rpt-next-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--rpt-border-radius);
+  background-color: transparent;
+  border: 1px solid var(--rpt-input-border-color);
+  color: var(--rpt-text-color);
+  cursor: pointer;
+  transition: background-color var(--rpt-transition-duration) ease,
+              border-color var(--rpt-transition-duration) ease,
+              color var(--rpt-transition-duration) ease,
+              box-shadow var(--rpt-transition-duration) ease;
+}
+
+.rpt-prev-button:hover,
+.rpt-next-button:hover {
+  background-color: var(--rpt-row-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-prev-button:focus,
+.rpt-next-button:focus,
+.rpt-page-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+  z-index: 1;
+}
+
+.rpt-prev-button:focus-visible,
+.rpt-next-button:focus-visible,
+.rpt-page-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+.rpt-prev-button:disabled,
+.rpt-next-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--rpt-muted);
+}
+
+.rpt-prev-button svg,
+.rpt-next-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Active page button */
+.rpt-page-button.rpt-page-active {
+  background-color: var(--rpt-primary);
+  border-color: var(--rpt-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.rpt-page-button.rpt-page-active:hover {
+  background-color: var(--rpt-primary-dark);
+  border-color: var(--rpt-primary-dark);
+}
+
+/* Page count status */
+.rpt-page-count {
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--rpt-text-color);
+}
+
+/* Ellipsis indicator */
+.rpt-page-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+  color: var(--rpt-muted-text);
+}
+
+/* Jump to page input */
+.rpt-jump-to-page {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.rpt-jump-label {
+  font-size: 0.875rem;
+  color: var(--rpt-muted-text);
+  white-space: nowrap;
+}
+
+.rpt-jump-input {
+  width: 60px;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--rpt-border-radius);
+  border: 1px solid var(--rpt-input-border-color);
+  background-color: var(--rpt-input-bg);
+  color: var(--rpt-text-color);
+  font-size: 0.875rem;
+  text-align: center;
+  transition: border-color var(--rpt-transition-duration) ease,
+              box-shadow var(--rpt-transition-duration) ease;
+}
+
+.rpt-jump-input:hover {
+  border-color: var(--rpt-border-hover-color);
+}
+
+.rpt-jump-input:focus {
+  outline: none;
+  border-color: var(--rpt-primary);
+  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+}
+
+/* Compact pagination variant */
+.rpt-pagination-compact {
+  padding: 0.625rem 1rem;
+}
+
+.rpt-pagination-compact .rpt-page-button,
+.rpt-pagination-compact .rpt-prev-button,
+.rpt-pagination-compact .rpt-next-button {
+  min-width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.75rem;
+}
+
+.rpt-pagination-compact .rpt-pagination-info,
+.rpt-pagination-compact .rpt-page-size-label,
+.rpt-pagination-compact .rpt-page-size-select,
+.rpt-pagination-compact .rpt-jump-label,
+.rpt-pagination-compact .rpt-jump-input {
+  font-size: 0.75rem;
+}
+
+/* Pagination with border */
+.rpt-pagination-bordered {
+  border-top: 1px solid var(--rpt-border-color);
+  border-bottom: 1px solid var(--rpt-border-color);
+}
+
+/* Simple pagination variant */
+.rpt-pagination-simple {
+  justify-content: flex-end;
+}
+
+.rpt-pagination-simple .rpt-pagination-info {
+  margin-right: auto;
+}
+
+.rpt-pagination-simple .rpt-pagination-controls {
+  gap: 0.5rem;
+}
+
+/* Stack pagination on small screens */
+@media (max-width: 640px) {
+  .rpt-pagination-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .rpt-pagination-info {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .rpt-pagination-controls {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .rpt-page-size-selector {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+  }
+
+  .rpt-jump-to-page {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}
+
+/* When table has horizontal scroll, make pagination match the content width */
+.rpt-table-wrapper.has-horizontal-scroll + .rpt-pagination-container {
+  width: max-content !important;
+  min-width: 100% !important;
+}
+
+/* This will make sure the pagination matches the exact width of the table */
+@media (min-width: 1px) {
+  .rpt-table-wrapper {
+    width: auto;
+    min-width: 100%;
+  }
+  
+  .rpt-pagination-container {
+    width: auto;
+    min-width: 100%;
+  }
+}
+
+/* RTL support */
+[dir="rtl"] .rpt-page-size-select {
+  padding-right: 0.75rem;
+  padding-left: 2rem;
+  background-position: left 0.5rem center;
+}
+
+[dir="rtl"] .rpt-jump-to-page {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .rpt-page-button.rpt-page-active {
+    border: 2px solid ButtonText;
+  }
+  
+  .rpt-prev-button,
+  .rpt-next-button {
+    border: 1px solid ButtonText;
+  }
+  
+  .rpt-prev-button:disabled,
+  .rpt-next-button:disabled {
+    opacity: 0.5;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .rpt-pagination-container * {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,357 @@
+/**
+ * React Power Table - Theme Variables
+ * Core CSS variables for theming the table with light/dark mode support
+ */
+
+/* Base theme variables - light theme by default */
+:root, [data-theme="light"] {
+  /* Colors */
+  --rpt-primary: #3b82f6;
+  --rpt-primary-light: #93c5fd;
+  --rpt-primary-dark: #2563eb;
+  --rpt-success: #10b981;
+  --rpt-warning: #f59e0b;
+  --rpt-danger: #ef4444;
+  --rpt-info: #3b82f6;
+  
+  /* Background colors */
+  --rpt-bg-color: #ffffff;
+  --rpt-toolbar-bg: #ffffff;
+  --rpt-header-bg: #f8fafc;
+  --rpt-footer-bg: #f8fafc;
+  --rpt-row-bg: #ffffff;
+  --rpt-row-bg-alt: #f8fafc;
+  --rpt-row-hover-bg: #f1f5f9;
+  --rpt-row-selected-bg: #eff6ff;
+  --rpt-row-updated-bg: rgba(59, 130, 246, 0.08);
+  
+  /* Text colors */
+  --rpt-text-color: #1e293b;
+  --rpt-title-color: #0f172a;
+  --rpt-description-color: #64748b;
+  --rpt-header-text-color: #475569;
+  --rpt-muted-text: #64748b;
+  
+  /* Border colors */
+  --rpt-border-color: #e2e8f0;
+  --rpt-border-hover-color: #cbd5e1;
+  --rpt-focus-color: rgba(59, 130, 246, 0.5);
+  --rpt-focus-shadow: rgba(59, 130, 246, 0.25);
+  
+  /* Form element colors */
+  --rpt-input-bg: #ffffff;
+  --rpt-input-border-color: #e2e8f0;
+  --rpt-input-focus-border-color: #93c5fd;
+  --rpt-input-placeholder-color: #94a3b8;
+  
+  /* Button colors */
+  --rpt-btn-primary-bg: #3b82f6;
+  --rpt-btn-primary-text: #ffffff;
+  --rpt-btn-primary-hover-bg: #2563eb;
+  --rpt-btn-secondary-bg: #f1f5f9;
+  --rpt-btn-secondary-text: #1e293b;
+  --rpt-btn-secondary-hover-bg: #e2e8f0;
+  --rpt-btn-danger-bg: #ef4444;
+  --rpt-btn-danger-text: #ffffff;
+  --rpt-btn-danger-hover-bg: #dc2626;
+  
+  /* Status colors */
+  --rpt-status-success-bg: #dcfce7;
+  --rpt-status-success-text: #14532d;
+  --rpt-status-warning-bg: #fef3c7;
+  --rpt-status-warning-text: #78350f;
+  --rpt-status-danger-bg: #fee2e2;
+  --rpt-status-danger-text: #7f1d1d;
+  --rpt-status-info-bg: #dbeafe;
+  --rpt-status-info-text: #1e3a8a;
+  --rpt-status-neutral-bg: #f3f4f6;
+  --rpt-status-neutral-text: #374151;
+  
+  /* Measurements */
+  --rpt-border-radius: 0.5rem;
+  --rpt-border-width: 1px;
+  --rpt-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  
+  /* Transitions */
+  --rpt-transition-duration: 0.2s;
+}
+
+/* New theme container class to properly cascade theme styles */
+.rpt-theme-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Dark theme variables */
+.rpt-theme-dark, [data-theme="dark"] {
+  /* Colors */
+  --rpt-primary: #3b82f6;
+  --rpt-primary-light: #2563eb;
+  --rpt-primary-dark: #1d4ed8;
+  --rpt-success: #10b981;
+  --rpt-warning: #f59e0b;
+  --rpt-danger: #ef4444;
+  --rpt-info: #3b82f6;
+  
+  /* Background colors */
+  --rpt-bg-color: #1e293b;
+  --rpt-toolbar-bg: #1e293b;
+  --rpt-header-bg: #0f172a;
+  --rpt-footer-bg: #0f172a;
+  --rpt-row-bg: #1e293b;
+  --rpt-row-bg-alt: #1a2234;
+  --rpt-row-hover-bg: #334155;
+  --rpt-row-selected-bg: #1e3a8a;
+  --rpt-row-updated-bg: rgba(59, 130, 246, 0.15);
+  
+  /* Text colors */
+  --rpt-text-color: #e2e8f0;
+  --rpt-title-color: #f8fafc;
+  --rpt-description-color: #94a3b8;
+  --rpt-header-text-color: #cbd5e1;
+  --rpt-muted-text: #94a3b8;
+  
+  /* Border colors */
+  --rpt-border-color: #334155;
+  --rpt-border-hover-color: #475569;
+  --rpt-focus-color: rgba(59, 130, 246, 0.5);
+  --rpt-focus-shadow: rgba(59, 130, 246, 0.25);
+  
+  /* Form element colors */
+  --rpt-input-bg: #1e293b;
+  --rpt-input-border-color: #334155;
+  --rpt-input-focus-border-color: #2563eb;
+  --rpt-input-placeholder-color: #64748b;
+  
+  /* Button colors */
+  --rpt-btn-primary-bg: #3b82f6;
+  --rpt-btn-primary-text: #ffffff;
+  --rpt-btn-primary-hover-bg: #2563eb;
+  --rpt-btn-secondary-bg: #334155;
+  --rpt-btn-secondary-text: #f1f5f9;
+  --rpt-btn-secondary-hover-bg: #475569;
+  --rpt-btn-danger-bg: #ef4444;
+  --rpt-btn-danger-text: #ffffff;
+  --rpt-btn-danger-hover-bg: #dc2626;
+  
+  /* Status colors */
+  --rpt-status-success-bg: rgba(16, 185, 129, 0.2);
+  --rpt-status-success-text: #a7f3d0;
+  --rpt-status-warning-bg: rgba(245, 158, 11, 0.2);
+  --rpt-status-warning-text: #fde68a;
+  --rpt-status-danger-bg: rgba(239, 68, 68, 0.2);
+  --rpt-status-danger-text: #fca5a5;
+  --rpt-status-info-bg: rgba(59, 130, 246, 0.2);
+  --rpt-status-info-text: #93c5fd;
+  --rpt-status-neutral-bg: rgba(243, 244, 246, 0.1);
+  --rpt-status-neutral-text: #e5e7eb;
+}
+
+/* Theme variants */
+
+/* Light mode variants */
+.rpt-theme-light {
+  /* Default light theme already defined in :root */
+}
+
+/* Primary variant - Light mode */
+.rpt-theme-container.rpt-variant-primary {
+  --rpt-header-bg: #eff6ff;
+  --rpt-footer-bg: #eff6ff;
+  --rpt-toolbar-bg: #eff6ff;
+  --rpt-border-color: #bfdbfe;
+  --rpt-border-hover-color: #93c5fd;
+  --rpt-row-hover-bg: #dbeafe;
+  --rpt-row-selected-bg: #bfdbfe;
+}
+
+/* Neutral variant - Light mode */
+.rpt-theme-container.rpt-variant-neutral {
+  --rpt-header-bg: #f1f5f9;
+  --rpt-footer-bg: #f1f5f9;
+  --rpt-toolbar-bg: #f1f5f9;
+  --rpt-border-color: #cbd5e1;
+  --rpt-border-hover-color: #94a3b8;
+  --rpt-row-hover-bg: #e2e8f0;
+  --rpt-row-selected-bg: #cbd5e1;
+}
+
+/* Custom variant - Light mode */
+.rpt-theme-container.rpt-variant-custom {
+  /* Custom variables can be defined by users */
+}
+
+/* Primary variant - Dark mode */
+.rpt-theme-dark.rpt-variant-primary,
+.rpt-theme-container.rpt-theme-dark.rpt-variant-primary {
+  --rpt-header-bg: #1e3a8a;
+  --rpt-footer-bg: #1e3a8a;
+  --rpt-toolbar-bg: #1e3a8a;
+  --rpt-border-color: #2563eb;
+  --rpt-border-hover-color: #3b82f6;
+  --rpt-row-hover-bg: #1e40af;
+  --rpt-row-selected-bg: #1d4ed8;
+}
+
+/* Neutral variant - Dark mode */
+.rpt-theme-dark.rpt-variant-neutral,
+.rpt-theme-container.rpt-theme-dark.rpt-variant-neutral {
+  --rpt-header-bg: #1f2937;
+  --rpt-footer-bg: #1f2937;
+  --rpt-toolbar-bg: #1f2937;
+  --rpt-border-color: #4b5563;
+  --rpt-border-hover-color: #6b7280;
+  --rpt-row-hover-bg: #374151;
+  --rpt-row-selected-bg: #4b5563;
+}
+
+/* Custom variant - Dark mode */
+.rpt-theme-dark.rpt-variant-custom,
+.rpt-theme-container.rpt-theme-dark.rpt-variant-custom {
+  /* Custom variables can be defined by users */
+}
+
+/* Table style variants */
+/* Default variant */
+.rpt-table-variant-default {
+  /* Default styles */
+}
+
+/* Modern variant */
+.rpt-theme-container.rpt-table-variant-modern,
+.rpt-table-variant-modern {
+  --rpt-border-radius: 0.75rem;
+  --rpt-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.rpt-theme-light .rpt-table-variant-modern,
+.rpt-theme-container.rpt-theme-light.rpt-table-variant-modern {
+  --rpt-header-bg: #ffffff;
+  --rpt-border-color: #f1f5f9;
+}
+
+.rpt-theme-dark .rpt-table-variant-modern,
+.rpt-theme-container.rpt-theme-dark.rpt-table-variant-modern {
+  --rpt-header-bg: #111827;
+  --rpt-border-color: #1f2937;
+}
+
+/* Minimal variant */
+.rpt-theme-container.rpt-table-variant-minimal,
+.rpt-table-variant-minimal {
+  --rpt-border-radius: 0.25rem;
+  --rpt-border-color: transparent;
+}
+
+.rpt-theme-light .rpt-table-variant-minimal,
+.rpt-theme-container.rpt-theme-light.rpt-table-variant-minimal {
+  --rpt-header-bg: transparent;
+  --rpt-row-bg: transparent;
+  --rpt-toolbar-bg: transparent;
+  --rpt-footer-bg: transparent;
+  --rpt-border-color: #f1f5f9;
+}
+
+.rpt-theme-dark .rpt-table-variant-minimal,
+.rpt-theme-container.rpt-theme-dark.rpt-table-variant-minimal {
+  --rpt-header-bg: transparent;
+  --rpt-row-bg: transparent;
+  --rpt-toolbar-bg: transparent;
+  --rpt-footer-bg: transparent;
+  --rpt-border-color: #2d3748;
+}
+
+/* Bordered variant */
+.rpt-theme-container.rpt-table-variant-bordered,
+.rpt-table-variant-bordered {
+  --rpt-border-width: 1px;
+}
+
+.rpt-theme-light .rpt-table-variant-bordered,
+.rpt-theme-container.rpt-theme-light.rpt-table-variant-bordered {
+  --rpt-border-color: #e2e8f0;
+}
+
+.rpt-theme-dark .rpt-table-variant-bordered,
+.rpt-theme-container.rpt-theme-dark.rpt-table-variant-bordered {
+  --rpt-border-color: #334155;
+}
+
+/* Border radius variants */
+.rpt-theme-container.rpt-radius-none,
+.rpt-radius-none {
+  --rpt-border-radius: 0;
+}
+
+.rpt-theme-container.rpt-radius-sm,
+.rpt-radius-sm {
+  --rpt-border-radius: 0.25rem;
+}
+
+.rpt-theme-container.rpt-radius-md,
+.rpt-radius-md {
+  --rpt-border-radius: 0.5rem;
+}
+
+.rpt-theme-container.rpt-radius-lg,
+.rpt-radius-lg {
+  --rpt-border-radius: 0.75rem;
+}
+
+.rpt-theme-container.rpt-radius-full,
+.rpt-radius-full {
+  --rpt-border-radius: 9999px;
+}
+
+/* System preference based theme */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.rpt-theme-light) {
+    --rpt-bg-color: #1e293b;
+    --rpt-toolbar-bg: #1e293b;
+    --rpt-header-bg: #0f172a;
+    --rpt-footer-bg: #0f172a;
+    --rpt-row-bg: #1e293b;
+    --rpt-row-bg-alt: #1a2234;
+    --rpt-row-hover-bg: #334155;
+    --rpt-row-selected-bg: #1e3a8a;
+    --rpt-row-updated-bg: rgba(59, 130, 246, 0.15);
+    
+    --rpt-text-color: #e2e8f0;
+    --rpt-title-color: #f8fafc;
+    --rpt-description-color: #94a3b8;
+    --rpt-header-text-color: #cbd5e1;
+    --rpt-muted-text: #94a3b8;
+    
+    --rpt-border-color: #334155;
+    --rpt-border-hover-color: #475569;
+    
+    --rpt-input-bg: #1e293b;
+    --rpt-input-border-color: #334155;
+    --rpt-input-placeholder-color: #64748b;
+    
+    --rpt-btn-secondary-bg: #334155;
+    --rpt-btn-secondary-text: #f1f5f9;
+    --rpt-btn-secondary-hover-bg: #475569;
+    
+    --rpt-status-success-bg: rgba(16, 185, 129, 0.2);
+    --rpt-status-success-text: #a7f3d0;
+    --rpt-status-warning-bg: rgba(245, 158, 11, 0.2);
+    --rpt-status-warning-text: #fde68a;
+    --rpt-status-danger-bg: rgba(239, 68, 68, 0.2);
+    --rpt-status-danger-text: #fca5a5;
+    --rpt-status-info-bg: rgba(59, 130, 246, 0.2);
+    --rpt-status-info-text: #93c5fd;
+    --rpt-status-neutral-bg: rgba(243, 244, 246, 0.1);
+    --rpt-status-neutral-text: #e5e7eb;
+  }
+}
+
+/* High contrast mode overrides */
+@media (forced-colors: active) {
+  :root {
+    --rpt-border-color: CanvasText;
+    --rpt-border-hover-color: Highlight;
+    --rpt-primary: Highlight;
+    --rpt-focus-color: Highlight;
+  }
+}
