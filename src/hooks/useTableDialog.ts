@@ -140,8 +140,8 @@ export function useTableDialog<T = any>(options: UseTableDialogOptions<T> = {}) 
   }, []);
 
   // Submit dialog data with better error handling
-  const submitDialog = useCallback(async (data: any, type: DialogType): Promise<boolean> => {
-    if (!options.onSubmit) {
+  const submitDialog = useCallback(async (data: any, type: DialogType | null): Promise<boolean> => {
+    if (!options.onSubmit || !type) {
       console.warn('No onSubmit handler provided to useTableDialog');
       return false;
     }

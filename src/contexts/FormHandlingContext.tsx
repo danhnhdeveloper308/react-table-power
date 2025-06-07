@@ -361,7 +361,7 @@ export const FormHandlingProvider: React.FC<FormHandlingProviderProps> = ({
   // Validate form and get data if valid - combines validation and data retrieval
   const validateAndGetFormData = useCallback(async (type?: DialogMode) => {
     // Special handling for delete operations - always return valid
-    if (type === 'delete') { // This comparison should now work correctly
+    if (type === 'delete') {
       console.log("Delete operation detected in validateAndGetFormData - bypassing validation");
       return {
         isValid: true,
@@ -407,6 +407,19 @@ export const FormHandlingProvider: React.FC<FormHandlingProviderProps> = ({
           } else {
             result.errors = getFormErrorsUtil(formRef);
           }
+          
+          // Special case: If no errors were returned, but we failed validation, 
+          // check if we have data - this often happens with empty forms
+          if (Object.keys(result.errors).length === 0) {
+            console.log("No validation errors found, checking if we have form data");
+            // Try to get values
+            result.data = getFormValuesUtil(formRef);
+            if (result.data && Object.keys(result.data).length > 0) {
+              console.log("Form has data despite 'failed' validation - proceeding");
+              result.isValid = true;
+            }
+          }
+          
           return result;
         }
       }
@@ -428,6 +441,14 @@ export const FormHandlingProvider: React.FC<FormHandlingProviderProps> = ({
             if (formRef.current.formState && typeof formRef.current.formState === 'object') {
               if (formRef.current.formState.errors && typeof formRef.current.formState.errors === 'object') {
                 result.errors = formRef.current.formState.errors;
+              }
+            }
+            
+            // Special case: Empty form with no validation rules but we failed validation
+            if (Object.keys(result.errors).length === 0) {
+              result.data = formRef.current.getValues();
+              if (result.data && Object.keys(result.data).length > 0) {
+                result.isValid = true;
               }
             }
           }
@@ -456,6 +477,14 @@ export const FormHandlingProvider: React.FC<FormHandlingProviderProps> = ({
           } else {
             // Ensure errors is an object before assigning
             result.errors = errors && typeof errors === 'object' ? errors : {};
+            
+            // Special case: Empty form with no validation rules
+            if (Object.keys(result.errors).length === 0) {
+              result.data = formRef.current.values;
+              if (result.data && Object.keys(result.data).length > 0) {
+                result.isValid = true;
+              }
+            }
           }
           
           return result;
@@ -475,6 +504,7 @@ export const FormHandlingProvider: React.FC<FormHandlingProviderProps> = ({
       result.data = getFormValuesUtil(formRef);
       
       // If we have data but no validation method was found, consider it valid
+      // This helps with forms that don't have explicit validation
       if (result.data && Object.keys(result.data).length > 0) {
         result.isValid = true;
       }

@@ -40,6 +40,9 @@ import Checkbox from './form/Checkbox';
 import ThemeProvider from './ThemeProvider';
 import BatchActionsBar from './BatchActionsBar'; // Import the new component
 
+// Import new OptimizedDialog component
+import OptimizedDialog from './OptimizedDialog';
+
 // Import hooks
 import { useAnimationPreference } from '../hooks/useAnimationPreference';
 import { useTableDialog } from '../hooks/useTableDialog';
@@ -59,7 +62,9 @@ import { useDataTableConfig } from '../contexts/DataTableConfigContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import useSafeTableSettings from '../hooks/useSafeTableSettings';
 import { TableSettings } from '../hooks';
-import AppendableDialog from './AppendableDialog';
+
+// Comment out AppendableDialog import
+// import AppendableDialog from './AppendableDialog';
 
 // Add this type declaration at the top of the file
 declare global {
@@ -1149,7 +1154,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
   
   // Extract form components from builtInActions with automatic wrapping
   const formComponents = useMemo(() => {
-    if (!builtInActions) return {};
+    if (!builtInActions) return {} as Record<DialogType, React.ComponentType<any> | undefined>;
     
     const autoHandleSubmission = builtInActions.formHandling?.autoHandleFormSubmission;
     
@@ -1169,7 +1174,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       delete: wrapComponent(builtInActions.deleteFormComponent, 'delete'),
       // Kiểm tra tồn tại của customFormComponent trước khi sử dụng
       ...(builtInActions.customFormComponent ? { custom: wrapComponent(builtInActions.customFormComponent, 'custom') } : {})
-    };
+    } as Record<DialogType, React.ComponentType<any> | undefined>;
   }, [builtInActions]);
 
   // Extract row actions if available through builtInActions
@@ -1607,7 +1612,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       </TableContainer>
 
       {/* Dialog for CRUD operations */}
-      <AppendableDialog
+      {/* <AppendableDialog
         activeDialog={dialogOpen ? (dialogType as DialogType) : undefined}
         activeRecord={dialogData}
         dialogTitle={dialogTitle}
@@ -1623,8 +1628,29 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
         actionsPosition="right"
         buttonSize="md"
         elevatedButtons={true}
-        loadingEffect="overlay" // Add this prop to control loading effect
-        reducedMotion={!animate} // Add this for accessibility
+        loadingEffect="overlay"
+        reducedMotion={!animate}
+      /> */}
+      
+      {/* New OptimizedDialog implementation */}
+      <OptimizedDialog
+        open={dialogOpen}
+        dialogType={dialogType}
+        dialogTitle={dialogTitle}
+        dialogDescription={dialogDescription}
+        data={dialogData}
+        formComponent={dialogType ? formComponents[dialogType] : undefined}
+        onClose={closeDialog}
+        onSubmit={submitDialog}
+        loading={dialogLoading}
+        error={dialogError}
+        width={dialog?.width || '500px'}
+        closeOnClickOutside={dialog?.closeOnClickOutside}
+        closeOnEsc={dialog?.closeOnEsc}
+        actionsPosition="right"
+        buttonSize="md"
+        elevatedButtons={true}
+        reducedMotion={!animate}
       />
       
       {/* New Batch Actions Bar */}

@@ -118,8 +118,7 @@ export {
   useFormHandling,
   withFormHandling,
   useReactHookFormAdapter,
-  useFormikAdapter,
-  useFinalFormAdapter
+  useFormikAdapter
 } from './contexts/FormHandlingContext';
 
 // Export DataTableProvider and related hooks

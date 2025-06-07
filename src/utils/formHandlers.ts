@@ -100,6 +100,17 @@ export async function validateAndGetFormData(formRef: FormRef): Promise<FormVali
         } else {
           result.errors = getFormErrors(formRef);
         }
+        
+        // Special case: if no validation errors were returned, but the form has data,
+        // we might still be able to proceed - this helps with empty forms with no validation rules
+        if (Object.keys(result.errors).length === 0) {
+          const values = formRef.current.getValues();
+          if (values && Object.keys(values).length > 0) {
+            result.data = values;
+            result.isValid = true;
+          }
+        }
+        
         return result;
       }
     }
@@ -114,6 +125,12 @@ export async function validateAndGetFormData(formRef: FormRef): Promise<FormVali
           result.data = formRef.current.values || {};
         } else {
           result.errors = errors || {};
+        }
+        
+        // Special case: Empty form with no validation rules
+        if (!result.isValid && Object.keys(result.errors).length === 0) {
+          result.data = formRef.current.values || {};
+          result.isValid = true;
         }
         
         return result;
@@ -147,9 +164,10 @@ export async function validateAndGetFormData(formRef: FormRef): Promise<FormVali
     result.isValid = await checkFormValidity(formRef);
     result.errors = getFormErrors(formRef);
     
-    // If valid, get the data
-    if (result.isValid && Object.keys(result.errors).length === 0) {
+    // If valid or no errors, get the data
+    if (result.isValid || Object.keys(result.errors).length === 0) {
       result.data = getFormValues(formRef) || {};
+      result.isValid = true;
     }
     
     return result;
@@ -174,13 +192,33 @@ export async function handleFormSubmission(
     const validation = await validateAndGetFormData(formRef);
     console.log("Validation result:", validation);
     
+    // Special case: If validation failed but no specific errors were returned,
+    // but we have form data, try to proceed (often happens with empty forms)
+    if (!validation.isValid && Object.keys(validation.errors).length === 0 && validation.data) {
+      console.log("Validation 'failed' but we have data and no specific errors - continuing");
+      validation.isValid = true;
+    }
+    
     if (!validation.isValid || !validation.data) {
       console.log("Validation failed, errors:", validation.errors);
       // Set errors on form
       if (Object.keys(validation.errors).length > 0) {
         setFormErrors(formRef, validation.errors);
         onError?.(validation.errors);
+      } else {
+        // If no specific errors but validation failed, add a generic error
+        const genericError = { form: 'Form validation failed. Please check your input.' };
+        setFormErrors(formRef, genericError);
+        onError?.(genericError);
       }
+      return false;
+    }
+    
+    // Skip submission for empty form data on create operations
+    if (Object.keys(validation.data).length === 0) {
+      const emptyDataError = { form: 'Please fill out the form before submitting.' };
+      setFormErrors(formRef, emptyDataError);
+      onError?.(emptyDataError);
       return false;
     }
     
