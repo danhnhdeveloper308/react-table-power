@@ -1,220 +1,199 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import {
-  BaseTableData,
-  TableColumn,
-  FilterConfig,
-  FilterType
-} from '../types';
-import { safeToString, isDate, getPropertyValue } from '../utils/typeUtils';
-import { generateId } from '../utils';
+import { BaseTableData, TableColumn, FilterConfig, FilterType } from '../types';
+import { applyFilters } from '../utils/filterUtils';
 
-export interface FilterGroup {
-  id: string;
-  filters: Record<string, any>;
-  operator?: 'AND' | 'OR';
+interface UseTableFilterOptions<T extends BaseTableData = BaseTableData> {
+  /**
+   * Data to be filtered
+   */
+  data: T[];
+  
+  /**
+   * Column definitions
+   */
+  columns: TableColumn<T>[];
+  
+  /**
+   * Filter configurations
+   */
+  filterConfigs?: FilterConfig[];
+  
+  /**
+   * Initial filter values
+   */
+  initialFilters?: Record<string, any>;
+  
+  /**
+   * Whether filtering is server-side
+   */
+  serverSide?: boolean;
+  
+  /**
+   * Callback when filters change
+   */
+  onFilterChange?: (filters: Record<string, any>) => void;
+  
+  /**
+   * Enable persistence of filters
+   */
+  persist?: boolean;
+  
+  /**
+   * Key for persisting filters
+   */
+  persistKey?: string;
 }
 
 export interface FilterPreset {
   id: string;
   name: string;
   filters: Record<string, any>;
-  groups?: FilterGroup[];
-  createdAt?: number;
-  updatedAt?: number;
-}
-
-interface UseTableFilterOptions<T extends BaseTableData = BaseTableData> {
-  data: T[];
-  columns: TableColumn<T>[];
-  filterConfigs?: FilterConfig[];
-  defaultFilters?: Record<string, any>;
-  serverSide?: boolean;
-  onFilterChange?: (filters: Record<string, any>) => void;
-  persistKey?: string;
-  persist?: boolean;
-  enableComplexFiltering?: boolean;
+  isDefault?: boolean; // Changed from optional property to match other interfaces
+  createdAt: string | number; // Accept either string or number to be compatible with both interfaces
 }
 
 interface UseTableFilterReturn<T extends BaseTableData = BaseTableData> {
+  /**
+   * Current filter values
+   */
   filters: Record<string, any>;
-  filteredData: T[];
-  activeFilters: string[];
-  activeFilterCount: number;
-  setFilter: (key: string, value: any) => void;
-  removeFilter: (key: string) => void;
+  
+  /**
+   * Set filter for a specific field
+   */
+  setFilter: (field: string, value: any) => void;
+  
+  /**
+   * Set multiple filters at once
+   */
+  setFilters: (filters: Record<string, any>) => void;
+  
+  /**
+   * Remove filter for a specific field
+   */
+  removeFilter: (field: string) => void;
+  
+  /**
+   * Clear all filters
+   */
   clearFilters: () => void;
+  
+  /**
+   * Reset filters to initial values
+   */
   resetFilters: () => void;
+  
+  /**
+   * Filtered data based on current filters
+   */
+  filteredData: T[];
+  
+  /**
+   * Whether any filters are active
+   */
   hasActiveFilters: boolean;
-  getFilterConfig: (key: string) => FilterConfig | undefined;
+  
+  /**
+   * Count of active filters
+   */
+  activeFilterCount: number;
+  
+  /**
+   * Available filter configurations
+   */
   filterConfigs: FilterConfig[];
-  isFilterActive: (key: string) => boolean;
-  // Complex filtering
-  filterGroups: FilterGroup[];
-  addFilterGroup: () => FilterGroup;
-  removeFilterGroup: (groupId: string) => void;
-  updateFilterGroup: (groupId: string, filters: Record<string, any>) => void;
-  setFilterGroupOperator: (groupId: string, operator: 'AND' | 'OR') => void;
-  // Filter presets
-  filterPresets: FilterPreset[];
+  
+  /**
+   * Save current filters as a preset
+   */
   saveFilterPreset: (name: string, filters?: Record<string, any>) => FilterPreset;
+  
+  /**
+   * Load filters from a preset
+   */
   loadFilterPreset: (presetId: string) => Record<string, any> | null;
-  deleteFilterPreset: (presetId: string) => void;
-  activePresetId: string | null;
-  setActivePresetId: (presetId: string | null) => void;
+  
+  /**
+   * Available filter presets
+   */
+  filterPresets: FilterPreset[];
+  
+  /**
+   * Delete a filter preset
+   */
+  deleteFilterPreset: (presetId: string) => boolean;
+  
+  /**
+   * Set default filter preset
+   */
+  setDefaultFilterPreset: (presetId: string) => boolean;
+
+  /**
+   * Check if a filter supports multiple values
+   */
+  supportsMultipleValues: (field: string) => boolean;
 }
 
 /**
- * Advanced hook for table filtering with presets and complex filtering
+ * Hook for managing table filtering
  */
 export function useTableFilter<T extends BaseTableData = BaseTableData>({
   data,
   columns,
   filterConfigs = [],
-  defaultFilters = {},
+  initialFilters = {},
   serverSide = false,
   onFilterChange,
-  persistKey,
   persist = false,
-  enableComplexFiltering = false,
+  persistKey = 'table-filters',
 }: UseTableFilterOptions<T>): UseTableFilterReturn<T> {
-  // Generate filters from columns if no filterConfigs provided
-  const resolvedFilterConfigs = useMemo(() => {
-    if (filterConfigs.length > 0) {
-      return filterConfigs;
-    }
-    
-    // Auto-generate filter configs from columns
-    return columns
-      .filter(col => col.filterable !== false)
-      .map(col => {
-        const key = String(col.accessorKey || col.id || '');
-        let type: FilterType = 'text';
-        
-        // Try to determine filter type from column data
-        if (col.filterType) {
-          type = col.filterType;
-        } else {
-          // Try to infer filter type from first non-null value
-          const firstNonNullRow = data.find(row => {
-            if (!(key in row)) return false;
-            const val = getPropertyValue(row, key);
-            return val !== null && val !== undefined;
-          });
-          
-          if (firstNonNullRow) {
-            const firstValue = getPropertyValue(firstNonNullRow, key);
-            
-            if (typeof firstValue === 'boolean') {
-              type = 'boolean';
-            } else if (isDate(firstValue)) {
-              type = 'date';
-            } else if (typeof firstValue === 'number') {
-              type = 'number';
-            }
-          }
-        }
-        
-        return {
-          key,
-          label: typeof col.header === 'string' ? col.header : key,
-          type,
-          options: col.filterOptions,
-        } as FilterConfig;
-      })
-      .filter(config => config.key); // Filter out configs without a key
-  }, [columns, filterConfigs, data]);
-  
-  // Storage keys for persisting filters and presets
-  const filtersStorageKey = persist && persistKey ? `filters-${persistKey}` : null;
-  const presetsStorageKey = persist && persistKey ? `filter-presets-${persistKey}` : null;
-  const activePresetStorageKey = persist && persistKey ? `active-filter-preset-${persistKey}` : null;
-  const filterGroupsStorageKey = persist && persistKey ? `filter-groups-${persistKey}` : null;
-  
-  // Load persisted filters if enabled
+  // Load persisted filters if available
   const loadPersistedFilters = useCallback(() => {
-    if (!filtersStorageKey || typeof window === 'undefined') {
-      return defaultFilters;
+    if (!persist || typeof window === 'undefined') {
+      return initialFilters;
     }
     
     try {
-      const saved = localStorage.getItem(filtersStorageKey);
+      const saved = localStorage.getItem(`filters-${persistKey}`);
       if (saved) {
-        return { ...defaultFilters, ...JSON.parse(saved) };
+        return JSON.parse(saved);
       }
     } catch (error) {
       console.warn('Failed to load persisted filters:', error);
     }
     
-    return defaultFilters;
-  }, [defaultFilters, filtersStorageKey]);
+    return initialFilters;
+  }, [initialFilters, persist, persistKey]);
   
-  // Load persisted filter presets
+  // Initialize filter state
+  const [filters, setFilters] = useState<Record<string, any>>(loadPersistedFilters);
+  
+  // Load persisted presets if available
   const loadPersistedPresets = useCallback(() => {
-    if (!presetsStorageKey || typeof window === 'undefined') {
+    if (!persist || typeof window === 'undefined') {
       return [];
     }
     
     try {
-      const saved = localStorage.getItem(presetsStorageKey);
+      const saved = localStorage.getItem(`filter-presets-${persistKey}`);
       if (saved) {
-        return JSON.parse(saved) as FilterPreset[];
+        return JSON.parse(saved);
       }
     } catch (error) {
       console.warn('Failed to load persisted filter presets:', error);
     }
     
     return [];
-  }, [presetsStorageKey]);
+  }, [persist, persistKey]);
   
-  // Load persisted active preset ID
-  const loadActivePresetId = useCallback(() => {
-    if (!activePresetStorageKey || typeof window === 'undefined') {
-      return null;
-    }
-    
-    try {
-      const saved = localStorage.getItem(activePresetStorageKey);
-      return saved; // Will be null if not saved
-    } catch (error) {
-      console.warn('Failed to load persisted active preset ID:', error);
-    }
-    
-    return null;
-  }, [activePresetStorageKey]);
-  
-  // Load persisted filter groups
-  const loadPersistedFilterGroups = useCallback(() => {
-    if (!filterGroupsStorageKey || typeof window === 'undefined' || !enableComplexFiltering) {
-      return [];
-    }
-    
-    try {
-      const saved = localStorage.getItem(filterGroupsStorageKey);
-      if (saved) {
-        return JSON.parse(saved) as FilterGroup[];
-      }
-    } catch (error) {
-      console.warn('Failed to load persisted filter groups:', error);
-    }
-    
-    return [];
-  }, [filterGroupsStorageKey, enableComplexFiltering]);
-  
-  // Filter state
-  const [filters, setFilters] = useState<Record<string, any>>(loadPersistedFilters());
-  
-  // Filter presets state
-  const [filterPresets, setFilterPresets] = useState<FilterPreset[]>(loadPersistedPresets());
-  const [activePresetId, setActivePresetId] = useState<string | null>(loadActivePresetId());
-  
-  // Filter groups state - for complex filtering
-  const [filterGroups, setFilterGroups] = useState<FilterGroup[]>(loadPersistedFilterGroups());
+  // Initialize filter presets
+  const [filterPresets, setFilterPresets] = useState<FilterPreset[]>(loadPersistedPresets);
   
   // Persist filters when they change
   useEffect(() => {
-    if (filtersStorageKey && typeof window !== 'undefined') {
+    if (persist && typeof window !== 'undefined') {
       try {
-        localStorage.setItem(filtersStorageKey, JSON.stringify(filters));
+        localStorage.setItem(`filters-${persistKey}`, JSON.stringify(filters));
       } catch (error) {
         console.warn('Failed to persist filters:', error);
       }
@@ -224,407 +203,244 @@ export function useTableFilter<T extends BaseTableData = BaseTableData>({
     if (onFilterChange) {
       onFilterChange(filters);
     }
-  }, [filters, filtersStorageKey, onFilterChange]);
+  }, [filters, persist, persistKey, onFilterChange]);
   
   // Persist filter presets when they change
   useEffect(() => {
-    if (presetsStorageKey && typeof window !== 'undefined') {
+    if (persist && typeof window !== 'undefined') {
       try {
-        localStorage.setItem(presetsStorageKey, JSON.stringify(filterPresets));
+        localStorage.setItem(`filter-presets-${persistKey}`, JSON.stringify(filterPresets));
       } catch (error) {
         console.warn('Failed to persist filter presets:', error);
       }
     }
-  }, [filterPresets, presetsStorageKey]);
+  }, [filterPresets, persist, persistKey]);
   
-  // Persist active preset ID
-  useEffect(() => {
-    if (activePresetStorageKey && typeof window !== 'undefined') {
-      try {
-        if (activePresetId) {
-          localStorage.setItem(activePresetStorageKey, activePresetId);
-        } else {
-          localStorage.removeItem(activePresetStorageKey);
-        }
-      } catch (error) {
-        console.warn('Failed to persist active preset ID:', error);
-      }
-    }
-  }, [activePresetId, activePresetStorageKey]);
-  
-  // Persist filter groups
-  useEffect(() => {
-    if (filterGroupsStorageKey && typeof window !== 'undefined' && enableComplexFiltering) {
-      try {
-        localStorage.setItem(filterGroupsStorageKey, JSON.stringify(filterGroups));
-      } catch (error) {
-        console.warn('Failed to persist filter groups:', error);
-      }
-    }
-  }, [filterGroups, filterGroupsStorageKey, enableComplexFiltering]);
-  
-  // Set a filter value
-  const setFilter = useCallback((key: string, value: any) => {
-    setFilters(prev => {
-      // If value is empty, null, or undefined, remove the filter
-      if (value === '' || value === null || value === undefined) {
-        const { [key]: _, ...rest } = prev;
-        return rest;
-      }
-      
-      return {
-        ...prev,
-        [key]: value,
-      };
-    });
-    
-    // After modifying a filter, clear the active preset
-    setActivePresetId(null);
+  // Helper to check if a filter type supports multiple values
+  const supportsMultipleValuesByType = useCallback((type: FilterType): boolean => {
+    return type === 'select' || type === 'multiselect';
   }, []);
   
-  // Remove a filter
-  const removeFilter = useCallback((key: string) => {
+  // Get configurations for each field
+  const processedFilterConfigs = useMemo(() => {
+    // Start with provided filter configs
+    if (filterConfigs.length > 0) {
+      return filterConfigs.map(config => ({
+        ...config,
+        // Ensure select and multiselect types support multiple values
+        supportsMultipleValues: 
+          config.supportsMultipleValues !== undefined ? 
+          config.supportsMultipleValues : 
+          supportsMultipleValuesByType(config.type)
+      }));
+    }
+    
+    // Auto-generate filter configs from columns
+    return columns
+      .filter(column => column.enableFiltering !== false && column.accessorKey)
+      .map(column => {
+        const key = column.accessorKey as string;
+        const type = column.filterType || 'text';
+        
+        return {
+          key,
+          label: column.header as string || key,
+          type,
+          options: column.filterOptions,
+          placeholder: `Filter by ${column.header || key}`,
+          // Enhanced support for multiple values
+          supportsMultipleValues: 
+            column.meta?.supportsMultipleValues !== undefined ? 
+            column.meta?.supportsMultipleValues :
+            (type === 'select' || type === 'multiselect')
+        };
+      });
+  }, [filterConfigs, columns, supportsMultipleValuesByType]);
+  
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return Object.keys(filters).some(key => {
+      const value = filters[key];
+      
+      // Check for empty arrays
+      if (Array.isArray(value) && value.length === 0) {
+        return false;
+      }
+      
+      return value !== undefined && value !== null && value !== '';
+    });
+  }, [filters]);
+  
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    return Object.keys(filters).filter(key => {
+      const value = filters[key];
+      
+      // Check for empty arrays
+      if (Array.isArray(value) && value.length === 0) {
+        return false;
+      }
+      
+      return value !== undefined && value !== null && value !== '';
+    }).length;
+  }, [filters]);
+  
+  // Apply filters to data (client-side)
+  const filteredData = useMemo(() => {
+    if (serverSide || !hasActiveFilters) {
+      return data;
+    }
+    
+    return applyFilters(data, filters, processedFilterConfigs);
+  }, [data, filters, processedFilterConfigs, serverSide, hasActiveFilters]);
+  
+  // Set filter for a specific field
+  const setFilter = useCallback((field: string, value: any) => {
     setFilters(prev => {
-      const { [key]: _, ...rest } = prev;
+      // Check if field supports multiple values
+      const config = processedFilterConfigs.find(c => c.key === field);
+      const supportsMultiple = config?.supportsMultipleValues;
+      
+      // Handle array values for multi-select
+      if (Array.isArray(value) && supportsMultiple) {
+        // If empty array, remove the filter
+        if (value.length === 0) {
+          const { [field]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [field]: value };
+      } 
+      // Handle single values
+      else if (value === undefined || value === null || value === '') {
+        // Remove the filter if value is empty
+        const { [field]: _, ...rest } = prev;
+        return rest;
+      } else {
+        return { ...prev, [field]: value };
+      }
+    });
+  }, [processedFilterConfigs]);
+  
+  // Set multiple filters at once
+  const setMultipleFilters = useCallback((newFilters: Record<string, any>) => {
+    setFilters(prev => {
+      // Process each filter to handle arrays and empty values correctly
+      const processedFilters = { ...prev };
+      
+      Object.entries(newFilters).forEach(([field, value]) => {
+        // Check if field supports multiple values
+        const config = processedFilterConfigs.find(c => c.key === field);
+        const supportsMultiple = config?.supportsMultipleValues;
+        
+        // Handle array values
+        if (Array.isArray(value) && supportsMultiple) {
+          if (value.length === 0) {
+            delete processedFilters[field];
+          } else {
+            processedFilters[field] = value;
+          }
+        } 
+        // Handle single values
+        else if (value === undefined || value === null || value === '') {
+          delete processedFilters[field];
+        } else {
+          processedFilters[field] = value;
+        }
+      });
+      
+      return processedFilters;
+    });
+  }, [processedFilterConfigs]);
+  
+  // Remove filter for a specific field
+  const removeFilter = useCallback((field: string) => {
+    setFilters(prev => {
+      const { [field]: _, ...rest } = prev;
       return rest;
     });
-    
-    // After modifying a filter, clear the active preset
-    setActivePresetId(null);
   }, []);
   
   // Clear all filters
   const clearFilters = useCallback(() => {
     setFilters({});
-    setActivePresetId(null);
   }, []);
   
-  // Reset to default filters
+  // Reset filters to initial values
   const resetFilters = useCallback(() => {
-    setFilters(defaultFilters);
-    setActivePresetId(null);
-  }, [defaultFilters]);
+    setFilters(initialFilters);
+  }, [initialFilters]);
   
-  // Save filter preset
-  const saveFilterPreset = useCallback((name: string, customFilters?: Record<string, any>): FilterPreset => {
-    if (!name.trim()) {
-      throw new Error('Preset name is required');
-    }
+  // Save current filters as a preset
+  const saveFilterPreset = useCallback((name: string, customFilters?: Record<string, any>) => {
+    const filtersToSave = customFilters || filters;
     
-    const timestamp = Date.now();
+    // Create a new preset
     const newPreset: FilterPreset = {
-      id: generateId('preset'),
-      name: name.trim(),
-      filters: customFilters || { ...filters },
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      groups: enableComplexFiltering ? [...filterGroups] : undefined,
+      id: `preset-${Date.now()}`,
+      name,
+      filters: filtersToSave,
+      createdAt: new Date().toISOString(), // Using ISO string format
+      isDefault: false,
     };
     
-    setFilterPresets(prevPresets => {
-      // Check if we're updating an existing preset with the same name
-      const existingIndex = prevPresets.findIndex(p => p.name === name.trim());
-      
-      if (existingIndex >= 0) {
-        // Update existing preset
-        const updated = [...prevPresets];
-        updated[existingIndex] = {
-          ...newPreset,
-          id: updated[existingIndex].id,
-          createdAt: updated[existingIndex].createdAt,
-        };
-        return updated;
-      }
-      
-      // Add new preset
-      return [...prevPresets, newPreset];
-    });
-    
-    setActivePresetId(newPreset.id);
-    
+    setFilterPresets(prev => [...prev, newPreset]);
     return newPreset;
-  }, [filters, filterGroups, enableComplexFiltering]);
+  }, [filters]);
   
-  // Load filter preset
-  const loadFilterPreset = useCallback((presetId: string): Record<string, any> | null => {
+  // Load filters from a preset
+  const loadFilterPreset = useCallback((presetId: string) => {
     const preset = filterPresets.find(p => p.id === presetId);
     if (!preset) return null;
     
-    // Apply preset filters
-    setFilters(preset.filters || {});
-    
-    // Apply preset filter groups if complex filtering is enabled
-    if (enableComplexFiltering && preset.groups) {
-      setFilterGroups(preset.groups);
-    }
-    
-    setActivePresetId(presetId);
-    
-    return preset.filters || {};
-  }, [filterPresets, enableComplexFiltering]);
+    setFilters(preset.filters);
+    return preset.filters;
+  }, [filterPresets]);
   
-  // Delete filter preset
-  const deleteFilterPreset = useCallback((presetId: string): void => {
-    setFilterPresets(prevPresets => prevPresets.filter(p => p.id !== presetId));
+  // Delete a filter preset
+  const deleteFilterPreset = useCallback((presetId: string) => {
+    const presetExists = filterPresets.some(p => p.id === presetId);
+    if (!presetExists) return false;
     
-    // If we're deleting the active preset, clear the active preset
-    if (activePresetId === presetId) {
-      setActivePresetId(null);
-    }
-  }, [activePresetId]);
+    setFilterPresets(prev => prev.filter(p => p.id !== presetId));
+    return true;
+  }, [filterPresets]);
   
-  // Add a new filter group
-  const addFilterGroup = useCallback((): FilterGroup => {
-    const newGroup: FilterGroup = {
-      id: generateId('group'),
-      filters: {},
-      operator: 'AND',
-    };
+  // Set default filter preset
+  const setDefaultFilterPreset = useCallback((presetId: string) => {
+    const presetExists = filterPresets.some(p => p.id === presetId);
+    if (!presetExists) return false;
     
-    setFilterGroups(prev => [...prev, newGroup]);
-    
-    return newGroup;
-  }, []);
-  
-  // Remove a filter group
-  const removeFilterGroup = useCallback((groupId: string): void => {
-    setFilterGroups(prev => prev.filter(group => group.id !== groupId));
-  }, []);
-  
-  // Update a filter group's filters
-  const updateFilterGroup = useCallback((groupId: string, groupFilters: Record<string, any>): void => {
-    setFilterGroups(prev => 
-      prev.map(group => 
-        group.id === groupId ? { ...group, filters: groupFilters } : group
-      )
+    setFilterPresets(prev => 
+      prev.map(p => ({
+        ...p,
+        isDefault: p.id === presetId
+      }))
     );
-  }, []);
+    return true;
+  }, [filterPresets]);
   
-  // Set a filter group's operator
-  const setFilterGroupOperator = useCallback((groupId: string, operator: 'AND' | 'OR'): void => {
-    setFilterGroups(prev => 
-      prev.map(group => 
-        group.id === groupId ? { ...group, operator } : group
-      )
-    );
-  }, []);
-  
-  // Get filter configuration for a specific key
-  const getFilterConfig = useCallback((key: string) => {
-    return resolvedFilterConfigs.find(config => config.key === key);
-  }, [resolvedFilterConfigs]);
-  
-  // Check if a filter is active
-  const isFilterActive = useCallback((key: string) => {
-    return filters[key] !== undefined && filters[key] !== null && filters[key] !== '';
-  }, [filters]);
-  
-  // Get list of active filter keys
-  const activeFilters = useMemo(() => {
-    return Object.keys(filters).filter(key => 
-      filters[key] !== undefined && filters[key] !== null && filters[key] !== ''
-    );
-  }, [filters]);
-  
-  // Get count of active filters
-  const activeFilterCount = useMemo(() => activeFilters.length, [activeFilters]);
-  
-  // Check if any filters are active
-  const hasActiveFilters = useMemo(() => activeFilterCount > 0, [activeFilterCount]);
-  
-  // Helper function to safely convert to Date
-  const safeToDate = (value: any): Date | null => {
-    if (value instanceof Date) return value;
-    if (typeof value === 'string' || typeof value === 'number') {
-      const date = new Date(value);
-      return !isNaN(date.getTime()) ? date : null;
-    }
-    return null;
-  };
-  
-  // Helper function for date comparison
-  const compareDates = (rowValue: any, filterValue: any): boolean => {
-    const dateValue = safeToDate(rowValue);
-    if (!dateValue) return false;
-    
-    // If filter value is a date range
-    if (Array.isArray(filterValue) && filterValue.length === 2) {
-      const [start, end] = filterValue;
-      const startDate = start ? safeToDate(start) : null;
-      const endDate = end ? safeToDate(end) : null;
-      
-      if (startDate && endDate) {
-        return dateValue >= startDate && dateValue <= endDate;
-      } else if (startDate) {
-        return dateValue >= startDate;
-      } else if (endDate) {
-        return dateValue <= endDate;
-      }
-      return true;
-    }
-    
-    // Single date comparison
-    const filterDate = safeToDate(filterValue);
-    if (!filterDate) return false;
-    
-    return dateValue.toDateString() === filterDate.toDateString();
-  };
-  
-  // Apply filter to a row
-  const applyFilter = useCallback((row: T, key: string, value: any): boolean => {
-    if (value === undefined || value === null || value === '') {
-      return true; // Skip empty filters
-    }
-    
-    const config = getFilterConfig(key);
-    if (!config) return true; // Skip if no config found
-    
-    // Use safe property access
-    if (!(key in row)) return false;
-    const rawValue = getPropertyValue(row, key);
-    
-    // Handle different filter types
-    switch (config.type) {
-      case 'text': {
-        if (typeof value !== 'string') return true;
-        if (rawValue === null || rawValue === undefined) return false;
-        
-        const cellValue = safeToString(rawValue).toLowerCase();
-        return cellValue.includes(value.toLowerCase());
-      }
-      
-      case 'select': {
-        if (Array.isArray(value)) {
-          // Multi-select: match any value in the array
-          return value.length === 0 || value.some(v => 
-            safeToString(v) === safeToString(rawValue)
-          );
-        }
-        return safeToString(value) === safeToString(rawValue);
-      }
-      
-      case 'boolean': {
-        if (value === 'all') return true;
-        const boolValue = value === 'true' || value === true;
-        return rawValue === boolValue;
-      }
-      
-      case 'date':
-        return compareDates(rawValue, value);
-      
-      case 'dateRange':
-        return compareDates(rawValue, value);
-      
-      case 'number': {
-        if (rawValue === null || rawValue === undefined) return false;
-        
-        const numValue = Number(rawValue);
-        if (isNaN(numValue)) return false;
-        
-        // If value is a range
-        if (Array.isArray(value) && value.length === 2) {
-          const [min, max] = value;
-          if (min !== null && max !== null) {
-            return numValue >= min && numValue <= max;
-          } else if (min !== null) {
-            return numValue >= min;
-          } else if (max !== null) {
-            return numValue <= max;
-          }
-          return true;
-        }
-        
-        return numValue === Number(value);
-      }
-      
-      // Custom filtering can be handled by the parent component
-      case 'custom':
-        return true;
-      
-      default:
-        return true;
-    }
-  }, [getFilterConfig]);
-  
-  // Apply a filter group to a row
-  const applyFilterGroup = useCallback((row: T, group: FilterGroup): boolean => {
-    if (Object.keys(group.filters).length === 0) return true;
-    
-    const isAnd = group.operator !== 'OR';
-    
-    // For AND, all filters must pass
-    if (isAnd) {
-      return Object.entries(group.filters).every(([key, value]) => 
-        applyFilter(row, key, value)
-      );
-    }
-    
-    // For OR, any filter can pass
-    return Object.entries(group.filters).some(([key, value]) => 
-      applyFilter(row, key, value)
-    );
-  }, [applyFilter]);
-  
-  // Apply filters to data (client-side filtering)
-  const filteredData = useMemo(() => {
-    if (serverSide) {
-      return data;
-    }
-    
-    let result = [...data];
-    
-    // Apply main filters
-    if (hasActiveFilters) {
-      result = result.filter(row => {
-        return Object.entries(filters).every(([key, value]) => 
-          applyFilter(row, key, value)
-        );
-      });
-    }
-    
-    // Apply filter groups if complex filtering is enabled
-    if (enableComplexFiltering && filterGroups.length > 0) {
-      result = result.filter(row => {
-        // If no groups have filters, consider all rows matching
-        const activeGroups = filterGroups.filter(group => Object.keys(group.filters).length > 0);
-        if (activeGroups.length === 0) return true;
-        
-        // Each group applies its own internal logic (AND/OR),
-        // and groups are combined with OR by default
-        return activeGroups.some(group => applyFilterGroup(row, group));
-      });
-    }
-    
-    return result;
-  }, [data, filters, hasActiveFilters, serverSide, enableComplexFiltering, filterGroups, applyFilter, applyFilterGroup]);
+  // Check if a field supports multiple values
+  const supportsMultipleValues = useCallback((field: string) => {
+    const config = processedFilterConfigs.find(c => c.key === field);
+    return Boolean(config?.supportsMultipleValues);
+  }, [processedFilterConfigs]);
   
   return {
     filters,
-    filteredData,
-    activeFilters,
-    activeFilterCount,
     setFilter,
+    setFilters: setMultipleFilters,
     removeFilter,
     clearFilters,
     resetFilters,
+    filteredData,
     hasActiveFilters,
-    getFilterConfig,
-    filterConfigs: resolvedFilterConfigs,
-    isFilterActive,
-    // Complex filtering
-    filterGroups,
-    addFilterGroup,
-    removeFilterGroup,
-    updateFilterGroup,
-    setFilterGroupOperator,
-    // Filter presets
-    filterPresets,
+    activeFilterCount,
+    filterConfigs: processedFilterConfigs,
     saveFilterPreset,
     loadFilterPreset,
+    filterPresets,
     deleteFilterPreset,
-    activePresetId,
-    setActivePresetId
+    setDefaultFilterPreset,
+    supportsMultipleValues
   };
 }
-
-export default useTableFilter;

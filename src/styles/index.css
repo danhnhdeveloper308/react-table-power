@@ -2,6 +2,7 @@
  * React Power Table - Main Styles
  * Root CSS file that imports all component-specific styles
  */
+
 /* 
  * Base styling reset and core styling for the library
  * These styles provide the foundation for all components
@@ -38,30 +39,42 @@
   border-radius: var(--rpt-border-radius); /* Added border-radius variable */
   min-width: 280px; /* Base minimum width for small devices */
   overflow-x: auto; /* Enable horizontal scrolling at container level */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
 }
 
-@media (min-width: 640px) {
-  .rpt-container {
-    min-width: 400px; /* Minimum width for small tablets */
-  }
+.rpt-container:hover {
+  scrollbar-width: auto;
+  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
 }
 
-@media (min-width: 768px) {
-  .rpt-container {
-    min-width: 600px; /* Minimum width for tablets */
-  }
+.rpt-container::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-width);
+  height: var(--rpt-scrollbar-width);
+  background-color: var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
 }
 
-@media (min-width: 1024px) {
-  .rpt-container {
-    min-width: 800px; /* Minimum width for small desktops */
-  }
+.rpt-container:hover::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-hover-width);
+  height: var(--rpt-scrollbar-hover-width);
 }
 
-@media (min-width: 1280px) {
-  .rpt-container {
-    min-width: 1000px; /* Minimum width for desktops */
-  }
+.rpt-container::-webkit-scrollbar-track {
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 10px;
+}
+
+.rpt-container::-webkit-scrollbar-thumb {
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 10px;
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-container::-webkit-scrollbar-thumb:hover {
+  background: var(--rpt-scrollbar-thumb-hover-color);
 }
 
 /* Responsive image */
@@ -209,37 +222,67 @@
   }
 }
 
+/* Improved responsive classes */
+@media (max-width: 640px) {
+  .rpt-container {
+    border-radius: calc(var(--rpt-border-radius) / 2); /* Smaller radius on mobile */
+  }
+  
+  /* Optimize buttons for touch */
+  .rpt-btn, .rpt-action-btn {
+    min-height: 36px; /* Ensure touch target size meets standards */
+  }
+  
+  /* Ensure tables don't overflow */
+  .rpt-table-wrapper {
+    margin-right: -1px;
+    margin-left: -1px;
+  }
+  
+  /* Ensure font size is readable on mobile */
+  .rpt-text-xs {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Enhanced mobile landscape mode */
+@media (max-width: 896px) and (orientation: landscape) {
+  .rpt-container {
+    max-height: 85vh;
+  }
+  
+  /* Optimize dialogs for landscape */
+  .rpt-dialog {
+    max-height: 85vh;
+    width: 90vw;
+  }
+}
+
 /* Print styles - simplified for better printing */
 @media print {
   .rpt-container {
     background-color: white !important;
     color: black !important;
-    break-inside: avoid;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
   }
   
-  .rpt-toolbar,
-  .rpt-action-cell,
-  .rpt-table-footer,
-  .rpt-pagination,
-  .rpt-refresh-btn,
-  .rpt-filter-btn,
-  .rpt-export-btn,
-  .rpt-column-toggle-btn {
+  /* Ensure scrollbars don't print */
+  .rpt-container::-webkit-scrollbar,
+  .rpt-table-wrapper::-webkit-scrollbar,
+  .rpt-dialog-content::-webkit-scrollbar {
     display: none !important;
   }
+  
+  /* Fix table layout for printing */
   .rpt-table {
+    table-layout: auto !important;
     width: 100% !important;
-    border-collapse: collapse !important;
   }
   
-  .rpt-head-cell,
-  .rpt-cell {
-    border: 1px solid #ddd !important;
-    padding: 8px !important;
-  }
-  
-  .rpt-head-cell {
-    font-weight: bold !important;
-    background-color: #f9f9f9 !important;
+  /* Ensure borders print properly */
+  .rpt-head-cell, .rpt-cell {
+    border: 1px solid #000 !important;
   }
 }

@@ -127,6 +127,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             required={required}
             className={cn(
               'rpt-input',
+              'rpt-scrollable', // Add scrollable class for custom scrollbar
               error && 'rpt-input-error',
               className
             )}

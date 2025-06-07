@@ -175,6 +175,32 @@ export const TablePagination = ({
   const startRecord = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endRecord = Math.min(currentPage * pageSize, totalRecords);
   
+  // Jump to page input with enhanced scrollbar
+  const renderJumpToPage = () => {
+    if (!showJumpToPage) return null;
+
+    return (
+      <div className="rpt-jump-to-page">
+        <span className="rpt-jump-label">Go to:</span>
+        <input
+          className="rpt-jump-input rpt-scrollable"
+          type="text"
+          value={jumpToPageValue}
+          onChange={handleJumpToPageInput}
+          onKeyPress={handleKeyPress}
+          aria-label="Jump to page"
+        />
+        <button
+          className="rpt-page-button"
+          onClick={handleJumpToPage}
+          aria-label="Go to page"
+        >
+          Go
+        </button>
+      </div>
+    );
+  };
+  
   return (
     <motion.div 
       className={cn(
@@ -203,7 +229,7 @@ export const TablePagination = ({
           <div className="rpt-page-size-selector">
             <label className="rpt-page-size-label">Rows per page:</label>
             <select
-              className="rpt-page-size-select"
+              className="rpt-page-size-select rpt-scrollable"
               value={pageSize}
               onChange={handlePageSizeChange}
               aria-label="Rows per page"
@@ -286,26 +312,7 @@ export const TablePagination = ({
         </button>
         
         {/* Jump to page */}
-        {showJumpToPage && (
-          <div className="rpt-jump-to-page">
-            <span className="rpt-jump-label">Go to:</span>
-            <input
-              className="rpt-jump-input"
-              type="text"
-              value={jumpToPageValue}
-              onChange={handleJumpToPageInput}
-              onKeyPress={handleKeyPress}
-              aria-label="Jump to page"
-            />
-            <button
-              className="rpt-page-button"
-              onClick={handleJumpToPage}
-              aria-label="Go to page"
-            >
-              Go
-            </button>
-          </div>
-        )}
+        {renderJumpToPage()}
       </div>
     </motion.div>
   );

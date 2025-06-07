@@ -102,6 +102,7 @@ export const TableContainer: React.FC<TableContainerProps> = ({
   // Classes for the scroll container
   const scrollContainerClasses = cn(
     'rpt-scroll-container',
+    'rpt-scrollable', // Add the scrollable class for custom scrollbar styling
     (zebra || striped) && 'rpt-zebra-striping',
     hover && 'rpt-table-hover',
     bordered && 'rpt-table-bordered'

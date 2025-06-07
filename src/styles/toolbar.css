@@ -372,7 +372,11 @@
   color: var(--rpt-text-hover-color);
 }
 
-/* Export button */
+/* Export button and dropdown positioning */
+.rpt-export-dropdown {
+  position: relative;
+}
+
 .rpt-export-btn {
   composes: rpt-toolbar-btn;
 }
@@ -380,6 +384,21 @@
 .rpt-export-icon {
   width: 16px;
   height: 16px;
+}
+
+/* Fix export dropdown position */
+.rpt-export-dropdown .rpt-column-dropdown {
+  right: 0; /* Position from right side instead of left */
+  left: auto;
+  width: 180px; /* More appropriate width for export options */
+}
+
+/* Special case for export dropdown near left edge of screen */
+@media (max-width: 640px) {
+  .rpt-export-dropdown .rpt-column-dropdown {
+    left: 0;
+    right: auto;
+  }
 }
 
 /* Refresh button */
@@ -465,7 +484,7 @@
   font-weight: bold;
 }
 
-/* Selection bar styling */
+/* Selection bar styling - improved positioning */
 .rpt-toolbar-with-selection {
   flex-direction: column;
   align-items: stretch;
@@ -476,56 +495,87 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--rpt-selection-bg);
+  background-color: var(--rpt-selection-bg, rgba(59, 130, 246, 0.1));
   padding: 0.75rem;
   border-radius: var(--rpt-border-radius);
   margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 40;
 }
 
-.rpt-selection-count {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--rpt-selection-text);
-}
-
-.rpt-selection-actions {
+/* New batch actions floating bar */
+.rpt-batch-actions-bar {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--rpt-bg-color);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  padding: 0.75rem 1.5rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 90%;
+  animation: rpt-slide-up 0.3s ease-out;
+}
+
+@keyframes rpt-slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.rpt-batch-actions-text {
+  font-weight: 500;
+  color: var(--rpt-text-color);
+}
+
+.rpt-batch-actions-buttons {
+  display: flex;
   gap: 0.5rem;
 }
 
-.rpt-bulk-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+.rpt-batch-action-btn {
+  padding: 0.5rem 1rem;
   border-radius: var(--rpt-border-radius);
-  background: none;
-  border: 1px solid transparent;
-  font-size: 0.75rem;
-  color: var(--rpt-text-color);
+  font-size: 0.875rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   transition: background-color var(--rpt-transition-duration) ease,
               color var(--rpt-transition-duration) ease;
 }
 
-.rpt-bulk-action-btn:hover {
-  background-color: var(--rpt-row-hover-bg);
+.rpt-batch-action-delete {
+  background-color: var(--rpt-danger-bg);
+  color: var(--rpt-danger);
+  border: none;
 }
 
-.rpt-action-icon {
-  width: 14px;
-  height: 14px;
+.rpt-batch-action-delete:hover {
+  background-color: var(--rpt-danger);
+  color: #ffffff;
 }
 
-.rpt-clear-selection-btn {
-  font-weight: 500;
+.rpt-batch-action-cancel {
+  background: none;
+  border: 1px solid var(--rpt-border-color);
   color: var(--rpt-text-color);
 }
 
-.rpt-export-selected-btn {
-  color: var(--rpt-primary);
+.rpt-batch-action-cancel:hover {
+  background-color: var(--rpt-row-hover-bg);
 }
 
 /* Filter panel */
@@ -568,6 +618,28 @@
   transition: box-shadow var(--rpt-transition-duration) ease;
   position: relative;
   z-index: 40;
+}
+
+/* Advanced Filter Panel scrollbar improvements */
+.rpt-advanced-filter-panel {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
+}
+
+.rpt-advanced-filter-panel:hover {
+  scrollbar-width: auto;
+  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
+}
+
+.rpt-advanced-filter-panel::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-width);
+  height: var(--rpt-scrollbar-width);
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-advanced-filter-panel:hover::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-hover-width);
+  height: var(--rpt-scrollbar-hover-width);
 }
 
 .rpt-advanced-filter-panel:hover {
@@ -1036,57 +1108,103 @@
 
 @media (max-width: 768px) {
   .rpt-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    padding: 0.75rem;
+    gap: 0.75rem;
   }
-  
+
   .rpt-toolbar-left {
     max-width: 100%;
-    margin-right: 0;
+    width: 100%;
+  }
+  
+  .rpt-toolbar-search {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  /* Fix toolbar buttons on mobile */
+  .rpt-toolbar-btn, .rpt-filter-btn, .rpt-export-btn {
+    height: 38px; /* Larger touch target */
+    font-size: 0.75rem;
+  }
+  
+  .rpt-toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
+  .rpt-toolbar-section {
+    flex-wrap: wrap;
+  }
+  
+  /* Ensure dropdowns are positioned correctly on mobile */
+  .rpt-column-dropdown {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    border-radius: var(--rpt-border-radius) var(--rpt-border-radius) 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    max-height: 80vh;
+    margin: 0;
+    z-index: 1000;
+  }
+  
+  .rpt-toolbar-title {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+  
+  .rpt-toolbar-description {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  /* Fix spacing between buttons on mobile */
+  .rpt-column-list {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+
+/* Tablet optimization */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .rpt-toolbar {
+    padding: 1rem;
   }
   
   .rpt-toolbar-right {
     flex-wrap: wrap;
-    width: 100%;
-    justify-content: space-between;
-    margin-left: 0;
   }
   
-  .rpt-toolbar-search {
-    max-width: 300px;
+  /* Position dropdowns better on tablets */
+  .rpt-column-dropdown {
+    max-width: 400px;
+    right: 0;
+    left: auto;
   }
-  
-  .rpt-toolbar-selection {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .rpt-selection-actions {
-    width: 100%;
-  }
-  
-  /* Fix for dropdowns on mobile - position stays relative to parent */
+}
+
+/* Fix for landscape mobile orientation */
+@media (max-width: 896px) and (orientation: landscape) {
   .rpt-column-dropdown {
     position: absolute;
-    top: 0.5rem;
-    width: 100%;
-    max-height: 60vh;
-    min-width: 240px;
+    max-height: 70vh;
+    max-width: 90vw;
+    width: 300px;
+    left: auto;
+    right: 0;
+    bottom: auto;
+    top: 100%;
+    border-radius: var(--rpt-border-radius);
   }
   
-  .rpt-filters-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .rpt-filter-group-filters {
-    grid-template-columns: 1fr;
-  }
-  
-  .rpt-preset-save {
-    flex-direction: column;
+  .rpt-column-list {
+    max-height: 50vh;
   }
 }
 

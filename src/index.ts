@@ -49,16 +49,18 @@ if (typeof window !== 'undefined') {
 // CSS imports are now handled by the separate styles.ts entry point
 // If you need styles, import from 'react-power-table/styles'
 
-// Export original components
-export { DataTable } from './components/DataTable';
-export { TableToolbar } from './components/table/TableToolbar';
-export { TablePagination } from './components/table/TablePagination';
-export { ColumnVisibilityToggle } from './components/table/ColumnVisibilityToggle';
-export { TableDialog } from './components/TableDialog';
-export { TableRowActions } from './components/table/TableRowActions';
-export { EmptyState } from './components/EmptyState';
-export { ErrorState } from './components/ErrorState';
-export { LoadingSpinner } from './components/LoadingSpinner';
+// Export components
+export { default as DataTable } from './components/DataTable';
+export { default as TableContainer } from './components/table/TableContainer';
+export { default as TableToolbar } from './components/table/TableToolbar';
+export { default as TablePagination } from './components/table/TablePagination';
+export { default as LoadingState } from './components/LoadingState';
+export { default as TableDialog } from './components/TableDialog';
+export { AppendableDialog } from './components/AppendableDialog';
+export { default as ThemeProvider } from './components/ThemeProvider';
+export { default as EmptyState } from './components/EmptyState';
+export { default as ErrorState } from './components/ErrorState';
+export { default as LoadingSpinner } from './components/LoadingSpinner';
 
 // Export new modular table components
 export { 
@@ -68,15 +70,14 @@ export {
   TableFooter,
   TableRow,
   TableCell,
-  TablePagination as TablePaginationModern,
-  TableRowMemo,
   TableHeaderRow,
   TableHeadCell,
-  TableContainer,
   TableEmpty,
-  TableFilter
+  TableFilter,
+  TableRowMemo
 } from './components/table';
 
+// Export icons
 export {
   Settings,
   EyeOff,
@@ -102,19 +103,32 @@ export {
 } from './icons';
 
 // Export hooks
-export { 
-  useDataTable,
-  useTableExport,
-  useTableFilter,
-  useTableSorting,
-  useTablePagination,
-  useTableGlobalSearch,
-  useTableDialog,
-  useColumnVisibility,
-  useTableRowExpansion,
-  useTableSelection,
-  useAnimationPreference
-} from './hooks';
+export { useTableDialog } from './hooks/useTableDialog';
+export { useTableExport } from './hooks/useTableExport';
+export { useTableSettings, type TableSettings } from './hooks/useTableSettings';
+export { useSafeTableSettings } from './hooks/useSafeTableSettings';
+export { useColumnVisibility } from './hooks/useColumnVisibility';
+export { useTableFilter } from './hooks/useTableFilter';
+export { useDataTable } from './hooks/useDataTable';
+export { useAnimationPreference } from './hooks/useAnimationPreference';
+
+// Export form handling context
+export {
+  FormHandlingProvider,
+  useFormHandling,
+  withFormHandling,
+  useReactHookFormAdapter,
+  useFormikAdapter,
+  useFinalFormAdapter
+} from './contexts/FormHandlingContext';
+
+// Export DataTableProvider and related hooks
+export {
+  DataTableProvider,
+  useDataTableConfig,
+  withDataTableConfig,
+  type DataTableProviderConfig
+} from './contexts/DataTableConfigContext';
 
 // Export theme utilities
 export {
@@ -129,33 +143,7 @@ export {
 export type { ThemeVariables } from './utils/theme';
 
 // Export types
-export type {
-  BaseTableData,
-  TableColumn,
-  DataTableProps,
-  TableProps,
-  TableDialogProps,
-  UseDataTableOptions,
-  UseDataTableReturn,
-  SortConfig, 
-  SortDirection,
-  FilterConfig,
-  GlobalSearchConfig,
-  PaginationConfig,
-  SelectionConfig,
-  ActionConfig,
-  BuiltInActionsConfig,
-  TableSize,
-  ExportFormat, 
-  ExportConfig,
-  ButtonVariant,
-  DialogType,
-  ServerDataConfig,
-  RowExpansionConfig,
-  BulkActionConfig,
-  DialogConfig,
-  TableThemeConfig,
-} from './types';
+export * from './types';
 
 // Export CSS injection function for manual control
 export { injectCSS };

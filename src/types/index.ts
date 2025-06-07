@@ -28,16 +28,28 @@ export interface BaseTableData {
 
 export type TableSize = 'small' | 'medium' | 'large';
 export type SortDirection = 'asc' | 'desc' | false;
-export type LoadingVariant = 'skeleton' | 'spinner' | 'pulse';
-export type DialogMode = 'view' | 'edit' | 'create' | 'delete';
+export type LoadingVariant = 'skeleton' | 'spinner' | 'pulse' | 'overlay' | 'blur' | 'none';
+export type DialogMode = 'view' | 'edit' | 'create' | 'delete' | 'custom';
+export type DialogType = DialogMode; 
 export type ExportFormat = 'csv' | 'excel' | 'pdf';
-export type FilterType = 'text' | 'select' | 'boolean' | 'date' | 'dateRange' | 'number' | 'custom';
+export type FilterType = 
+  | 'text' 
+  | 'number' 
+  | 'date' 
+  | 'dateRange' 
+  | 'boolean' 
+  | 'select'
+  | 'multiselect' 
+  | 'custom';
 export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | 'primary';
 export type TablePosition = 'top' | 'bottom' | 'both';
 export type ColorScheme = 'primary' | 'secondary' | 'danger' | 'warning' | 'success' | 'info';
 export type ActionPosition = 'inline' | 'dropdown';
 export type ColumnAlignment = 'left' | 'center' | 'right';
 export type StickyPosition = 'left' | 'right' | false;
+export type SpinnerType = 'spinner' | 'skeleton' | 'overlay' | 'blur' | 'fade' | 'dots' | 'circle' | 'wave' | 'pulse' | 'progress';
+export type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type LoadingType = 'spinner' | 'dots' | 'circle' | 'wave' | 'pulse' | 'progress';
 
 // ==================== Column Configuration ====================
 export interface TableColumn<T extends BaseTableData = BaseTableData> {
@@ -163,6 +175,12 @@ export interface TableProps<T extends BaseTableData = BaseTableData> extends Rea
    * Event handlers for table interactions
    */
   eventHandlers?: EventHandlersConfig<T>;
+  
+  /**
+   * Handler for batch delete of selected rows
+   * This is an integrated feature that's triggered when users select multiple rows
+   */
+  onBatchDelete?: (selectedRows: T[]) => Promise<boolean> | boolean;
 }
 
 // ==================== FilterOptions ====================
@@ -176,26 +194,44 @@ export interface FilterOption {
 }
 
 export interface FilterConfig {
-  key: string;
-  label: string;
-  type: FilterType;
-  placeholder?: string;
-  options?: FilterOption[];
-  render?: (props: { onChange: (value: any) => void; filter: FilterConfig }) => React.ReactNode;
-  defaultValue?: any;
   /**
-   * Additional metadata for the filter
+   * Unique key for the filter
    */
-  meta?: {
-    /**
-     * Filter category for grouping
-     */
-    category?: string;
-    /**
-     * Any other metadata properties
-     */
-    [key: string]: any;
-  };
+  key: string;
+  
+  /**
+   * Display label
+   */
+  label: string;
+  
+  /**
+   * Filter type
+   */
+  type: FilterType;
+  
+  /**
+   * Filter options, required for select and multiselect types
+   */
+  options?: FilterOption[];
+  
+  /**
+   * Placeholder text
+   */
+  placeholder?: string;
+  
+  /**
+   * Whether filter supports multiple values
+   */
+  supportsMultipleValues?: boolean;
+  
+  /**
+   * Custom render function for custom filter types
+   */
+  render?: (props: { 
+    onChange: (value: any) => void;
+    filter: FilterConfig;
+    value?: any;
+  }) => React.ReactNode;
 }
 
 // ==================== Pagination Configuration ====================
@@ -280,11 +316,66 @@ export interface BuiltInActionsConfig {
   tooltips?: boolean;
   showLabels?: boolean;
   actionButtonVariant?: ButtonVariant;
+  
   // Form components for each action type
   createFormComponent?: React.ComponentType<any>;
   editFormComponent?: React.ComponentType<any>;
   viewFormComponent?: React.ComponentType<any>;
   deleteFormComponent?: React.ComponentType<any>;
+  customFormComponent?: React.ComponentType<any>;
+  
+  // Form handling configuration
+  formHandling?: {
+    /**
+     * Whether to automatically handle form validation and submission
+     * @default false
+     */
+    autoHandleFormSubmission?: boolean;
+    
+    /**
+     * Form library to integrate with
+     */
+    formLibrary?: 'react-hook-form' | 'formik' | 'final-form' | 'custom';
+    
+    /**
+     * Validation resolver to use
+     */
+    validationResolver?: 'zod' | 'yup' | 'joi' | 'superstruct' | 'custom';
+    
+    /**
+     * Event fired before attempting to submit the form
+     * Return false to prevent submission or modified data to continue with submission
+     */
+    onBeforeSubmit?: (formType: DialogMode, formData: any) => Promise<any | false> | (any | false);
+    
+    /**
+     * Event fired after successful validation but before API call
+     * Transform the data before it's sent to the server
+     */
+    onValidSubmit?: (formType: DialogMode, formData: any) => Promise<any> | any;
+    
+    /**
+     * Event fired after form validation fails
+     */
+    onInvalidSubmit?: (formType: DialogMode, errors: any) => void;
+    
+    /**
+     * Event fired after form submission (success or failure)
+     */
+    onAfterSubmit?: (formType: DialogMode, data: any, success: boolean) => void;
+    
+    /**
+     * Form submission timeout in milliseconds
+     * @default 10000
+     */
+    submitTimeout?: number;
+    
+    /**
+     * Interface to use for form handling
+     * @default 'auto'
+     */
+    formInterface?: 'react-hook-form' | 'formik' | 'final-form' | 'custom' | 'auto';
+  };
 }
 
 // ==================== Bulk Action Configuration ====================
@@ -339,7 +430,11 @@ export interface DialogConfig {
 // ==================== Loading Configuration ====================
 export interface LoadingConfig {
   variant?: LoadingVariant;
-  rows?: number;
+  spinnerType?: SpinnerType;  // Add this property
+  spinnerSize?: SpinnerSize;  // Add this property
+  text?: string;              // Add this property
+  skeletonRows?: number;      // Add this property
+  skeletonColumns?: number;   // Add this property
   customRenderer?: React.ComponentType<any>;
 }
 
@@ -465,7 +560,7 @@ export interface TableThemeConfig {
   /**
    * Theme mode - light or dark
    */
-  theme?: 'light' | 'dark' | 'system';
+  theme?: string; 
 
   /**
    * Table style variant
@@ -530,14 +625,32 @@ export interface EventHandlersConfig<T extends BaseTableData = BaseTableData> {
   onSelectionChange?: (selectedRowKeys: (string | number)[], selectedRows: T[]) => void;
   onExpandChange?: (expandedRowKeys: (string | number)[], expandedRows: T[]) => void;
   onRefresh?: () => void;
-  onCreate?: (data: any) => void;
-  onUpdate?: (data: any, id?: string | number) => void;
-  onDelete?: (id?: string | number) => void;
   onDataChange?: (data: T[]) => void;
-  /**
-   * Callback when a filter preset is saved
-   */
   onFilterPresetSave?: (preset: any) => void;
+  
+  // CRUD handlers with enhanced validation support
+  onCreate?: (data: any) => Promise<boolean> | boolean;
+  onUpdate?: (data: any, id?: string | number) => Promise<boolean> | boolean;
+  onDelete?: (id?: string | number) => Promise<boolean> | boolean;
+  
+  // Additional validation/transformation handlers
+  onBeforeSubmit?: (type: DialogMode, data: any) => Promise<any | false> | (any | false);
+  onValidationError?: (type: DialogMode, errors: any) => void;
+  onAfterSubmit?: (type: DialogMode, data: any, success: boolean) => void;
+  
+  /**
+   * Handler called after completing a batch action
+   * @param actionType Type of batch action performed
+   * @param result Result of the batch operation
+   */
+  onBatchActionComplete?: (
+    actionType: 'delete' | 'update' | string, 
+    result: { 
+      successes: number; 
+      failures: number; 
+      results: Array<{ id: string | number; success: boolean; error?: any }>
+    }
+  ) => void;
 }
 
 // ==================== Main DataTable Props ====================
@@ -586,6 +699,7 @@ export interface DataTableProps<T extends BaseTableData = BaseTableData> {
   errorStateRenderer?: (error: Error) => React.ReactNode;
   toolbarRenderer?: (defaultToolbar: React.ReactNode) => React.ReactNode;
   theme?: TableThemeConfig;
+  onBatchDelete?: (selectedRows: T[]) => Promise<boolean> | boolean;
   animate?: boolean;
   /**
    * Settings for persisting table configuration
@@ -840,9 +954,6 @@ export interface DataTableState<T> {
   expandedRows?: Record<string, boolean>;
 }
 
-// TableDialog props
-export type DialogType = 'create' | 'edit' | 'delete' | 'view' | 'custom';
-
 export interface TableDialogProps {
   open: boolean;
   type: DialogType;
@@ -850,9 +961,44 @@ export interface TableDialogProps {
   description?: string;
   data?: any;
   onClose: () => void;
-  onSubmit?: (data: any) => void;
+  // Fix: Update return type to be Promise<boolean> | boolean
+  onSubmit?: (data: any) => Promise<boolean> | boolean;
   loading?: boolean;
   children?: React.ReactNode;
+}
+
+// New type for AppendableDialogProps
+export interface AppendableDialogProps<T extends BaseTableData = BaseTableData> extends Omit<TableDialogProps, 'open' | 'onClose' | 'type' | 'data' | 'onSubmit' | 'title' | 'description' | 'error'> {
+  /**
+   * Initial form values
+   */
+  initialValues?: T;
+  
+  /**
+   * Whether the dialog is in view mode
+   */
+  viewMode?: boolean;
+  
+  /**
+   * Custom validation function
+   */
+  validate?: (values: T) => Record<string, any>;
+  
+  /**
+   * Callback when form is submitted
+   * Must return a boolean or Promise<boolean> to indicate success
+   */
+  onSubmit?: (data: any, type: DialogType) => Promise<boolean> | boolean;
+  
+  /**
+   * Callback when the dialog is closed
+   */
+  onClose?: () => void;
+  
+  /**
+   * Custom renderer for the dialog content
+   */
+  customRenderer?: React.ComponentType<any>;
 }
 
 // Localization Strings
@@ -880,4 +1026,121 @@ export interface DataTableLocalization {
     last?: string;
     ofPages?: string;
   };
+}
+
+// New type for Form Component Props provided by DataTable
+export interface DataTableFormProps {
+  /**
+   * Dialog data when in edit or view mode
+   */
+  data?: Record<string, any>;
+  
+  /**
+   * Current operation type
+   */
+  dialogType?: DialogMode;
+  
+  /**
+   * Whether the form is in read-only mode
+   */
+  isReadOnly?: boolean;
+  
+  /**
+   * Function to close the dialog
+   */
+  onClose?: () => void;
+  
+  /**
+   * Submit handler - automatic if formHandling.autoHandleFormSubmission is true
+   */
+  onSubmit?: (data: any) => Promise<boolean>;
+  
+  /**
+   * Optional ref for DataTable to access form methods
+   * The form component should implement these methods
+   */
+  formRef?: React.Ref<{
+    /**
+     * Validate and get form values
+     */
+    getValidatedValues: () => Promise<any | null>;
+    
+    /**
+     * Reset the form to its initial state
+     */
+    reset: () => void;
+    
+    /**
+     * Set form values programmatically
+     */
+    setValues: (values: Record<string, any>) => void;
+    
+    /**
+     * Get current form values without validation
+     */
+    getValues: () => Record<string, any>;
+    
+    /**
+     * Check if the form is valid
+     */
+    isValid: () => Promise<boolean>;
+    
+    /**
+     * Get current form errors
+     */
+    getErrors: () => Record<string, any>;
+    
+    /**
+     * Set errors programmatically
+     */
+    setErrors?: (errors: Record<string, any>) => void;
+    
+    /**
+     * Set specific field error
+     */
+    setError?: (field: string, message: string) => void;
+    
+    /**
+     * Form integration adapter 
+     */
+    formIntegration?: FormLibraryIntegration;
+  }>;
+  
+  /**
+   * Additional props passed from DataTable configuration
+   */
+  [key: string]: any;
+}
+
+// Form integration types
+export interface FormLibraryIntegration {
+  // Common form methods that adapt to various form libraries
+  getFormValues: () => Record<string, any>;
+  setFormValues: (values: Record<string, any>) => void;
+  validateForm: () => Promise<boolean>;
+  submitForm: () => Promise<boolean>;
+  resetForm: () => void;
+  getErrors: () => Record<string, any>;
+  setErrors: (errors: Record<string, any>) => void;
+  // Library-specific adapters
+  library?: 'react-hook-form' | 'formik' | 'final-form' | 'custom';
+  resolver?: 'zod' | 'yup' | 'joi' | 'superstruct' | 'custom';
+}
+
+// ==================== TableToolbar Props ====================
+export interface TableToolbarProps<T extends BaseTableData = BaseTableData> {
+  /**
+   * Selected rows data
+   */
+  selectedRows?: T[];
+  
+  /**
+   * Handle batch delete operation
+   */
+  onBatchDelete?: (selectedRows: T[]) => Promise<boolean> | boolean;
+  
+  /**
+   * Handle clearing selection
+   */
+  onClearSelection?: () => void;
 }

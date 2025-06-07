@@ -83,11 +83,13 @@
     "url": "https://github.com/danhnhdeveloper308/react-table-power/issues"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.13.9",
     "clsx": "^2.1.1",
     "framer-motion": "^11.0.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "papaparse": "^5.4.1",
+    "react-virtual": "^2.10.4",
     "tailwind-merge": "^3.3.0",
     "xlsx": "^0.18.5"
   },

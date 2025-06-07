@@ -74,6 +74,14 @@
   
   /* Transitions */
   --rpt-transition-duration: 0.2s;
+
+  /* Custom scrollbar variables */
+  --rpt-scrollbar-width: 4px;
+  --rpt-scrollbar-hover-width: 8px;
+  --rpt-scrollbar-bg: transparent;
+  --rpt-scrollbar-thumb-color: rgba(0, 0, 0, 0.15);
+  --rpt-scrollbar-thumb-hover-color: rgba(0, 0, 0, 0.3);
+  --rpt-scrollbar-transition: all 0.3s ease;
 }
 
 /* New theme container class to properly cascade theme styles */
@@ -145,6 +153,18 @@
   --rpt-status-info-text: #93c5fd;
   --rpt-status-neutral-bg: rgba(243, 244, 246, 0.1);
   --rpt-status-neutral-text: #e5e7eb;
+  
+  /* Measurements */
+  --rpt-border-radius: 0.5rem;
+  --rpt-border-width: 1px;
+  --rpt-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  
+  /* Transitions */
+  --rpt-transition-duration: 0.2s;
+
+  /* Custom scrollbar variables */
+  --rpt-scrollbar-thumb-color: rgba(255, 255, 255, 0.15);
+  --rpt-scrollbar-thumb-hover-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Theme variants */
@@ -354,4 +374,43 @@
     --rpt-primary: Highlight;
     --rpt-focus-color: Highlight;
   }
+}
+
+/* Adding global scrollbar styling */
+.rpt-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-scrollable:hover {
+  scrollbar-width: auto;
+  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
+}
+
+.rpt-scrollable::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-width);
+  height: var(--rpt-scrollbar-width);
+  background-color: var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-scrollable:hover::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-hover-width);
+  height: var(--rpt-scrollbar-hover-width);
+}
+
+.rpt-scrollable::-webkit-scrollbar-track {
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 10px;
+}
+
+.rpt-scrollable::-webkit-scrollbar-thumb {
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 10px;
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--rpt-scrollbar-thumb-hover-color);
 }

@@ -177,13 +177,47 @@
   color: var(--rpt-primary-dark);
 }
 
-/* Dropdown list */
+/* Dropdown list with improved scrollbar */
 .rpt-column-visibility-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   max-height: 300px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
+  padding: 0.5rem;
+}
+
+.rpt-column-visibility-list:hover {
+  scrollbar-width: auto;
+  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
+}
+
+.rpt-column-visibility-list::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-width);
+  background-color: var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-column-visibility-list:hover::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-hover-width);
+}
+
+.rpt-column-visibility-list::-webkit-scrollbar-track {
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 10px;
+}
+
+.rpt-column-visibility-list::-webkit-scrollbar-thumb {
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 10px;
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-column-visibility-list::-webkit-scrollbar-thumb:hover {
+  background: var(--rpt-scrollbar-thumb-hover-color);
 }
 
 .rpt-column-visibility-empty {
@@ -266,5 +300,63 @@
 @media (prefers-reduced-motion: reduce) {
   .rpt-column-visibility * {
     transition: none !important;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 640px) {
+  .rpt-column-visibility-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: var(--rpt-border-radius) var(--rpt-border-radius) 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+  }
+  
+  .rpt-column-visibility-list {
+    max-height: 50vh;
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .rpt-column-visibility-header {
+    position: sticky;
+    top: 0;
+    background-color: var(--rpt-bg-color);
+    z-index: 2;
+  }
+  
+  .rpt-column-visibility-button {
+    height: 36px;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Fix for landscape mobile orientation */
+@media (max-width: 896px) and (orientation: landscape) {
+  .rpt-column-visibility-dropdown {
+    position: absolute;
+    max-height: 80vh;
+    max-width: 90vw;
+    width: 260px;
+    left: auto;
+    right: 0;
+    bottom: auto;
+    top: 100%;
+    border-radius: var(--rpt-border-radius);
+  }
+  
+  .rpt-column-visibility-list {
+    max-height: 60vh;
   }
 }

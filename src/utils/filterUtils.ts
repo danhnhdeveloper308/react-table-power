@@ -1,4 +1,5 @@
 import { TableColumn, FilterConfig, BaseTableData } from '../types';
+import { getNestedValue } from './typeUtils';
 
 /**
  * Helper function to infer the appropriate filter type from column data
@@ -133,112 +134,209 @@ export function generateFilterConfigs<T extends BaseTableData>(
 }
 
 /**
- * Apply filters to data (client-side filtering)
- * @param data The data to filter
- * @param filters The filters to apply
- * @param filterConfigs The filter configurations
- * @returns Filtered data
+ * Apply text filter for string values
+ * @param value The value to filter
+ * @param filterValue The filter value to compare against
+ * @returns Whether the value passes the filter
  */
-export function applyFilters<T extends BaseTableData>(
+export function applyTextFilter(value: any, filterValue: string): boolean {
+  if (value === null || value === undefined) return false;
+  const stringValue = String(value).toLowerCase();
+  const stringFilterValue = String(filterValue).toLowerCase();
+  return stringValue.includes(stringFilterValue);
+}
+
+/**
+ * Apply numeric filter for number values
+ * @param value The value to filter
+ * @param filterValue The filter value (can be a range or single value)
+ * @returns Whether the value passes the filter
+ */
+export function applyNumberFilter(value: any, filterValue: any): boolean {
+  if (value === null || value === undefined) return false;
+  
+  // Convert to number
+  const numValue = Number(value);
+  if (isNaN(numValue)) return false;
+  
+  // Check if filter is a range {min, max}
+  if (typeof filterValue === 'object' && filterValue !== null) {
+    const { min, max } = filterValue;
+    const hasMin = min !== undefined && min !== null && !isNaN(Number(min));
+    const hasMax = max !== undefined && max !== null && !isNaN(Number(max));
+    
+    if (hasMin && hasMax) {
+      return numValue >= Number(min) && numValue <= Number(max);
+    } else if (hasMin) {
+      return numValue >= Number(min);
+    } else if (hasMax) {
+      return numValue <= Number(max);
+    }
+    return true;
+  }
+  
+  // Single value comparison
+  const numFilterValue = Number(filterValue);
+  if (isNaN(numFilterValue)) return false;
+  
+  return numValue === numFilterValue;
+}
+
+/**
+ * Apply date filter for date values
+ * @param value The value to filter (date string, Date object, or timestamp)
+ * @param filterValue The filter value (can be a range or single date)
+ * @returns Whether the value passes the filter
+ */
+export function applyDateFilter(value: any, filterValue: any): boolean {
+  if (value === null || value === undefined) return false;
+  
+  // Convert value to Date
+  let dateValue: Date;
+  if (value instanceof Date) {
+    dateValue = value;
+  } else if (typeof value === 'string' || typeof value === 'number') {
+    dateValue = new Date(value);
+    if (isNaN(dateValue.getTime())) return false;
+  } else {
+    return false;
+  }
+  
+  // Remove time part for date-only comparison
+  const normalizedValue = new Date(dateValue.setHours(0, 0, 0, 0));
+  
+  // Check if filter is a range {start, end}
+  if (typeof filterValue === 'object' && filterValue !== null) {
+    const { start, end } = filterValue;
+    const hasStart = start !== undefined && start !== null;
+    const hasEnd = end !== undefined && end !== null;
+    
+    // Convert filter dates
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    
+    if (hasStart) {
+      startDate = new Date(start);
+      startDate.setHours(0, 0, 0, 0);
+      if (isNaN(startDate.getTime())) startDate = null;
+    }
+    
+    if (hasEnd) {
+      endDate = new Date(end);
+      endDate.setHours(23, 59, 59, 999); // End of day
+      if (isNaN(endDate.getTime())) endDate = null;
+    }
+    
+    if (startDate && endDate) {
+      return normalizedValue >= startDate && normalizedValue <= endDate;
+    } else if (startDate) {
+      return normalizedValue >= startDate;
+    } else if (endDate) {
+      return normalizedValue <= endDate;
+    }
+    return true;
+  }
+  
+  // Single date comparison
+  let filterDate: Date;
+  if (filterValue instanceof Date) {
+    filterDate = new Date(filterValue);
+  } else {
+    filterDate = new Date(filterValue);
+    if (isNaN(filterDate.getTime())) return false;
+  }
+  
+  // Normalize filter date
+  filterDate.setHours(0, 0, 0, 0);
+  
+  return normalizedValue.getTime() === filterDate.getTime();
+}
+
+/**
+ * Applies all filters to a dataset
+ * 
+ * @param data Data array to filter
+ * @param filters Filter values by field
+ * @param filterConfigs Filter configuration by field
+ * @returns Filtered data array
+ */
+export function applyFilters<T>(
   data: T[],
   filters: Record<string, any>,
-  filterConfigs: FilterConfig[]
+  filterConfigs: FilterConfig[] = []
 ): T[] {
-  // If no filters are active, return all data
-  if (!filters || Object.keys(filters).length === 0) {
+  if (!data || data.length === 0 || Object.keys(filters).length === 0) {
     return data;
   }
 
-  // Apply all active filters
-  return data.filter((row) => {
-    return Object.entries(filters).every(([key, value]) => {
-      // Skip empty filters
-      if (value === undefined || value === null || value === '') {
-        return true;
+  return data.filter(item => {
+    // Check all filters
+    for (const [field, value] of Object.entries(filters)) {
+      if (value === undefined || value === null) continue;
+
+      // Get the filter configuration
+      const filterConfig = filterConfigs.find(config => config.key === field);
+      const filterType = filterConfig?.type || 'text';
+      
+      // Get the item's field value
+      const fieldValue = typeof item === 'object' ? getNestedValue(item, field) : null;
+
+      // Skip if the field doesn't exist in the item
+      if (fieldValue === undefined || fieldValue === null) continue;
+
+      // Handle arrays for multi-select filters
+      if (Array.isArray(value) && value.length > 0) {
+        if (Array.isArray(fieldValue)) {
+          // If field value is also an array, check for any intersection
+          const hasMatch = value.some(val => fieldValue.includes(val));
+          if (!hasMatch) return false;
+        } else {
+          // If field value is a single value, check if it's in the filter values array
+          if (!value.includes(fieldValue)) return false;
+        }
+        continue; // Skip to next filter
       }
 
-      // Find filter configuration
-      const config = filterConfigs.find((c) => c.key === key);
-      if (!config) return true;
-
-      // Get the value from the row
-      const rowValue = row[key];
-      if (rowValue === undefined) return false;
+      // If value is empty string, skip
+      if (value === '') continue;
 
       // Apply filter based on type
-      switch (config.type) {
-        case 'text': {
-          if (typeof value !== 'string') return true;
-          const stringValue = String(rowValue).toLowerCase();
-          return stringValue.includes(value.toLowerCase());
-        }
-
-        case 'select': {
-          if (Array.isArray(value)) {
-            // Multi-select
-            return value.length === 0 || value.some((v) => String(v) === String(rowValue));
+      switch (filterType) {
+        case 'text':
+          if (!applyTextFilter(fieldValue, value)) return false;
+          break;
+          
+        case 'select':
+        case 'multiselect': // Handle both select and multiselect types
+          if (typeof value === 'string' || typeof value === 'number') {
+            // For single select
+            if (String(fieldValue) !== String(value)) return false;
+          } else if (Array.isArray(value)) {
+            // For multi-select values (handled above, but keeping for clarity)
+            if (!value.includes(fieldValue)) return false;
           }
-          return String(value) === String(rowValue);
-        }
-
-        case 'boolean': {
-          if (value === 'all') return true;
-          const boolValue = value === 'true' || value === true;
-          return rowValue === boolValue;
-        }
-
-        case 'date': {
-          const dateValue = rowValue instanceof Date ? rowValue : new Date(rowValue);
+          break;
           
-          // If filter value is a date range
-          if (Array.isArray(value) && value.length === 2) {
-            const [start, end] = value;
-            const startDate = start ? new Date(start) : null;
-            const endDate = end ? new Date(end) : null;
-            
-            if (startDate && endDate) {
-              return dateValue >= startDate && dateValue <= endDate;
-            } else if (startDate) {
-              return dateValue >= startDate;
-            } else if (endDate) {
-              return dateValue <= endDate;
-            }
-            return true;
-          }
+        case 'number':
+          if (!applyNumberFilter(fieldValue, value)) return false;
+          break;
           
-          // Single date comparison - match the day
-          const filterDate = new Date(value);
-          return (
-            dateValue.getFullYear() === filterDate.getFullYear() &&
-            dateValue.getMonth() === filterDate.getMonth() &&
-            dateValue.getDate() === filterDate.getDate()
-          );
-        }
-
-        case 'number': {
-          const numValue = Number(rowValue);
-          if (isNaN(numValue)) return false;
+        case 'date':
+        case 'dateRange':
+          if (!applyDateFilter(fieldValue, value)) return false;
+          break;
           
-          // If value is a range
-          if (Array.isArray(value) && value.length === 2) {
-            const [min, max] = value;
-            if (min !== null && max !== null) {
-              return numValue >= min && numValue <= max;
-            } else if (min !== null) {
-              return numValue >= min;
-            } else if (max !== null) {
-              return numValue <= max;
-            }
-            return true;
-          }
+        case 'boolean':
+          if (Boolean(fieldValue) !== Boolean(value)) return false;
+          break;
           
-          return numValue === Number(value);
-        }
-
         default:
-          return true;
+          // Fall back to text filter
+          if (!applyTextFilter(fieldValue, value)) return false;
       }
-    });
+    }
+    
+    return true; // Item passed all filters
   });
 }
 

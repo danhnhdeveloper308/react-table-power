@@ -1,7 +1,6 @@
 import React, { useContext, useRef, useEffect } from 'react';
 import { TableProps, BaseTableData, TableSize } from '../../types';
 import { cn } from '../../utils/cn';
-import { useTheme } from '../ThemeProvider';
 
 export function Table<T extends BaseTableData = BaseTableData>({
   data,
@@ -21,7 +20,6 @@ export function Table<T extends BaseTableData = BaseTableData>({
   ...props
 }: TableProps<T>) {
   // Get theme context
-  const { variant: themeVariant, borderRadius } = useTheme();
   const tableRef = useRef<HTMLTableElement>(null);
   
   // Map size to the appropriate CSS class
@@ -36,20 +34,17 @@ export function Table<T extends BaseTableData = BaseTableData>({
   // Use zebra as alternative name for striped if provided
   const isZebraStriped = striped || zebra;
   
-  // Use theme variant if no specific variant is provided
-  const effectiveVariant = variant || themeVariant;
-  
   // Combine all class names with classes that actually exist in CSS
   const tableClasses = cn(
     'rpt-table',
     sizeClass,
-    bordered && 'rpt-table-bordered',
-    isZebraStriped && 'rpt-zebra-striping',
-    highlightOnHover && 'rpt-table-hover',
-    dense && 'rpt-table-dense',
-    fullWidth && 'rpt-table-full-width',
-    !rounded && 'rpt-table-no-rounded', // CSS defaults to rounded, class removes it
-    effectiveVariant && `rpt-table-variant-${effectiveVariant}`,
+    {
+      'rpt-table-bordered': bordered,
+      'rpt-zebra-striping': isZebraStriped,
+      'rpt-table-hover': highlightOnHover,
+      'rpt-sticky-header': stickyHeader,
+      'rpt-table-full-width': fullWidth,
+    },
     className
   );
 

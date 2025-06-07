@@ -87,22 +87,33 @@ const LoadingState: React.FC<LoadingStateProps> = ({
     contained: 'rpt-loading-contained-variant',
     full: 'rpt-loading-full-variant'
   };
-  
-  // With overlay - show loading on top of children
+
+  // Create loading indicator element
+  const loadingIndicator = (
+    <>
+      <LoadingSpinner
+        type={loadingType}
+        size={size}
+        color={color}
+        ariaLabel={loadingText || 'Loading'}
+      />
+      {loadingText && <div className="rpt-loading-text">{loadingText}</div>}
+    </>
+  );
+
+  // With overlay - show loading on top of children while preserving context
   if (shouldShowOverlay) {
     return (
       <div className={cn('rpt-loading-container', className)}>
-        {children}
-        <div className={cn('rpt-loading-overlay', variantClasses[variant])}>
-          <div className={cn('rpt-loading-indicator', center && 'rpt-loading-centered')}>
-            <LoadingSpinner
-              type={loadingType}
-              size={size}
-              color={color}
-              ariaLabel={loadingText || 'Loading'}
-            />
-            {loadingText && <div className="rpt-loading-text">{loadingText}</div>}
-          </div>
+        <div className={cn('rpt-loading-content', { 
+          'rpt-loading-blur': true,
+          'rpt-loading-disabled': true
+        })}>
+          {children}
+        </div>
+        <div className="rpt-loading-overlay-background"></div>
+        <div className={cn('rpt-loading-indicator', center && 'rpt-loading-centered')}>
+          {loadingIndicator}
         </div>
       </div>
     );
@@ -112,12 +123,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
   if (variant === 'inline') {
     return (
       <span className={cn('rpt-loading-inline', className)}>
-        <LoadingSpinner
-          type={loadingType}
-          size={size}
-          color={color}
-          ariaLabel={loadingText || 'Loading'}
-        />
+        {loadingIndicator}
         {loadingText && <span className="rpt-loading-text">{loadingText}</span>}
       </span>
     );
@@ -127,13 +133,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
   if (variant === 'full') {
     return (
       <div className={cn('rpt-loading-full', center && 'rpt-loading-centered', className)}>
-        <LoadingSpinner
-          type={loadingType}
-          size={size}
-          color={color}
-          ariaLabel={loadingText || 'Loading'}
-        />
-        {loadingText && <div className="rpt-loading-text">{loadingText}</div>}
+        {loadingIndicator}
       </div>
     );
   }
@@ -141,13 +141,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
   // Default/contained variant
   return (
     <div className={cn('rpt-loading-state', center && 'rpt-loading-centered', className)}>
-      <LoadingSpinner
-        type={loadingType}
-        size={size}
-        color={color}
-        ariaLabel={loadingText || 'Loading'}
-      />
-      {loadingText && <div className="rpt-loading-text">{loadingText}</div>}
+      {loadingIndicator}
     </div>
   );
 };

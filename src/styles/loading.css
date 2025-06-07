@@ -1,383 +1,427 @@
 /**
- * React Power Table - Loading Animations
- * Various loading animations for use in buttons, tables, and dialogs
+ * React Power Table - Loading State Styles
+ * CSS animations and states for loading indicators
  */
 
-/* Base loader container */
-.rpt-loader {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-/* Loader sizes */
-.rpt-loader--xs {
-  width: 12px;
-  height: 12px;
-}
-
-.rpt-loader--sm {
-  width: 16px;
-  height: 16px;
-}
-
-.rpt-loader--md {
-  width: 24px;
-  height: 24px;
-}
-
-.rpt-loader--lg {
-  width: 36px;
-  height: 36px;
-}
-
-.rpt-loader--xl {
-  width: 48px;
-  height: 48px;
-}
-
-/* Spinner Loading Animation */
-.rpt-loader-spinner {
-  border-radius: 50%;
-  position: relative;
-}
-
-.rpt-loader-spinner svg {
-  animation: rpt-spinner-rotate 1s linear infinite;
-  height: 100%;
-  width: 100%;
-  transform-origin: center center;
-}
-
-.rpt-loader-spinner-path {
-  stroke-dasharray: 60;
-  stroke-dashoffset: 0;
-  stroke-linecap: round;
-  stroke: currentColor;
-  animation: rpt-spinner-dash 1.5s ease-in-out infinite;
-}
-
-@keyframes rpt-spinner-rotate {
+/* Spinner animation */
+@keyframes rpt-spin {
+  0% {
+    transform: rotate(0deg);
+  }
   100% {
     transform: rotate(360deg);
   }
 }
 
-@keyframes rpt-spinner-dash {
-  0% {
-    stroke-dasharray: 1, 150;
-    stroke-dashoffset: 0;
-  }
-  50% {
-    stroke-dasharray: 90, 150;
-    stroke-dashoffset: -35;
-  }
-  100% {
-    stroke-dasharray: 90, 150;
-    stroke-dashoffset: -124;
-  }
-}
-
-/* Circle Loading Animation */
-.rpt-loader-circle svg {
-  animation: rpt-circle-rotate 2s linear infinite;
-  height: 100%;
-  width: 100%;
-  transform-origin: center center;
-}
-
-.rpt-loader-circle-path {
-  stroke-dasharray: 150, 200;
-  stroke-dashoffset: -10;
-  stroke-linecap: round;
-  stroke: currentColor;
-  animation: rpt-circle-dash 1.5s ease-in-out infinite;
-}
-
-@keyframes rpt-circle-rotate {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes rpt-circle-dash {
-  0% {
-    stroke-dasharray: 1, 200;
-    stroke-dashoffset: 0;
-  }
-  50% {
-    stroke-dasharray: 89, 200;
-    stroke-dashoffset: -35px;
-  }
-  100% {
-    stroke-dasharray: 89, 200;
-    stroke-dashoffset: -124px;
-  }
-}
-
-/* Dots Loading Animation */
-.rpt-loader-dots {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.rpt-loader-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: currentColor;
-  animation: rpt-dot-bounce 1.4s infinite ease-in-out both;
-}
-
-.rpt-loader-dots .rpt-loader-dot:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.rpt-loader-dots .rpt-loader-dot:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-@keyframes rpt-dot-bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
-}
-
-/* Pulse Loading Animation */
-.rpt-loader-pulse {
-  width: 100%;
-  height: 100%;
-  background-color: currentColor;
-  border-radius: 50%;
-  opacity: 0.6;
-  animation: rpt-pulse 1.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-}
-
+/* Pulse animation for skeletons */
 @keyframes rpt-pulse {
   0%, 100% {
-    transform: scale(0.6);
     opacity: 0.5;
   }
   50% {
-    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+/* Fade in animation */
+@keyframes rpt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
     opacity: 1;
   }
 }
 
-/* Wave Loading Animation */
-.rpt-loader-wave {
+/* Slide up animation for batch actions bar */
+@keyframes rpt-slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Base loading container */
+.rpt-loading-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 100%;
-}
-
-.rpt-loader-wave-bar {
-  display: inline-block;
-  width: 3px;
-  height: 75%;
-  margin: 0 1px;
-  background-color: currentColor;
-  border-radius: 1px;
-  animation: rpt-wave 1.2s ease-in-out infinite;
-}
-
-.rpt-loader-wave-bar:nth-child(1) {
-  animation-delay: -0.48s;
-}
-
-.rpt-loader-wave-bar:nth-child(2) {
-  animation-delay: -0.36s;
-}
-
-.rpt-loader-wave-bar:nth-child(3) {
-  animation-delay: -0.24s;
-}
-
-.rpt-loader-wave-bar:nth-child(4) {
-  animation-delay: -0.12s;
-}
-
-@keyframes rpt-wave {
-  0%, 40%, 100% {
-    transform: scaleY(0.4);
-  }
-  20% {
-    transform: scaleY(1);
-  }
-}
-
-/* Progress Line Animation */
-.rpt-loader-progress-container {
-  width: 100%;
-  height: 4px;
-  background-color: rgba(128, 128, 128, 0.2);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.rpt-loader-progress {
-  width: 100%;
-  height: 100%;
-  background-color: currentColor;
-  border-radius: 2px;
-  animation: rpt-progress 1.5s ease-in-out infinite;
-  transform-origin: left;
-}
-
-@keyframes rpt-progress {
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-/* Slide Animation */
-.rpt-loader-slide {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  border-radius: inherit;
-}
-
-.rpt-loader-slide-animation {
-  width: 300%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  animation: rpt-slide 1.5s infinite linear;
-  position: absolute;
-  top: 0;
-  left: -100%;
-}
-
-@keyframes rpt-slide {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  min-height: 40px;
 }
 
 /* Loading overlay */
 .rpt-loading-overlay {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+/* Loading overlay background with improved performance */
+.rpt-loading-overlay-background {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+  background-color: rgba(255, 255, 255, var(--backdrop-opacity, 0.6));
+  z-index: 1;
+  border-radius: inherit;
   backdrop-filter: blur(1px);
+  will-change: opacity; /* Performance hint for browsers */
+  transition: opacity 0.2s ease;
 }
 
-.rpt-loading-container {
-  position: relative;
+.dark .rpt-loading-overlay-background {
+  background-color: rgba(15, 23, 42, var(--backdrop-opacity, 0.6));
 }
 
-.rpt-loading-state {
+/* Loading indicator positioned in center */
+.rpt-loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  gap: 0.5rem;
 }
 
-.rpt-loading-centered {
-  height: 100%;
+/* Loading blur effect with reduced GPU impact */
+.rpt-loading-blur > *:not(.rpt-loading-overlay-background):not(.rpt-loading-indicator) {
+  filter: blur(2px);
+  will-change: filter; /* Performance hint for browsers */
+  transition: filter 0.2s ease;
+}
+
+/* Loading disabled state */
+.rpt-loading-disabled {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+/* Loading fade effect */
+.rpt-loading-fade {
+  animation: rpt-fade-in 0.2s ease forwards;
+}
+
+/* Loading sizes with consistent naming */
+.rpt-loading--xs {
+  width: 16px;
+  height: 16px;
+}
+
+.rpt-loading--sm {
+  width: 24px;
+  height: 24px;
+}
+
+.rpt-loading--md {
+  width: 32px;
+  height: 32px;
+}
+
+.rpt-loading--lg {
+  width: 40px;
+  height: 40px;
+}
+
+.rpt-loading--xl {
+  width: 48px;
+  height: 48px;
+}
+
+/* Skeleton loading animation with reduced GPU impact */
+.rpt-loading-skeleton {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--rpt-bg-color);
+  min-height: 20px;
+  border-radius: var(--rpt-border-radius);
+}
+
+/* More efficient skeleton animation */
+.rpt-loading-skeleton-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--rpt-skeleton-color, rgba(0, 0, 0, 0.05)),
+    transparent
+  );
+  will-change: transform; /* Performance hint for browsers */
+  animation: rpt-loading-skeleton 1.5s ease-in-out infinite;
+}
+
+/* Dark mode skeleton colors */
+.dark .rpt-loading-skeleton-content {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--rpt-skeleton-color, rgba(255, 255, 255, 0.05)),
+    transparent
+  );
+}
+
+@keyframes rpt-loading-skeleton {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Dialog specific loading styles */
+.rpt-dialog-loading {
+  position: relative;
+  width: 100%;
   min-height: 150px;
 }
 
-.rpt-loading-text {
-  font-size: 0.875rem;
-  color: var(--rpt-text-color);
-  margin-top: 0.5rem;
-  opacity: 0.8;
+/* Use CSS custom property for opacity */
+.rpt-dialog-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, var(--backdrop-opacity, 0.6));
+  border-radius: var(--rpt-border-radius);
+  z-index: 1;
+  backdrop-filter: blur(2px);
+  transition: all 0.2s ease;
 }
 
-/* For dark mode */
-[data-theme="dark"] .rpt-loading-overlay {
-  background-color: rgba(0, 0, 0, 0.6);
+.dark .rpt-dialog-loading::before {
+  background-color: rgba(15, 23, 42, var(--backdrop-opacity, 0.6));
 }
 
-/* Skeleton loading animation */
-.rpt-loader-skeletons {
-  width: 100%;
+/* Optimized loading indicator positioning */
+.rpt-dialog-loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
-.rpt-loader-skeleton {
-  height: 12px;
-  background: linear-gradient(
-    90deg,
-    var(--rpt-skeleton-start) 0%,
-    var(--rpt-skeleton-end) 50%,
-    var(--rpt-skeleton-start) 100%
-  );
-  background-size: 200% 100%;
-  animation: rpt-skeleton 1.5s infinite;
-  border-radius: 4px;
+/* Dialog content with blur effect during loading */
+.rpt-dialog-content-blur {
+  filter: blur(2px);
+  opacity: 0.7;
+  pointer-events: none;
+  will-change: filter, opacity; /* Performance hint */
+  transition: all 0.2s ease;
 }
 
-.rpt-loader-skeleton:nth-child(1) {
+/* Dialog skeleton loading with variable item support */
+.rpt-dialog-skeleton {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
 }
 
-.rpt-loader-skeleton:nth-child(2) {
-  width: 75%;
+/* Consistent skeleton animation */
+.rpt-dialog-skeleton-item {
+  height: 1rem;
+  background: linear-gradient(90deg, 
+    rgba(226, 232, 240, 0.6) 25%, 
+    rgba(203, 213, 225, 0.6) 37%, 
+    rgba(226, 232, 240, 0.6) 63%
+  );
+  background-size: 400% 100%;
+  animation: rpt-dialog-skeleton 1.4s ease infinite;
+  border-radius: var(--rpt-border-radius-sm, 4px);
+  will-change: background-position; /* Performance hint */
 }
 
-.rpt-loader-skeleton:nth-child(3) {
-  width: 50%;
+.dark .rpt-dialog-skeleton-item {
+  background: linear-gradient(90deg, 
+    rgba(55, 65, 81, 0.7) 25%, 
+    rgba(75, 85, 99, 0.7) 37%, 
+    rgba(55, 65, 81, 0.7) 63%
+  );
 }
 
-@keyframes rpt-skeleton {
+/* Other skeleton variations */
+.rpt-dialog-skeleton-item.rpt-skeleton-title {
+  width: 70%;
+  height: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rpt-dialog-skeleton-item.rpt-skeleton-input {
+  height: 2.5rem;
+}
+
+.rpt-dialog-skeleton-item.rpt-skeleton-textarea {
+  height: 5rem;
+}
+
+@keyframes rpt-dialog-skeleton {
   0% {
-    background-position: 200% 0;
+    background-position: 100% 50%;
   }
   100% {
-    background-position: -200% 0;
+    background-position: 0 50%;
   }
 }
 
-/* For reduced motion preference */
+/* Table specific loading styles */
+.rpt-table-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, var(--backdrop-opacity, 0.6));
+  z-index: 50;
+  border-radius: inherit;
+  backdrop-filter: blur(1px);
+  will-change: opacity; /* Performance hint */
+}
+
+.dark .rpt-table-loading {
+  background-color: rgba(15, 23, 42, var(--backdrop-opacity, 0.6));
+}
+
+/* Loading indicator containers */
+.rpt-table-loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 51;
+}
+
+.rpt-table-loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rpt-table-loading-text {
+  font-size: 0.875rem;
+  color: var(--rpt-text-color);
+  margin-top: 0.25rem;
+}
+
+/* Optimized table loading blur effect */
+.rpt-table-loading-blur .rpt-table {
+  filter: blur(2px);
+  opacity: 0.7;
+  pointer-events: none;
+  will-change: filter, opacity; /* Performance hint */
+  transition: all 0.2s ease;
+}
+
+/* Reduced motion support */
+.rpt-reduced-motion * {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rpt-loader-spinner svg,
-  .rpt-loader-circle svg,
-  .rpt-loader-spinner-path,
-  .rpt-loader-circle-path,
-  .rpt-loader-dot,
-  .rpt-loader-pulse,
-  .rpt-loader-wave-bar,
-  .rpt-loader-progress,
-  .rpt-loader-slide-animation,
-  .rpt-loader-skeleton {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  :root {
+    --transition-speed: 0.001ms;
   }
+  
+  .rpt-spin,
+  .rpt-pulse,
+  .rpt-fade-in,
+  .rpt-slide-up,
+  .rpt-loading-skeleton-content,
+  .rpt-dialog-skeleton-item {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  
+  .rpt-loading-blur > *,
+  .rpt-table-loading-blur .rpt-table,
+  .rpt-dialog-content-blur {
+    filter: none !important;
+    transition: none !important;
+  }
+}
+
+/* Table skeleton loading */
+.rpt-table-skeleton {
+  width: 100%;
+  overflow: hidden;
+  background: var(--rpt-bg-color);
+  border-radius: var(--rpt-border-radius);
+  box-shadow: var(--rpt-shadow-sm);
+}
+
+.rpt-table-skeleton-header {
+  display: flex;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--rpt-border-color);
+  background-color: var(--rpt-head-bg-color);
+}
+
+.rpt-table-skeleton-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.rpt-table-skeleton-row {
+  display: flex;
+  border-bottom: 1px solid var(--rpt-border-color);
+  padding: 0.75rem 1rem;
+}
+
+/* Optimized skeleton cells */
+.rpt-table-skeleton-cell {
+  flex: 1;
+  height: 1.5rem;
+  margin-right: 1rem;
+  background: linear-gradient(90deg, 
+    rgba(226, 232, 240, 0.6) 25%, 
+    rgba(203, 213, 225, 0.6) 37%, 
+    rgba(226, 232, 240, 0.6) 63%
+  );
+  background-size: 400% 100%;
+  animation: rpt-table-skeleton 1.4s ease infinite;
+  border-radius: 4px;
+  will-change: background-position; /* Performance hint */
+}
+
+.dark .rpt-table-skeleton-cell {
+  background: linear-gradient(90deg, 
+    rgba(55, 65, 81, 0.7) 25%, 
+    rgba(75, 85, 99, 0.7) 37%, 
+    rgba(55, 65, 81, 0.7) 63%
+  );
+}
+
+/* Header cells in skeleton */
+.rpt-skeleton-header-cell {
+  height: 1.75rem;
 }

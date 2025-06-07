@@ -253,8 +253,8 @@ export function ColumnVisibilityToggle<T extends BaseTableData = BaseTableData>(
               </div>
             </div>
             
-            {/* Column list */}
-            <div className="rpt-column-visibility-list">
+            {/* Column list with custom scrollbar */}
+            <div className="rpt-column-visibility-list rpt-scrollable">
               {columns.length === 0 ? (
                 <p className="rpt-column-visibility-empty">No columns available</p>
               ) : (

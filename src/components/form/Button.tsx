@@ -1,9 +1,10 @@
 import React, { forwardRef } from 'react';
 import { cn } from '../../utils/cn';
+import { LoadingType } from '../../types';
 
 export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | 'primary';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-export type ButtonLoadingType = 'spinner' | 'dots' | 'progress' | 'slide' | 'circle' | 'pulse' | 'wave';
+export type ButtonLoadingType = LoadingType;
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**
@@ -113,7 +114,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         case 'circle':
           return <span className="rpt-btn-loader" aria-hidden="true"></span>;
         case 'progress':
-        case 'slide':
+        // case 'slide':
         case 'spinner':
         default:
           return <span className="rpt-btn-loader" aria-hidden="true"></span>;

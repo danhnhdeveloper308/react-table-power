@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, memo } from 'react';
 import { cn } from '../../utils/cn';
 import { TableSettings as TableSettingsType } from '../../hooks/useTableSettings';
 
@@ -7,15 +7,15 @@ interface TableSettingsProps {
   onUpdateSetting: <K extends keyof TableSettingsType>(key: K, value: TableSettingsType[K]) => void;
   onResetSettings: () => void;
   /**
-   * Callback khi người dùng lưu tableIdentifier mới
+   * Callback when user saves new tableIdentifier
    */
   onSaveTableIdentifier?: (identifier: string) => void;
   /**
-   * tableIdentifier hiện tại
+   * Current table identifier
    */
   currentTableIdentifier?: string;
   /**
-   * Callback khi người dùng lưu toàn bộ cấu hình
+   * Callback when user saves all settings
    */
   onSaveAllSettings?: (identifier: string) => void;
   /**
@@ -24,8 +24,8 @@ interface TableSettingsProps {
   savedConfigurations?: { id: string; name?: string }[];
 }
 
-// Settings icon component
-function SettingsIcon({ size = 16 }: { size?: number }) {
+// Settings icon component with memo to prevent re-renders
+const SettingsIcon = memo(({ size = 16 }: { size?: number }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -43,8 +43,129 @@ function SettingsIcon({ size = 16 }: { size?: number }) {
       <circle cx="12" cy="12" r="3" />
     </svg>
   );
-}
+});
+SettingsIcon.displayName = 'SettingsIcon';
 
+// RadioOption component
+const RadioOption = memo(({ 
+  id, 
+  name, 
+  label, 
+  value, 
+  checked, 
+  onChange 
+}: { 
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  checked: boolean;
+  onChange: (value: string) => void;
+}) => (
+  <label htmlFor={id} className="rpt-settings-option">
+    <input
+      type="radio"
+      id={id}
+      name={name}
+      value={value}
+      checked={checked}
+      onChange={() => onChange(value)}
+      className="rpt-settings-radio"
+    />
+    <span className="rpt-settings-option-text">{label}</span>
+  </label>
+));
+RadioOption.displayName = 'RadioOption';
+
+// CheckboxOption component
+const CheckboxOption = memo(({ 
+  id, 
+  label, 
+  checked, 
+  onChange 
+}: { 
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) => (
+  <label htmlFor={id} className="rpt-settings-option-checkbox">
+    <input
+      type="checkbox"
+      id={id}
+      checked={checked || false}
+      onChange={e => onChange(e.target.checked)}
+      className="rpt-settings-checkbox"
+    />
+    <span className="rpt-settings-option-text">{label}</span>
+  </label>
+));
+CheckboxOption.displayName = 'CheckboxOption';
+
+// Configurations Panel component
+const ConfigurationsPanel = memo(({ 
+  configurations, 
+  currentIdentifier, 
+  onLoadConfig, 
+  onClose 
+}: { 
+  configurations: { id: string; name?: string }[];
+  currentIdentifier: string;
+  onLoadConfig: (id: string) => void;
+  onClose: () => void;
+}) => (
+  <div 
+    className="rpt-column-dropdown rpt-settings-configurations-panel"
+    style={{ 
+      position: 'absolute', 
+      top: '100%', 
+      right: '100%',
+      marginRight: '8px',
+      zIndex: 70,
+      width: '250px'
+    }}
+  >
+    <div className="rpt-column-header">
+      <h4 className="rpt-column-title">Saved Configurations</h4>
+      <div className="rpt-column-actions">
+        <button 
+          className="rpt-column-action-btn"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+    <div className="rpt-column-list">
+      {configurations.length === 0 ? (
+        <div className="rpt-empty-configurations">
+          <p>No saved configurations found</p>
+        </div>
+      ) : (
+        configurations.map(config => (
+          <button
+            key={config.id}
+            className={cn(
+              "rpt-configuration-item",
+              config.id === currentIdentifier && "rpt-configuration-item-active"
+            )}
+            onClick={() => onLoadConfig(config.id)}
+          >
+            {config.name || config.id}
+            {config.id === currentIdentifier && (
+              <span className="rpt-configuration-active-indicator">Current</span>
+            )}
+          </button>
+        ))
+      )}
+    </div>
+  </div>
+));
+ConfigurationsPanel.displayName = 'ConfigurationsPanel';
+
+/**
+ * TableSettings component - UI for customizing table appearance and settings
+ */
 export function TableSettings({
   settings = {},
   onUpdateSetting,
@@ -54,25 +175,34 @@ export function TableSettings({
   onSaveAllSettings,
   savedConfigurations = []
 }: TableSettingsProps) {
+  // Component state
   const [isOpen, setIsOpen] = useState(false);
   const [tableIdentifier, setTableIdentifier] = useState(currentTableIdentifier);
   const [showConfigurations, setShowConfigurations] = useState(false);
   const [identifierError, setIdentifierError] = useState('');
+  const [isClient, setIsClient] = useState(false);
+  
+  // Refs for DOM elements
   const dropdownRef = useRef<HTMLDivElement>(null);
   const configurationsPanelRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   
-  // Cập nhật state khi prop thay đổi từ bên ngoài
+  // Mark when we're on client side
   useEffect(() => {
+    setIsClient(true);
     setTableIdentifier(currentTableIdentifier);
   }, [currentTableIdentifier]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (typeof window === 'undefined' || !isOpen) return;
+    
     function handleClickOutside(event: MouseEvent) {
       if (
-        isOpen &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        buttonRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setShowConfigurations(false);
@@ -82,7 +212,6 @@ export function TableSettings({
         showConfigurations &&
         configurationsPanelRef.current &&
         !configurationsPanelRef.current.contains(event.target as Node) &&
-        // Make sure we don't close configurations panel when clicking in the dropdown
         !dropdownRef.current?.contains(event.target as Node)
       ) {
         setShowConfigurations(false);
@@ -95,8 +224,33 @@ export function TableSettings({
     };
   }, [isOpen, showConfigurations]);
   
+  // Close on ESC key
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isOpen) return;
+    
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        setShowConfigurations(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen]);
+  
   // Toggle dropdown
-  const toggleDropdown = () => setIsOpen(prev => !prev);
+  const toggleDropdown = () => {
+    setIsOpen(prev => {
+      if (!prev) {
+        setTableIdentifier(currentTableIdentifier);
+        setIdentifierError('');
+      }
+      return !prev;
+    });
+  };
   
   // Validate table identifier
   const validateIdentifier = (identifier: string): boolean => {
@@ -105,7 +259,6 @@ export function TableSettings({
       return false;
     }
     
-    // Check if identifier contains only valid characters
     if (!/^[a-zA-Z0-9_-]+$/.test(identifier)) {
       setIdentifierError('Identifier can only contain letters, numbers, hyphens and underscores');
       return false;
@@ -115,11 +268,11 @@ export function TableSettings({
     return true;
   };
   
-  // Save table identifier and all current settings
+  // Save table settings
   const handleSaveSettings = () => {
     if (validateIdentifier(tableIdentifier) && onSaveAllSettings) {
       onSaveAllSettings(tableIdentifier);
-      setIsOpen(false); // Đóng dropdown sau khi lưu
+      setIsOpen(false);
     }
   };
   
@@ -127,135 +280,31 @@ export function TableSettings({
   const handleLoadConfiguration = (configId: string) => {
     if (onSaveTableIdentifier) {
       onSaveTableIdentifier(configId);
-      setIsOpen(false); // Close dropdown after loading
-      
-      // We expect the parent component to reload the page or update settings
-      // If needed, we can add a callback here for immediate updates
+      setIsOpen(false);
+      setTableIdentifier(configId);
     }
   };
   
-  // Create labeled radio input for options
-  const RadioOption = ({ 
-    id, 
-    name, 
-    label, 
-    value, 
-    checked, 
-    onChange 
-  }: { 
-    id: string;
-    name: string;
-    label: string;
-    value: string;
-    checked: boolean;
-    onChange: (value: string) => void;
-  }) => (
-    <label htmlFor={id} className="rpt-settings-option">
-      <input
-        type="radio"
-        id={id}
-        name={name}
-        value={value}
-        checked={checked}
-        onChange={() => onChange(value)}
-        className="rpt-settings-radio"
-      />
-      <span className="rpt-settings-option-text">{label}</span>
-    </label>
-  );
-  
-  // Create labeled checkbox input for boolean options
-  const CheckboxOption = ({ 
-    id, 
-    label, 
-    checked, 
-    onChange 
-  }: { 
-    id: string;
-    label: string;
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-  }) => (
-    <label htmlFor={id} className="rpt-settings-option-checkbox">
-      <input
-        type="checkbox"
-        id={id}
-        checked={checked || false}
-        onChange={e => onChange(e.target.checked)}
-        className="rpt-settings-checkbox"
-      />
-      <span className="rpt-settings-option-text">{label}</span>
-    </label>
-  );
-  
-  // Handle feature checkbox changes - ensuring boolean values
-  const handleFeatureChange = <K extends keyof TableSettingsType>(
-    key: K, 
-    value: boolean
-  ) => {
-    // Debug the actual value being sent
-    console.log(`Setting ${String(key)} to:`, value);
-    onUpdateSetting(key, value as any);
-  };
-
-  // Configurations panel (shown when clicking "Load Configuration")
-  const ConfigurationsPanel = () => {
-    if (!showConfigurations) return null;
-    
+  // Don't render anything if not on client side
+  if (!isClient) {
     return (
-      <div 
-        className="rpt-column-dropdown rpt-settings-configurations-panel"
-        ref={configurationsPanelRef}
-        style={{ 
-          position: 'absolute', 
-          top: '100%', 
-          right: '100%',
-          marginRight: '8px',
-          zIndex: 70,
-          width: '250px'
-        }}
-      >
-        <div className="rpt-column-header">
-          <h4 className="rpt-column-title">Saved Configurations</h4>
-          <div className="rpt-column-actions">
-            <button 
-              className="rpt-column-action-btn"
-              onClick={() => setShowConfigurations(false)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-        <div className="rpt-column-list">
-          {savedConfigurations.length === 0 ? (
-            <div className="rpt-empty-configurations">
-              <p>No saved configurations found</p>
-            </div>
-          ) : (
-            savedConfigurations.map(config => (
-              <button
-                key={config.id}
-                className={cn(
-                  "rpt-configuration-item",
-                  config.id === currentTableIdentifier && "rpt-configuration-item-active"
-                )}
-                onClick={() => handleLoadConfiguration(config.id)}
-              >
-                {config.name || config.id}
-                {config.id === currentTableIdentifier && (
-                  <span className="rpt-configuration-active-indicator">Current</span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
+      <div className="rpt-settings-dropdown">
+        <button
+          ref={buttonRef}
+          className="rpt-toolbar-btn rpt-settings-btn"
+          title="Table settings"
+          aria-label="Table settings"
+        >
+          <SettingsIcon size={16} />
+        </button>
       </div>
     );
-  };
+  }
   
   return (
     <div className="rpt-settings-dropdown" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         className={cn(
           'rpt-toolbar-btn rpt-settings-btn',
           isOpen && 'rpt-settings-btn--active'
@@ -263,10 +312,8 @@ export function TableSettings({
         onClick={toggleDropdown}
         title="Table settings"
         aria-label="Table settings"
-        aria-expanded={isOpen}
       >
         <SettingsIcon size={16} />
-        {/* <span>Settings</span> */}
       </button>
       
       {isOpen && (
@@ -276,17 +323,14 @@ export function TableSettings({
             <div className="rpt-column-actions">
               <button 
                 className="rpt-column-action-btn"
-                onClick={() => {
-                  onResetSettings();
-                  // setIsOpen(false); // Uncomment to close after reset
-                }}
+                onClick={onResetSettings}
               >
                 Reset
               </button>
             </div>
           </div>
           
-          <div className="rpt-settings-content">
+          <div className="rpt-settings-content rpt-scrollable">
             {/* Table Identifier Section */}
             <div className="rpt-settings-section">
               <h5 className="rpt-settings-section-title">Table Identifier</h5>
@@ -320,11 +364,19 @@ export function TableSettings({
                 <button
                   className="rpt-load-config-btn"
                   onClick={() => setShowConfigurations(!showConfigurations)}
+                  type="button"
                 >
                   Load Configuration
                 </button>
                 
-                {ConfigurationsPanel()}
+                {showConfigurations && (
+                  <ConfigurationsPanel
+                    configurations={savedConfigurations}
+                    currentIdentifier={currentTableIdentifier}
+                    onLoadConfig={handleLoadConfiguration}
+                    onClose={() => setShowConfigurations(false)}
+                  />
+                )}
               </div>
             </div>
             
@@ -515,25 +567,25 @@ export function TableSettings({
                   id="feature-striped"
                   label="Zebra Striping"
                   checked={!!settings.striped}
-                  onChange={(val) => handleFeatureChange('striped', val)}
+                  onChange={(val) => onUpdateSetting('striped', val)}
                 />
                 <CheckboxOption
                   id="feature-hover"
                   label="Highlight On Hover"
                   checked={settings.hover !== false} // true by default
-                  onChange={(val) => handleFeatureChange('hover', val)}
+                  onChange={(val) => onUpdateSetting('hover', val)}
                 />
                 <CheckboxOption
                   id="feature-bordered"
                   label="Bordered"
                   checked={!!settings.bordered}
-                  onChange={(val) => handleFeatureChange('bordered', val)}
+                  onChange={(val) => onUpdateSetting('bordered', val)}
                 />
                 <CheckboxOption
                   id="feature-sticky"
                   label="Sticky Header"
                   checked={!!settings.sticky}
-                  onChange={(val) => handleFeatureChange('sticky', val)}
+                  onChange={(val) => onUpdateSetting('sticky', val)}
                 />
               </div>
             </div>
@@ -545,6 +597,7 @@ export function TableSettings({
                   className="rpt-settings-save-btn"
                   onClick={handleSaveSettings}
                   disabled={!tableIdentifier.trim() || !!identifierError}
+                  type="button"
                 >
                   Save Settings
                 </button>

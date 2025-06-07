@@ -161,6 +161,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             disabled={disabled || isLoading}
             className={cn(
               'rpt-select',
+              'rpt-scrollable', // Add scrollable class for custom scrollbar
               className
             )}
             aria-invalid={error ? 'true' : 'false'}

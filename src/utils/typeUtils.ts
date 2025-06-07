@@ -65,6 +65,48 @@ export function getPropertyValue(obj: any, path: string | number | symbol): any 
 }
 
 /**
+ * Type-safe way to get a nested property value from an object using a path string
+ * Supports dot notation (e.g. 'user.address.street')
+ * 
+ * @param obj The object to get the value from
+ * @param path The property path (e.g. 'user.name' or 'items[0].title')
+ * @param defaultValue Value to return if the path doesn't exist
+ * @returns The value at the path or defaultValue if not found
+ */
+export function getNestedValue<T = any>(obj: any, path: string, defaultValue?: T): T | undefined {
+  try {
+    // Return undefined for undefined/null objects
+    if (obj === undefined || obj === null) return defaultValue;
+
+    // Handle simple property access
+    if (typeof path !== 'string' || path.trim() === '') return obj;
+
+    // Handle array syntax like 'items[0]'
+    const sanitizedPath = path.replace(/\[(\w+)\]/g, '.$1');
+    const parts = sanitizedPath.split('.');
+    
+    // Start with the object
+    let current = obj;
+    
+    // Navigate through the path
+    for (const part of parts) {
+      if (part.trim() === '') continue;
+      
+      // Return undefined if we hit a null/undefined value before the end
+      if (current === undefined || current === null) return defaultValue;
+      
+      // Get the next level
+      current = current[part];
+    }
+    
+    return current !== undefined ? current : defaultValue;
+  } catch (error) {
+    console.error(`Error getting nested value for path '${path}':`, error);
+    return defaultValue;
+  }
+}
+
+/**
  * Utility function to set a property value on an object
  * Supports dot notation for nested properties
  */
@@ -303,4 +345,61 @@ export function debounce<T extends (...args: any[]) => void>(
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
+}
+
+/**
+ * Utility function to convert a value to a specific type
+ * 
+ * @param value The value to convert
+ * @param type The target type ('string', 'number', 'boolean', 'date', etc.)
+ * @returns The converted value
+ */
+export function convertType(value: any, type: string): any {
+  if (value === null || value === undefined) return value;
+  
+  switch (type.toLowerCase()) {
+    case 'string':
+      return safeToString(value);
+      
+    case 'number':
+      const num = Number(value);
+      return isNaN(num) ? value : num;
+      
+    case 'boolean':
+      if (typeof value === 'string') {
+        const lowered = value.toLowerCase();
+        return lowered === 'true' || lowered === '1' || lowered === 'yes';
+      }
+      return Boolean(value);
+      
+    case 'date':
+      if (value instanceof Date) return value;
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? value : date;
+      
+    default:
+      return value;
+  }
+}
+
+/**
+ * Determine if a value is a plain object (not null, an array, or a function)
+ * 
+ * @param value The value to check
+ * @returns True if the value is a plain object
+ */
+export function isPlainObject(value: any): boolean {
+  if (value === null || value === undefined) return false;
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+/**
+ * Deep clone an object
+ * 
+ * @param obj The object to clone
+ * @returns A deep clone of the object
+ */
+export function deepClone<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  return JSON.parse(JSON.stringify(obj));
 }

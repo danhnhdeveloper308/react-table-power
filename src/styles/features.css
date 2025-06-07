@@ -118,12 +118,175 @@ table.rpt-table.rpt-table-hover tbody tr:hover {
   .rpt-table-container.rpt-fixed-header {
     width: 100% !important; /* Allow full width on small screens */
   }
-  
-  /* .rpt-table-container.rpt-fixed-header {
-    max-height: 50vh !important; 
+}
+
+/**
+ * React Power Table - Features Styles
+ * CSS for various table features like batch actions
+ */
+
+/* Batch Actions Container */
+.rpt-batch-actions-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  z-index: 1000;
+  pointer-events: none; /* Allow clicking through the container */
+}
+
+/* Batch Actions Bar */
+.rpt-batch-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background-color: var(--rpt-bg-color);
+  border: 1px solid var(--rpt-border-color);
+  border-radius: var(--rpt-border-radius);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1.5rem;
+  min-width: 300px;
+  max-width: 600px;
+  pointer-events: auto; /* Enable interactions with the bar */
+  margin-bottom: 1.5rem;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .rpt-batch-actions-bar {
+  background-color: var(--rpt-bg-color);
+  border-color: var(--rpt-border-color);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Batch actions text */
+.rpt-batch-actions-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rpt-text-color);
+}
+
+/* Batch actions button container */
+.rpt-batch-actions-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Batch action button base style */
+.rpt-batch-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--rpt-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Delete button */
+.rpt-batch-action-delete {
+  background-color: var(--rpt-danger-bg, rgba(239, 68, 68, 0.1));
+  color: var(--rpt-danger, #ef4444);
+  border: 1px solid transparent;
+}
+
+.rpt-batch-action-delete:hover {
+  background-color: var(--rpt-danger, #ef4444);
+  color: white;
+}
+
+/* Cancel button */
+.rpt-batch-action-cancel {
+  background-color: transparent;
+  border: 1px solid var(--rpt-border-color);
+  color: var(--rpt-text-color);
+}
+
+.rpt-batch-action-cancel:hover {
+  background-color: var(--rpt-row-hover-bg);
+  border-color: var(--rpt-border-hover-color);
+}
+
+/* Loading spinner styles */
+.rpt-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: rpt-spin 0.8s linear infinite;
+}
+
+.rpt-spinner-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-width: 1.5px;
+}
+
+@keyframes rpt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .rpt-batch-actions-bar {
+    width: calc(100% - 2rem);
+    max-width: none;
+    padding: 0.625rem 1rem;
+    margin-bottom: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
   }
   
-  .rpt-table-container.rpt-fixed-header .rpt-scroll-container {
-    max-height: 50vh !important;
-  } */
+  .rpt-batch-actions-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .rpt-batch-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Fix for duplicate scrollbars */
+.rpt-table-wrapper {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* Don't show scrollbar on the container if table wrapper handles it */
+.rpt-container {
+  overflow-x: hidden !important;
+}
+
+/* Let the table wrapper handle scrolling */
+.rpt-table-container {
+  overflow: hidden !important;
+}
+
+/* Make sure only one scrollbar appears */
+.rpt-container::-webkit-scrollbar,
+.rpt-table_container::-webkit-scrollbar {
+  display: none !important;
+}
+
+.rpt-table-wrapper::-webkit-scrollbar {
+  height: var(--rpt-scrollbar-width);
+  background-color: var(--rpt-scrollbar-bg);
+}
+
+.rpt-table-wrapper:hover::-webkit-scrollbar {
+  height: var(--rpt-scrollbar-hover-width);
 }

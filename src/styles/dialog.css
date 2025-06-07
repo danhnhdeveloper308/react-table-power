@@ -103,12 +103,45 @@
   height: 16px;
 }
 
-/* Dialog content */
+/* Dialog content with improved scrollbar */
 .rpt-dialog-content {
   padding: 1.5rem;
   overflow-y: auto;
   flex-grow: 1;
   max-height: calc(90vh - 150px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-dialog-content:hover {
+  scrollbar-width: auto;
+  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
+}
+
+.rpt-dialog-content::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-width);
+  background-color: var(--rpt-scrollbar-bg);
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-dialog-content:hover::-webkit-scrollbar {
+  width: var(--rpt-scrollbar-hover-width);
+}
+
+.rpt-dialog-content::-webkit-scrollbar-track {
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 10px;
+}
+
+.rpt-dialog-content::-webkit-scrollbar-thumb {
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 10px;
+  transition: var(--rpt-scrollbar-transition);
+}
+
+.rpt-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: var(--rpt-scrollbar-thumb-hover-color);
 }
 
 /* Dialog footer */
@@ -337,55 +370,73 @@
   max-width: 96vw;
 }
 
-/* For mobile devices */
+/* For mobile devices - improve responsive behavior */
 @media (max-width: 640px) {
   .rpt-dialog {
     width: 100%;
     max-width: none !important;
-    max-height: 96vh;
-    margin: 1rem;
-    height: auto;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .rpt-dialog-backdrop{ 
     padding: 0;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
   }
-
-
   
   .rpt-dialog-header {
     padding: 1rem;
+    position: sticky;
+    top: 0;
+    background-color: var(--rpt-bg-color);
+    z-index: 10;
   }
   
   .rpt-dialog-content {
     padding: 1rem;
+    max-height: none;
+    flex: 1;
   }
   
   .rpt-dialog-footer {
     padding: 1rem;
-    flex-direction: column;
-    gap: 0.5rem;
+    position: sticky;
+    bottom: 0;
+    background-color: var(--rpt-bg-color);
+    z-index: 10;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
   }
   
   .rpt-dialog-actions {
-    flex-direction: column-reverse;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    justify-content: space-between !important;
     width: 100%;
   }
   
-  .rpt-dialog-actions--left,
-  .rpt-dialog-actions--right,
-  .rpt-dialog-actions--center,
-  .rpt-dialog-actions--split {
-    justify-content: stretch;
+  .rpt-dialog-actions .rpt-btn {
+    flex: 1;
+  }
+}
+
+/* Tablet optimization */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .rpt-dialog {
+    max-width: 90vw;
+  }
+}
+
+/* Fix for landscape mobile orientation */
+@media (max-width: 896px) and (orientation: landscape) {
+  .rpt-dialog {
+    max-height: 90vh;
+    height: auto;
   }
   
-  .rpt-dialog {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+  .rpt-dialog-content {
+    max-height: 60vh;
   }
 }
 

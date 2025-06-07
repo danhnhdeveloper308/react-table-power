@@ -200,6 +200,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             placeholder={placeholder}
             className={cn(
               'rpt-search-input',
+              'rpt-scrollable', // Add scrollable class for custom scrollbar
               `rpt-search-size-${size}`,
               `rpt-search-${variant}`,
               iconPosition === 'left' && 'rpt-search-input-with-left-icon',

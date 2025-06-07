@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { TableSize, TableThemeConfig } from '../types';
+import { useDataTableConfig } from '../contexts/DataTableConfigContext';
 
+// Thống nhất định nghĩa TableSettings ở một nơi duy nhất
 export interface TableSettings {
   size?: TableSize;
-  theme?: 'light' | 'dark' | 'system';
+  theme?: string;
   variant?: 'default' | 'modern' | 'minimal' | 'bordered';
   colorScheme?: 'default' | 'primary' | 'neutral' | 'custom';
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
@@ -11,6 +13,11 @@ export interface TableSettings {
   bordered?: boolean;
   hover?: boolean;
   sticky?: boolean;
+  emptyState?: {
+    title?: string;
+    message?: string;
+    action?: React.ReactNode;
+  };
 }
 
 export const defaultSettings: TableSettings = {
@@ -25,7 +32,7 @@ export const defaultSettings: TableSettings = {
   sticky: false
 };
 
-interface UseTableSettingsOptions {
+export interface UseTableSettingsOptions {
   tableId?: string;
   initialSettings?: Partial<TableSettings>;
   persistKey?: string;
@@ -37,29 +44,13 @@ interface UseTableSettingsOptions {
   useUrlAsKey?: boolean;
   /**
    * Custom identifier for this table when multiple tables exist on the same page
-   * This will be added to the URL-based key if useUrlAsKey is true
    */
   tableIdentifier?: string;
 }
 
-interface StoredSettings {
-  key: string;
-  settings: TableSettings;
-}
-
 /**
- * Hook to manage and persist table settings
- * 
- * @example
- * // Basic usage
- * const { settings, updateSetting } = useTableSettings();
- * 
- * @example
- * // With custom identifier for multiple tables on same page
- * const { settings, updateSetting } = useTableSettings({
- *   tableIdentifier: 'userTable',
- *   initialSettings: { size: 'small' }
- * });
+ * Hook to manage table settings
+ * Avoids direct localStorage access during render to be SSR-compatible
  */
 export function useTableSettings({
   tableId = 'rpt-table',
@@ -69,330 +60,205 @@ export function useTableSettings({
   useUrlAsKey = true,
   tableIdentifier
 }: UseTableSettingsOptions = {}) {
+  // Get provider config
+  const providerConfig = useDataTableConfig();
+  
+  // Track if component is mounted (client-side only)
+  const isMounted = useRef(false);
+  const isClient = typeof window !== 'undefined';
+  
   // Track if settings were updated manually
   const manuallyUpdatedRef = useRef(false);
   
+  // Merge provider config with default settings and initialSettings
+  const mergedDefaults = useMemo(() => {
+    const defaults = { ...defaultSettings };
+    
+    // Apply provider config settings if present
+    if (providerConfig) {
+      if (providerConfig.size) defaults.size = providerConfig.size;
+      if (providerConfig.theme) {
+        defaults.theme = providerConfig.theme.theme || defaultSettings.theme;
+        defaults.variant = providerConfig.theme.variant || defaultSettings.variant;
+        defaults.colorScheme = providerConfig.theme.colorScheme || defaultSettings.colorScheme;
+        defaults.borderRadius = providerConfig.theme.borderRadius || defaultSettings.borderRadius;
+      }
+      if (providerConfig.striped !== undefined) defaults.striped = providerConfig.striped;
+      if (providerConfig.bordered !== undefined) defaults.bordered = providerConfig.bordered;
+      if (providerConfig.hover !== undefined) defaults.hover = providerConfig.hover;
+      if (providerConfig.sticky !== undefined) defaults.sticky = providerConfig.sticky;
+      
+      // Thêm emptyState từ config nếu có
+      if (providerConfig.emptyState) {
+        defaults.emptyState = { ...providerConfig.emptyState };
+      }
+    }
+    
+    // Then apply initialSettings on top
+    return { ...defaults, ...(initialSettings || {}) };
+  }, [providerConfig, initialSettings]);
+  
   // Reference to initial settings to avoid infinite loops
-  const initialSettingsRef = useRef(initialSettings);
+  const initialSettingsRef = useRef(mergedDefaults);
 
-  // Check if we should use URL param tableId
-  const getTableIdFromUrl = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get('tableId') || tableIdentifier;
-    }
-    return tableIdentifier;
-  }, [tableIdentifier]);
-
-  // Normalizes the pathname to prevent double hyphens when creating storage keys
-  // For example: /examples/users-management -> examples-users-management
-  const getNormalizedPathname = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const pathname = window.location.pathname;
-      // Remove leading slash and convert remaining slashes to hyphens
-      // Also clean up any repeated hyphens or trailing hyphens
-      return pathname.replace(/^\//, '')
-                     .replace(/\//g, '-')
-                     .replace(/-+/g, '-')
-                     .replace(/-$/g, '');
-    }
-    return '';
-  }, []);
-
-  // Generate a unique and consistent storage key
+  // Generate a storage key safely (without accessing window during render)
   const generateStorageKey = useCallback(() => {
     // Start with the base key
     let baseKey = persistKey || `rpt-settings`;
     
-    // Add URL pathname if enabled and running in browser
-    if (useUrlAsKey && typeof window !== 'undefined') {
-      const normalizedPathname = getNormalizedPathname();
-      if (normalizedPathname) {
-        baseKey += `-${normalizedPathname}`;
-      }
-    }
-    
-    // First check URL param, then use provided tableIdentifier
-    const effectiveTableId = getTableIdFromUrl();
-    
     // Add table identifier if provided
-    if (effectiveTableId) {
-      // Ensure we have a clean identifier without duplicate elements
-      const pathParts = baseKey.split('-');
-      // Don't add the identifier if it's already part of the path
-      if (!pathParts.includes(effectiveTableId)) {
-        baseKey += `-${effectiveTableId}`;
-      }
-    } 
-    // Fall back to tableId if no specific identifiers were provided
-    else if (!persistKey && !useUrlAsKey) {
+    if (tableIdentifier) {
+      baseKey += `-${tableIdentifier}`;
+    } else if (tableId) {
       baseKey += `-${tableId}`;
     }
     
+    // Add URL pathname if requested
+    if (useUrlAsKey && typeof window !== 'undefined') {
+      baseKey += `-${window.location.pathname}`;
+    }
+    
     return baseKey;
-  }, [persistKey, useUrlAsKey, tableId, getTableIdFromUrl, getNormalizedPathname]);
+  }, [persistKey, tableId, tableIdentifier, useUrlAsKey]);
 
-  // Initial storage key
-  const [storageKey, setStorageKey] = useState(generateStorageKey);
-  
-  // Update storage key if URL changes
-  useEffect(() => {
-    const newKey = generateStorageKey();
-    if (newKey !== storageKey) {
-      setStorageKey(newKey);
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Storage key updated:', newKey);
-      }
+  // Initialize with defaults, will be updated after mount if needed
+  const [storageKey] = useState(generateStorageKey);
+  const [settings, setSettings] = useState<TableSettings>(mergedDefaults);
+
+  // Extract table identifier from current storage key
+  const extractTableIdentifier = useCallback((): string => {
+    // If we have a direct tableIdentifier, use that
+    if (tableIdentifier) {
+      return tableIdentifier;
     }
-  }, [generateStorageKey, storageKey]);
-
-  // Get all stored keys for this application
-  const getAllStoredKeys = useCallback(() => {
-    if (typeof window === 'undefined') return [];
-    
-    const keys = [];
-    const prefix = 'rpt-settings';
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(prefix)) {
-        keys.push(key);
-      }
-    }
-    
-    return keys;
-  }, []);
-
-  // Cleanup duplicate or outdated settings
-  const cleanupStoredSettings = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const allKeys = getAllStoredKeys();
-      const normalizedPathname = getNormalizedPathname();
-      const effectiveTableId = getTableIdFromUrl();
-      
-      // If we have a valid pathname and tableId, remove any conflicting settings
-      if (normalizedPathname && effectiveTableId) {
-        const baseWithoutId = `rpt-settings-${normalizedPathname}`;
-        const currentKey = `${baseWithoutId}-${effectiveTableId}`;
-        
-        // Get the current settings if they exist
-        const currentSettings = localStorage.getItem(currentKey);
-        
-        // Check for duplicate keys or outdated keys that should be consolidated
-        allKeys.forEach(key => {
-          // Skip the current key
-          if (key === currentKey) return;
-          
-          // Look for keys that are for the same page but different identifiers
-          // or keys that are duplicates (could happen with URL changes)
-          if (key.startsWith(baseWithoutId) && key !== currentKey) {
-            console.log(`Found duplicate/outdated key: ${key}, consolidating with: ${currentKey}`);
-            
-            // If we don't have current settings but have settings under this key, migrate them
-            if (!currentSettings && localStorage.getItem(key)) {
-              localStorage.setItem(currentKey, localStorage.getItem(key)!);
-              localStorage.removeItem(key);
-            } 
-            // If we already have current settings, remove the duplicate
-            else if (key !== storageKey) { // Don't remove the key we're using
-              localStorage.removeItem(key);
-            }
-          }
-        });
-      }
-    } catch (error) {
-      console.warn('Error cleaning up stored settings:', error);
-    }
-  }, [getAllStoredKeys, getNormalizedPathname, getTableIdFromUrl, storageKey]);
-
-  // Run cleanup once when the component mounts
-  useEffect(() => {
-    cleanupStoredSettings();
-  }, [cleanupStoredSettings]);
-
-  // Check for existing settings with similar keys to avoid duplicate keys
-  const findExistingSettings = useCallback((): StoredSettings | null => {
-    if (typeof window === 'undefined') return null;
 
     try {
-      // First check if an exact key match exists
-      const exactMatch = localStorage.getItem(storageKey);
-      if (exactMatch) {
-        return {
-          key: storageKey,
-          settings: JSON.parse(exactMatch)
-        };
-      }
-      
-      // Get the base parts of our current key (without identifier)
-      const baseKeyParts = storageKey.split('-');
-      // We expect "rpt-settings-pathname-identifier"
-      // So the base path is all elements except the last one
-      const basePathParts = baseKeyParts.length > 2 ? 
-        baseKeyParts.slice(0, -1).join('-') : storageKey;
-      
-      // Check for keys with same path but different identifiers
-      const allKeys = getAllStoredKeys();
-      for (const key of allKeys) {
-        if (key === storageKey) continue; // Skip exact match, we already checked it
-        
-        try {
-          const currentKeyParts = key.split('-');
-          // Get the base path without the identifier
-          const currentPathParts = currentKeyParts.length > 2 ? 
-            currentKeyParts.slice(0, -1).join('-') : key;
-          
-          // If path parts match (same page, different table)
-          if (basePathParts === currentPathParts) {
-            const savedSettings = localStorage.getItem(key);
-            if (savedSettings) {
-              return {
-                key,
-                settings: JSON.parse(savedSettings)
-              };
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to parse settings for key ${key}:`, error);
-        }
-      }
-      
-      // Handle URL parameters specifically
-      const urlTableId = new URLSearchParams(window.location.search).get('tableId');
-      if (urlTableId) {
-        let urlBasedKey = persistKey || `rpt-settings`;
-        if (useUrlAsKey) {
-          const normalizedPathname = getNormalizedPathname();
-          if (normalizedPathname) {
-            urlBasedKey += `-${normalizedPathname}`;
-          }
-        }
-        urlBasedKey += `-${urlTableId}`;
-        
-        const savedSettings = localStorage.getItem(urlBasedKey);
-        if (savedSettings) {
-          return {
-            key: urlBasedKey,
-            settings: JSON.parse(savedSettings)
-          };
-        }
+      // Extract from the current storage key
+      const keyParts = storageKey.split('-');
+      // Last part should be the identifier (assuming our keys follow the pattern)
+      if (keyParts.length > 2) {
+        return keyParts[keyParts.length - 1];
       }
     } catch (error) {
-      console.warn('Error checking localStorage:', error);
+      console.warn('Error extracting table identifier:', error);
     }
-    
-    return null;
-  }, [storageKey, persistKey, useUrlAsKey, getNormalizedPathname, getAllStoredKeys]);
-  
-  // Function to get settings from localStorage
-  const getSavedSettings = useCallback((): TableSettings | null => {
-    if (typeof window === 'undefined') return null;
+    return '';
+  }, [storageKey, tableIdentifier]);
+
+  // Function that safely attempts to use localStorage (for client-side only)
+  const safelyUseStorage = useCallback(<T>(operation: () => T, fallback: T): T => {
+    if (!isClient) return fallback;
     
     try {
-      // First try getting settings from current key
-      const currentKey = generateStorageKey();
-      let savedSettings = localStorage.getItem(currentKey);
-      
-      if (savedSettings) {
-        return JSON.parse(savedSettings);
-      }
-      
-      // If no settings found with current key, check for similar keys
-      const existingSettings = findExistingSettings();
-      if (existingSettings) {
-        // If we found settings under a different key, migrate them to our current key
-        localStorage.setItem(currentKey, JSON.stringify(existingSettings.settings));
-        if (existingSettings.key !== currentKey) {
-          console.log(`Migrated settings from ${existingSettings.key} to ${currentKey}`);
-          // Optionally remove the old settings if different key
-          localStorage.removeItem(existingSettings.key);
-        }
-        return existingSettings.settings;
-      }
+      return operation();
     } catch (error) {
-      console.warn('Failed to parse saved table settings:', error);
+      console.warn('LocalStorage operation failed:', error);
+      return fallback;
     }
-    
-    return null;
-  }, [generateStorageKey, findExistingSettings]);
-  
-  // Initialize settings from localStorage or defaults
-  const [settings, setSettings] = useState<TableSettings>(() => {
-    const savedSettings = getSavedSettings();
-    
-    if (savedSettings) {
-      // Merge saved settings with defaults and initialSettings, prioritizing initialSettings
-      return { 
-        ...defaultSettings, 
-        ...savedSettings,
-        ...(initialSettingsRef.current || {}) 
-      };
-    }
-    
-    // If no saved settings or errors, use defaults + initial settings
-    return { ...defaultSettings, ...(initialSettingsRef.current || {}) };
-  });
+  }, [isClient]);
 
-  // Apply settings when storage key changes
+  // Load settings from storage after mount (client-side only)
   useEffect(() => {
-    if (typeof window === 'undefined' || manuallyUpdatedRef.current) return;
+    if (!isClient) return;
     
-    const savedSettings = getSavedSettings();
-    if (savedSettings) {
-      // Apply saved settings while preserving any initialSettings that were provided
-      setSettings({
-        ...defaultSettings,
-        ...savedSettings,
-        ...(initialSettingsRef.current || {})
-      });
-    }
+    isMounted.current = true;
     
-    // Reset manual update flag when the storage key changes
-    return () => {
-      manuallyUpdatedRef.current = false;
+    const loadSettings = () => {
+      safelyUseStorage(() => {
+        const storedSettings = localStorage.getItem(storageKey);
+        if (storedSettings) {
+          try {
+            const parsed = JSON.parse(storedSettings) as TableSettings;
+            setSettings(current => ({ ...current, ...parsed }));
+          } catch (e) {
+            console.warn('Failed to parse stored table settings:', e);
+          }
+        }
+      }, null);
     };
-  }, [storageKey, getSavedSettings]);
-  
-  // Save settings to localStorage when they change
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
     
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(settings));
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Saved settings to localStorage', { key: storageKey, settings });
-      }
-    } catch (error) {
-      console.warn('Failed to save table settings:', error);
+    // Load settings after mount
+    loadSettings();
+    
+    // Log storage key for debugging in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Table settings using storage key:', storageKey);
     }
+  }, [storageKey, safelyUseStorage, isClient]);
+
+  // Save settings to storage when they change (client-side only)
+  useEffect(() => {
+    if (!isMounted.current || !isClient) return;
+    
+    safelyUseStorage(() => {
+      localStorage.setItem(storageKey, JSON.stringify(settings));
+    }, null);
     
     // Call onChange handler if provided
     if (onChange) {
       onChange(settings);
     }
-  }, [settings, storageKey, onChange]);
-  
+  }, [settings, storageKey, onChange, safelyUseStorage, isClient]);
+
+  // Detect system color scheme changes
+  useEffect(() => {
+    if (!isClient) return;
+    
+    // Only add listener if theme is set to system
+    if (settings.theme !== 'system') return;
+    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = () => {
+      // We don't need to update settings here, just trigger a re-render
+      // when system preference changes
+      if (onChange) {
+        onChange(settings);
+      }
+    };
+    
+    // Modern browsers
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } 
+    // Legacy browsers
+    else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleChange);
+    }
+    
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else if (mediaQuery.removeListener) {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, [settings.theme, onChange, settings, isClient]);
+
   // Update a specific setting
   const updateSetting = useCallback(<K extends keyof TableSettings>(
     key: K,
     value: TableSettings[K]
   ) => {
     manuallyUpdatedRef.current = true;
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value
-    }));
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Updating table setting: ${String(key)} =`, value);
+    }
+    
+    setSettings((prev) => {
+      // Only update if value is different to prevent unnecessary re-renders
+      if (prev[key] === value) return prev;
+      
+      // Create updated settings
+      return { ...prev, [key]: value };
+    });
   }, []);
   
   // Update multiple settings at once
   const updateSettings = useCallback((newSettings: Partial<TableSettings>) => {
     manuallyUpdatedRef.current = true;
-    setSettings((prev) => ({
-      ...prev,
-      ...newSettings
-    }));
+    setSettings(prev => ({ ...prev, ...newSettings }));
   }, []);
   
   // Reset settings to defaults
@@ -403,8 +269,16 @@ export function useTableSettings({
   
   // Get theme config for ThemeProvider
   const getThemeConfig = useCallback((): TableThemeConfig => {
+    // Default to system preference if we're on client-side and theme is 'system'
+    let effectiveTheme = settings.theme || 'system';
+    
+    if (isClient && effectiveTheme === 'system') {
+      // Check system preference
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
     return {
-      theme: settings.theme,
+      theme: effectiveTheme as 'light' | 'dark' | 'system',
       variant: settings.variant,
       colorScheme: settings.colorScheme,
       borderRadius: settings.borderRadius,
@@ -413,143 +287,67 @@ export function useTableSettings({
     settings.theme,
     settings.variant,
     settings.colorScheme,
-    settings.borderRadius
+    settings.borderRadius,
+    isClient
   ]);
   
-  // Update URL with table identifier without page reload
-  const updateUrlWithTableId = useCallback((identifier: string) => {
-    if (typeof window === 'undefined') return false;
-    
-    try {
-      const url = new URL(window.location.href);
-      const currentTableId = url.searchParams.get('tableId');
-      
-      if (currentTableId !== identifier) {
-        url.searchParams.set('tableId', identifier);
-        window.history.replaceState({}, '', url);
-        return true;
-      }
-    } catch (error) {
-      console.warn('Failed to update URL with tableId:', error);
-    }
-    return false;
-  }, []);
-  
-  // Save settings with a new table identifier
-  const saveSettingsWithIdentifier = useCallback((identifier: string): boolean => {
-    if (typeof window === 'undefined' || !identifier.trim()) return false;
-    
-    try {
-      // Create the new storage key with the new identifier
-      let baseKey = persistKey || `rpt-settings`;
-      if (useUrlAsKey) {
-        const normalizedPathname = getNormalizedPathname();
-        if (normalizedPathname) {
-          baseKey += `-${normalizedPathname}`;
-        }
-      }
-      
-      // Ensure the identifier doesn't duplicate parts of the path
-      const pathParts = baseKey.split('-');
-      if (!pathParts.includes(identifier)) {
-        baseKey += `-${identifier}`;
-      } else {
-        // If the identifier is already in the path, reconstruct without duplication
-        const parts = [];
-        for (const part of pathParts) {
-          if (part !== identifier) {
-            parts.push(part);
-          }
-        }
-        baseKey = [...parts, identifier].join('-');
-      }
-      
-      // Save current settings to new key
-      localStorage.setItem(baseKey, JSON.stringify(settings));
-      
-      // Update URL with new identifier
-      updateUrlWithTableId(identifier);
-      
-      // Update our current storage key
-      setStorageKey(baseKey);
-
-      // Clean up old settings with conflicting identifiers
-      cleanupStoredSettings();
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to save settings with new identifier:', error);
-      return false;
-    }
-  }, [settings, persistKey, useUrlAsKey, getNormalizedPathname, updateUrlWithTableId, cleanupStoredSettings]);
-  
-  // Get the current storage key being used
+  // Get current storage key
   const getCurrentStorageKey = useCallback(() => {
     return storageKey;
   }, [storageKey]);
-
-  // Extract table identifier from key
-  const extractTableIdentifier = useCallback((): string => {
-    const keyParts = storageKey.split('-');
-    return keyParts.length > 0 ? keyParts[keyParts.length - 1] : '';
-  }, [storageKey]);
-
-  // Delete all table settings for this page/application
-  const deleteAllSettings = useCallback(() => {
-    if (typeof window === 'undefined') return;
+  
+  // Save settings with a specific identifier
+  const saveSettingsWithIdentifier = useCallback((identifier: string): boolean => {
+    if (!identifier.trim() || !isClient) return false;
     
-    try {
-      const allKeys = getAllStoredKeys();
-      const normalizedPathname = getNormalizedPathname();
+    return safelyUseStorage(() => {
+      // Create the new storage key with the new identifier
+      let baseKey = persistKey || `rpt-settings`;
       
-      allKeys.forEach(key => {
-        // If no pathname filter or key includes the pathname, delete it
-        if (!normalizedPathname || key.includes(normalizedPathname)) {
-          localStorage.removeItem(key);
-        }
-      });
+      // Add table identifier
+      baseKey += `-${identifier}`;
       
-      // Reset to defaults
-      setSettings({ ...defaultSettings, ...initialSettingsRef.current });
-    } catch (error) {
-      console.warn('Error deleting all settings:', error);
-    }
-  }, [getAllStoredKeys, getNormalizedPathname]);
+      // Save current settings to new key
+      localStorage.setItem(baseKey, JSON.stringify(settings));
+      return true;
+    }, false);
+  }, [settings, persistKey, safelyUseStorage, isClient]);
 
-  // Get all saved configurations for the current page
+  // Get all saved configurations
   const getSavedConfigurations = useCallback(() => {
-    if (typeof window === 'undefined') return [];
+    if (!isClient) return [];
     
-    try {
-      const allKeys = getAllStoredKeys();
-      const normalizedPathname = getNormalizedPathname();
-      const configs = [];
+    return safelyUseStorage(() => {
+      const configs: { id: string; name?: string }[] = [];
+      const baseKeyPrefix = 'rpt-settings';
       
-      // Pattern to match: rpt-settings-pathname-identifier
-      const basePattern = normalizedPathname ? 
-        `rpt-settings-${normalizedPathname}-` : 
-        'rpt-settings-';
-      
-      for (const key of allKeys) {
-        if (key.startsWith(basePattern)) {
-          // Extract the identifier (last part)
-          const parts = key.split('-');
-          const identifier = parts[parts.length - 1];
-          
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(baseKeyPrefix)) continue;
+        
+        // Extract the identifier (last part of key)
+        const keyParts = key.split('-');
+        const identifier = keyParts[keyParts.length - 1];
+        
+        if (identifier) {
           configs.push({
             id: identifier,
-            key: key
+            name: identifier // We could add custom names in the future
           });
         }
       }
       
       return configs;
-    } catch (error) {
-      console.warn('Error getting saved configurations:', error);
-      return [];
-    }
-  }, [getAllStoredKeys, getNormalizedPathname]);
-  
+    }, []);
+  }, [safelyUseStorage, isClient]);
+
+  // Get the current system preference (light or dark)
+  const getSystemPreference = useCallback((): 'light' | 'dark' => {
+    if (!isClient) return 'light';
+    
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }, [isClient]);
+
   return {
     settings,
     updateSetting,
@@ -559,9 +357,9 @@ export function useTableSettings({
     getCurrentStorageKey,
     saveSettingsWithIdentifier,
     extractTableIdentifier,
-    updateUrlWithTableId,
-    deleteAllSettings,
-    getSavedConfigurations
+    getSavedConfigurations,
+    getSystemPreference,
+    isClient // Thêm prop isClient để cải thiện tương thích với SSR
   };
 }
 

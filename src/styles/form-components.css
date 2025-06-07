@@ -1150,3 +1150,230 @@
 .rpt-toolbar-search .rpt-search-clear-button:hover {
   color: var(--rpt-danger);
 }
+
+/* Form Components Styles */
+
+/* Checkbox */
+.rpt-checkbox {
+  position: relative;
+  display: inline-block;
+}
+
+.rpt-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.rpt-checkbox-indicator {
+  position: relative;
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  background: var(--rpt-color-background);
+  border: 1px solid var(--rpt-color-border);
+  border-radius: var(--rpt-radius-sm);
+  cursor: pointer;
+  transition: all var(--rpt-transition-fast);
+}
+
+.rpt-checkbox-input:checked + .rpt-checkbox-indicator {
+  background: var(--rpt-color-primary);
+  border-color: var(--rpt-color-primary);
+}
+
+.rpt-checkbox-input:indeterminate + .rpt-checkbox-indicator {
+  background: var(--rpt-color-primary);
+  border-color: var(--rpt-color-primary);
+}
+
+.rpt-checkbox-input:focus + .rpt-checkbox-indicator {
+  outline: 2px solid var(--rpt-color-primary);
+  outline-offset: 2px;
+}
+
+.rpt-checkbox-input:disabled + .rpt-checkbox-indicator {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rpt-checkbox-checkmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.75rem;
+  height: 0.75rem;
+  color: white;
+  opacity: 0;
+  transition: opacity var(--rpt-transition-fast);
+}
+
+.rpt-checkbox-input:checked + .rpt-checkbox-indicator .rpt-checkbox-checkmark,
+.rpt-checkbox-input:indeterminate + .rpt-checkbox-indicator .rpt-checkbox-checkmark {
+  opacity: 1;
+}
+
+/* Input Fields */
+.rpt-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--rpt-color-border);
+  border-radius: var(--rpt-radius-md);
+  font-size: var(--rpt-font-size-sm);
+  background: var(--rpt-color-background);
+  color: var(--rpt-color-text);
+  transition: all var(--rpt-transition-fast);
+}
+
+.rpt-input:focus {
+  outline: none;
+  border-color: var(--rpt-color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.rpt-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rpt-input--error {
+  border-color: var(--rpt-color-error);
+}
+
+.rpt-input--error:focus {
+  border-color: var(--rpt-color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Select */
+.rpt-select {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.rpt-select-control {
+  width: 100%;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid var(--rpt-color-border);
+  border-radius: var(--rpt-radius-md);
+  font-size: var(--rpt-font-size-sm);
+  background: var(--rpt-color-background);
+  color: var(--rpt-color-text);
+  cursor: pointer;
+  transition: all var(--rpt-transition-fast);
+  appearance: none;
+}
+
+.rpt-select-control:focus {
+  outline: none;
+  border-color: var(--rpt-color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.rpt-select-arrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--rpt-color-text-secondary);
+  pointer-events: none;
+}
+
+/* Form Groups */
+.rpt-form-group {
+  margin-bottom: 1rem;
+}
+
+.rpt-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.rpt-form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: var(--rpt-font-size-sm);
+  font-weight: 500;
+  color: var(--rpt-color-text);
+}
+
+.rpt-form-label--required::after {
+  content: '*';
+  color: var(--rpt-color-error);
+  margin-left: 0.25rem;
+}
+
+.rpt-form-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--rpt-font-size-xs);
+  color: var(--rpt-color-error);
+}
+
+.rpt-form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--rpt-font-size-xs);
+  color: var(--rpt-color-text-secondary);
+}
+
+/* Search Input */
+.rpt-search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rpt-search-input-field {
+  flex: 1;
+  padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+  border: 1px solid var(--rpt-color-border);
+  border-radius: var(--rpt-radius-md);
+  font-size: var(--rpt-font-size-sm);
+  background: var(--rpt-color-background);
+  color: var(--rpt-color-text);
+  transition: all var(--rpt-transition-fast);
+}
+
+.rpt-search-input-field:focus {
+  outline: none;
+  border-color: var(--rpt-color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.rpt-search-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--rpt-color-text-secondary);
+  pointer-events: none;
+}
+
+.rpt-search-input-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  background: none;
+  border: none;
+  color: var(--rpt-color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpt-search-input-clear:hover {
+  color: var(--rpt-color-text);
+}

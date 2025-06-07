@@ -1,4 +1,4 @@
-# React DataTable Kit
+# React Table Power
 
 A powerful, modern, and highly reusable DataTable component for React with TypeScript support.
 
@@ -440,52 +440,98 @@ function CustomTable() {
 
 For more detailed documentation of all props and TypeScript interfaces, please visit our [full API documentation](https://react-datatable-kit.dev/docs/api).
 
-## Style Customization
+## DataTableProvider
 
-### Basic Class Overrides
+The `DataTableProvider` component allows you to set default configurations for all DataTable instances within its context. This is especially useful for maintaining consistent styling and behavior across your application.
 
-You can customize appearance by providing CSS classes:
+### Basic Usage
 
 ```tsx
-<DataTable
-  className="my-custom-table-container"
-  tableClassName="my-custom-table"
-/>
-```
+import { DataTable, DataTableProvider } from 'react-table-power';
 
-### Theme Customization with CSS Variables
-
-React DataTable Kit provides CSS variables for easy theme customization:
-
-```css
-:root {
-  --rdt-primary: #0284c7;
-  --rdt-primary-foreground: #ffffff;
-  --rdt-secondary: #f3f4f6;
-  --rdt-border: #e5e7eb;
-  /* See documentation for all available variables */
+function App() {
+  return (
+    <DataTableProvider config={{
+      theme: {
+        theme: 'system',
+        variant: 'modern',
+        colorScheme: 'primary',
+      },
+      size: 'medium',
+      striped: true,
+      hover: true,
+      bordered: false,
+      sticky: true,
+      animate: true
+    }}>
+      <MyComponent />
+    </DataTableProvider>
+  );
 }
 
-/* Dark mode support */
-[data-theme="dark"] {
-  --rdt-primary: #0ea5e9;
-  --rdt-background: #1f2937;
-  --rdt-foreground: #ffffff;
+// Inside MyComponent or any descendant component:
+function MyComponent() {
+  return (
+    <DataTable
+      data={data}
+      columns={columns}
+      // These props will override provider settings
+      size="large"
+      // Provider settings will be used for other props
+    />
+  );
 }
 ```
 
-## Browser Support
+### Available Configuration Options
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-- IE 11 (basic support with polyfills)
+The DataTableProvider accepts a `config` prop with the following options:
 
-## Contributing
+- `size`: Default size for all tables ('small', 'medium', 'large')
+- `theme`: Default theme configuration object
+- `striped`: Whether tables should have striped rows by default
+- `bordered`: Whether tables should have borders by default
+- `hover`: Whether tables should have hover effects by default
+- `sticky`: Whether tables should have sticky headers by default
+- `animate`: Whether tables should have animations by default
+- `dialog`: Default dialog configuration
+- `loading`: Default loading indicator configuration
+- `labels`: Default text labels and translations
+- `pagination`: Default pagination configuration
+- `filterDefaults`: Default filtering options
+- `dateFormat`: Default date format for date columns
+- `numberFormat`: Default number format for numeric columns
+- `persistSettings`: Whether to persist table settings by default
+- `animations`: Default animation settings
 
-We welcome contributions to React DataTable Kit! Please see our [contributing guide](CONTRIBUTING.md) for more details.
+### Server-Side Rendering (SSR) Support
 
-## License
+The DataTableProvider is compatible with server-side rendering frameworks like Next.js. It safely handles hydration and does not cause hydration mismatches.
 
-MIT © [DanhDeveloper](https://github.com/danhnhdeveloper308)
+## Using the DataTableConfig hook
+
+For advanced use cases, you can access the configuration directly in your components:
+
+```tsx
+import { useDataTableConfig } from 'react-table-power';
+
+function MyCustomComponent() {
+  const config = useDataTableConfig();
+  
+  return (
+    <div>
+      Current theme: {config.theme?.theme || 'default'}
+    </div>
+  );
+}
+```
+
+## High-Order Component
+
+You can also wrap your components with the `withDataTableConfig` HOC:
+
+```tsx
+import { withDataTableConfig } from 'react-table-power';
+
+const MyComponentWithConfig = withDataTableConfig(MyComponent);
+```
