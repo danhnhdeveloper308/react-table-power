@@ -375,6 +375,8 @@ export interface BuiltInActionsConfig {
      * @default 'auto'
      */
     formInterface?: 'react-hook-form' | 'formik' | 'final-form' | 'custom' | 'auto';
+
+    skipInitialValidation?: boolean; // Whether to skip initial validation on mount
   };
 }
 
@@ -425,6 +427,7 @@ export interface DialogConfig {
   width?: string | number;
   closeOnClickOutside?: boolean;
   closeOnEsc?: boolean;
+  validateOnMount?: boolean;
 }
 
 // ==================== Loading Configuration ====================
@@ -433,8 +436,8 @@ export interface LoadingConfig {
   spinnerType?: SpinnerType;  // Add this property
   spinnerSize?: SpinnerSize;  // Add this property
   text?: string;              // Add this property
-  skeletonRows?: number;      // Add this property
-  skeletonColumns?: number;   // Add this property
+  skeletonRows?: number;      // FIX: Make sure this is always a number, not undefined
+  skeletonColumns?: number;   // FIX: Make sure this is always a number, not undefined
   customRenderer?: React.ComponentType<any>;
 }
 
@@ -624,14 +627,14 @@ export interface EventHandlersConfig<T extends BaseTableData = BaseTableData> {
   onColumnReorder?: (columns: TableColumn<T>[]) => void;
   onSelectionChange?: (selectedRowKeys: (string | number)[], selectedRows: T[]) => void;
   onExpandChange?: (expandedRowKeys: (string | number)[], expandedRows: T[]) => void;
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<void>;
   onDataChange?: (data: T[]) => void;
   onFilterPresetSave?: (preset: any) => void;
   
   // CRUD handlers with enhanced validation support
   onCreate?: (data: any) => Promise<boolean> | boolean;
-  onUpdate?: (data: any, id?: string | number) => Promise<boolean> | boolean;
-  onDelete?: (id?: string | number) => Promise<boolean> | boolean;
+  onUpdate?: (id: string | number, data: any) => Promise<boolean> | boolean;
+  onDelete?: (id: string | number) => Promise<boolean> | boolean;
   
   // Additional validation/transformation handlers
   onBeforeSubmit?: (type: DialogMode, data: any) => Promise<any | false> | (any | false);
@@ -642,6 +645,7 @@ export interface EventHandlersConfig<T extends BaseTableData = BaseTableData> {
    * Handler called after completing a batch action
    * @param actionType Type of batch action performed
    * @param result Result of the batch operation
+   * @param shouldRefresh Whether the action should trigger a data refresh
    */
   onBatchActionComplete?: (
     actionType: 'delete' | 'update' | string, 
@@ -649,7 +653,8 @@ export interface EventHandlersConfig<T extends BaseTableData = BaseTableData> {
       successes: number; 
       failures: number; 
       results: Array<{ id: string | number; success: boolean; error?: any }>
-    }
+    },
+    shouldRefresh?: boolean
   ) => void;
 }
 
@@ -961,8 +966,8 @@ export interface TableDialogProps {
   description?: string;
   data?: any;
   onClose: () => void;
-  // Fix: Update return type to be Promise<boolean> | boolean
-  onSubmit?: (data: any) => Promise<boolean> | boolean;
+  // Fix: Make the type parameter optional
+  onSubmit?: (data: any, type?: DialogType | null) => Promise<boolean> | boolean | undefined;
   loading?: boolean;
   children?: React.ReactNode;
 }
@@ -988,7 +993,7 @@ export interface AppendableDialogProps<T extends BaseTableData = BaseTableData> 
    * Callback when form is submitted
    * Must return a boolean or Promise<boolean> to indicate success
    */
-  onSubmit?: (data: any, type: DialogType) => Promise<boolean> | boolean;
+  onSubmit?: (data: any, type?: DialogMode | null) => Promise<boolean> | boolean | undefined;
   
   /**
    * Callback when the dialog is closed
@@ -1052,8 +1057,9 @@ export interface DataTableFormProps {
   
   /**
    * Submit handler - automatic if formHandling.autoHandleFormSubmission is true
+   * Fix: Update signature to match our other interfaces
    */
-  onSubmit?: (data: any) => Promise<boolean>;
+  onSubmit?: (data: any, type?: DialogMode | null) => Promise<boolean> | boolean | undefined;
   
   /**
    * Optional ref for DataTable to access form methods
@@ -1143,4 +1149,46 @@ export interface TableToolbarProps<T extends BaseTableData = BaseTableData> {
    * Handle clearing selection
    */
   onClearSelection?: () => void;
+}
+
+// FormAPI Interface to unify form library integration
+export interface FormAPI {
+  getValues: () => Record<string, any>;
+  getValidatedValues: () => Promise<Record<string, any>>;
+  reset: (values?: Record<string, any>) => void;
+  validate: () => Promise<boolean>;
+  isDirty: () => boolean;
+  isValid: () => boolean;
+  getErrors: () => Record<string, any>;
+  setError?: (field: string, message: string) => void;
+  submit?: () => Promise<boolean>;
+}
+
+// ==================== DataTableEventHandlers ====================
+export interface DataTableEventHandlers<T extends BaseTableData = BaseTableData> {
+  onRowClick?: (record: T, index: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  onSelectionChange?: (selectedKeys: (string | number)[], selectedRows: T[]) => void;
+  onSortChange?: (sorting: SortConfig[]) => void;
+  onPageChange?: (page: number, pageSize: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  onGlobalSearchChange?: (searchValue: string) => void;
+  onFilterChange?: (filters: Record<string, any>) => void;
+  onColumnVisibilityChange?: (visibleColumns: string[]) => void;
+  onDataChange?: (data: T[]) => void;
+  
+  // CRITICAL FIX: Ensure refresh handler is properly typed
+  onRefresh?: (() => void | Promise<void>);
+  
+  // CRUD operations with proper return types
+  onCreate?: (data: any) => Promise<boolean> | boolean;
+  onUpdate?: (id: string | number, data: any) => Promise<boolean> | boolean;
+  onDelete?: (id: string | number) => Promise<boolean> | boolean;
+  
+  // Form handling
+  onBeforeSubmit?: (type: DialogMode, data: any) => Promise<any> | any | boolean;
+  onAfterSubmit?: (type: DialogMode, data: any, success: boolean) => void;
+  onValidationError?: (type: DialogMode, errors: Record<string, any>) => void;
+  
+  // Filter presets
+  onFilterPresetSave?: (preset: any) => void;
 }

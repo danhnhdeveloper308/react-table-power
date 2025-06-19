@@ -69,39 +69,62 @@ export function useSafeTableSettings({
     }
   }, []); // Chỉ chạy một lần khi component mount
   
-  // Update setting function - memoized để không gây re-renders
-  const updateSetting = useCallback((key: keyof TableSettings, value: any) => {
-    // Sử dụng functional update để tránh dependency list
+  // CRITICAL FIX: Force component re-render when size changes
+  const updateSetting = useCallback(<K extends keyof TableSettings>(
+    key: K,
+    value: TableSettings[K]
+  ) => {
+    if (!isClient) {
+      console.warn('[useSafeTableSettings] Cannot update settings on server side');
+      return;
+    }
+
+    console.log(`[useSafeTableSettings] Updating ${key} from ${settings?.[key]} to:`, value);
+    
     setSettings(prevSettings => {
-      // Kiểm tra nếu giá trị thực sự thay đổi
-      if (prevSettings[key] === value) {
-        return prevSettings; // Không thay đổi state nếu giá trị như cũ
-      }
+      const currentValue = prevSettings?.[key];
       
-      // Tạo settings mới
-      const newSettings = { ...prevSettings, [key]: value };
-      
-      // Cập nhật ref
-      settingsRef.current = newSettings;
-      
-      // Lưu vào localStorage
-      if (isClient) {
+      // CRITICAL FIX: Always update if value is different
+      if (currentValue !== value) {
+        const newSettings = {
+          ...prevSettings,
+          [key]: value,
+        };
+        
+        console.log(`[useSafeTableSettings] Settings updated:`, newSettings);
+        
+        // Save to localStorage immediately
         try {
-          localStorage.setItem(getCurrentStorageKey(), JSON.stringify(newSettings));
-        } catch (err) {
-          console.error('Error saving table settings:', err);
+          const storageKey = getCurrentStorageKey();
+          localStorage.setItem(storageKey, JSON.stringify(newSettings));
+          console.log(`[useSafeTableSettings] Saved to localStorage with key: ${storageKey}`);
+        } catch (error) {
+          console.error('[useSafeTableSettings] Failed to save to localStorage:', error);
         }
+
+        // CRITICAL FIX: Force re-render by using functional update
+        setTimeout(() => {
+          console.log('[useSafeTableSettings] Triggering additional re-render for:', key, value);
+          setSettings(current => ({ ...current })); // Force re-render
+        }, 0);
+
+        // Call onChange callback
+        if (onChange) {
+          try {
+            onChange(newSettings);
+          } catch (error) {
+            console.error('[useSafeTableSettings] Error in onChange callback:', error);
+          }
+        }
+        
+        return newSettings;
       }
       
-      // Gọi callback onChange nếu có
-      if (onChange) {
-        onChange(newSettings);
-      }
-      
-      return newSettings;
+      console.log(`[useSafeTableSettings] No change needed for ${key}, keeping current value:`, currentValue);
+      return prevSettings;
     });
-  }, [getCurrentStorageKey, isClient, onChange]);
-  
+  }, [isClient, getCurrentStorageKey, onChange, settings]);
+
   // Reset settings về ban đầu
   const resetSettings = useCallback(() => {
     settingsRef.current = initialSettings;

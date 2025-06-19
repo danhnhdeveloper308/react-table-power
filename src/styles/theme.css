@@ -75,13 +75,13 @@
   /* Transitions */
   --rpt-transition-duration: 0.2s;
 
-  /* Custom scrollbar variables */
-  --rpt-scrollbar-width: 4px;
-  --rpt-scrollbar-hover-width: 8px;
-  --rpt-scrollbar-bg: transparent;
+  /* Scrollbar variables - Updated for better control */
+  --rpt-scrollbar-width: 6px;
+  --rpt-scrollbar-hover-width: 12px;
+  --rpt-scrollbar-bg: rgba(0, 0, 0, 0.05);
   --rpt-scrollbar-thumb-color: rgba(0, 0, 0, 0.15);
   --rpt-scrollbar-thumb-hover-color: rgba(0, 0, 0, 0.3);
-  --rpt-scrollbar-transition: all 0.3s ease;
+  --rpt-scrollbar-transition: width 0.2s ease, background-color 0.2s ease;
 }
 
 /* New theme container class to properly cascade theme styles */
@@ -162,7 +162,7 @@
   /* Transitions */
   --rpt-transition-duration: 0.2s;
 
-  /* Custom scrollbar variables */
+  /* Scrollbar variables - Updated for better control */
   --rpt-scrollbar-thumb-color: rgba(255, 255, 255, 0.15);
   --rpt-scrollbar-thumb-hover-color: rgba(255, 255, 255, 0.3);
 }

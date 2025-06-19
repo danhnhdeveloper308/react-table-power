@@ -29,18 +29,13 @@ import TableHeadCell from './table/TableHeadCell';
 import TableCell from './table/TableCell';
 import TableToolbar from './table/TableToolbar';
 import TablePagination from './table/TablePagination';
-import TableEmpty from './table/TableEmpty';
 import TableRowActions from './table/TableRowActions';
-import LoadingState from './LoadingState';
 import ErrorState from './ErrorState';
 import EmptyState from './EmptyState';
-import TableLoading from './TableLoading';
-import DialogLoadingState from './DialogLoadingState';
 import Checkbox from './form/Checkbox';
 import ThemeProvider from './ThemeProvider';
-import BatchActionsBar from './BatchActionsBar'; // Import the new component
+import BatchActionsBar from './BatchActionsBar';
 
-// Import new OptimizedDialog component
 import OptimizedDialog from './OptimizedDialog';
 
 // Import hooks
@@ -61,12 +56,8 @@ import { useDataTableConfig } from '../contexts/DataTableConfigContext';
 // For better animations
 import { motion, AnimatePresence } from 'framer-motion';
 import useSafeTableSettings from '../hooks/useSafeTableSettings';
-import { TableSettings } from '../hooks';
+import { TableSettings, useLoadingStateManager } from '../hooks';
 
-// Comment out AppendableDialog import
-// import AppendableDialog from './AppendableDialog';
-
-// Add this type declaration at the top of the file
 declare global {
   interface Window {
     __REACT_TABLE_POWER_COMPONENTS?: Record<string, boolean>;
@@ -125,11 +116,12 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
   filteringOptions = {},
   ...props
 }: DataTableProps<T>): React.ReactElement {
+  
+  // CRITICAL FIX: Use centralized loading state manager
+  const loadingManager = useLoadingStateManager();
+  
   // Get global default configs
   const defaultConfig = useDataTableConfig();
-
-  // Flag to ensure we only render fully on the client side
-  const [clientSideRendered, setClientSideRendered] = useState(false);
 
   // State
   const [currentPage, setCurrentPage] = useState(1);
@@ -142,7 +134,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
   const [updatedRowKeys, setUpdatedRowKeys] = useState<Set<string | number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
 
-  // Thêm state nội bộ cho dữ liệu bên trong DataTable
+  // CRITICAL FIX: Add missing internalData state
   const [internalData, setInternalData] = useState<T[]>(data);
   
   // Theo dõi thay đổi của dữ liệu đầu vào từ props
@@ -150,173 +142,127 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     setInternalData(data);
   }, [data]);
   
-  // Dữ liệu thực tế sử dụng trong component (dùng internalData thay vì data)
-  const actualData = useMemo(() => internalData, [internalData]);
-  
-  // Built-in delete function - xử lý xóa record nội bộ và không phụ thuộc onDataChange
-  const builtInOnDelete = useCallback(async (recordId: string | number): Promise<boolean> => {
-    console.log('Built-in delete operation for record ID:', recordId);
+  // CRITICAL FIX: Simplified refresh without loading manager conflicts
+  const triggerRefresh = useCallback(async (reason?: string) => {
+    if (!eventHandlers?.onRefresh) {
+      console.warn('[DataTable] No refresh handler available');
+      return;
+    }
     
     try {
-      // Xóa record khỏi dữ liệu nội bộ
-      const updatedData = internalData.filter(item => {
-        const itemId = item.id;
-        return itemId !== recordId;
-      });
+      const refreshResult = eventHandlers.onRefresh();
       
-      // Cập nhật state nội bộ
-      setInternalData(updatedData);
-      
-      // Nếu có onDataChange, gọi để thông báo cho parent component
-      if (eventHandlers?.onDataChange) {
-        eventHandlers.onDataChange(updatedData);
+      if (refreshResult instanceof Promise) {
+        await refreshResult;
       }
       
-      return true;
+      console.log('[DataTable] Refresh completed successfully');
     } catch (error) {
-      console.error('Error in built-in delete operation:', error);
-      return false;
+      console.error('[DataTable] Error during refresh:', error);
     }
-  }, [internalData, eventHandlers?.onDataChange]);
+  }, [eventHandlers?.onRefresh]);
 
-  // Built-in batch delete function - xử lý xóa nhiều records nội bộ
   const builtInBatchDelete = useCallback(async (selectedRows: T[]): Promise<boolean> => {
     if (selectedRows.length === 0) return false;
     
-    console.log('Built-in batch delete operation for', selectedRows.length, 'records');
-    
     try {
-      setIsLoading(true);
+      let successCount = 0;
       
-      const selectedIds = selectedRows
-        .map(row => row.id)
-        .filter((id): id is string | number => id !== undefined);
-      
-      // Xóa records khỏi dữ liệu nội bộ
-      const updatedData = internalData.filter(item => {
-        const itemId = item.id;
-        return itemId === undefined || !selectedIds.includes(itemId);
-      });
-      
-      // Cập nhật state nội bộ
-      setInternalData(updatedData);
-      
-      // Xóa selection sau khi xóa thành công
-      setSelectedRowKeys([]);
-        
-      // Nếu có onDataChange, gọi để thông báo cho parent component
-      if (eventHandlers?.onDataChange) {
-        eventHandlers.onDataChange(updatedData);
+      for (const row of selectedRows) {
+        const rowId = row.id;
+        if (rowId !== undefined && eventHandlers?.onDelete) {
+          try {
+            console.log(`[DataTable] Deleting item with ID: ${rowId}`);
+            const success = await eventHandlers.onDelete(rowId);
+            
+            if (success) {
+              successCount++;
+              console.log(`[DataTable] Successfully deleted item: ${rowId}`);
+            } else {
+              console.warn(`[DataTable] Failed to delete item: ${rowId}`);
+            }
+          } catch (error) {
+            console.error(`[DataTable] Error deleting row with ID ${rowId}:`, error);
+          }
+        }
       }
       
-      return true;
+      // Clear selection regardless of result
+      setSelectedRowKeys([]);
+      
+      // CRITICAL FIX: Simple refresh without complex state management
+      if (successCount > 0) {
+        try {
+          await triggerRefresh('post-batch-delete');
+        } catch (refreshError) {
+          console.error('[DataTable] Error during post-batch-delete refresh:', refreshError);
+        }
+      }
+      
+      return successCount > 0;
     } catch (error) {
-      console.error('Error in built-in batch delete operation:', error);
+      console.error("[DataTable] Error in batch delete operation:", error);
+      setSelectedRowKeys([]);
       return false;
-    } finally {
+    }
+  }, [eventHandlers?.onDelete, triggerRefresh]);
+
+  // CRITICAL FIX: Simplified single delete
+  const builtInOnDelete = useCallback(async (id: string | number): Promise<boolean> => {
+    if (!eventHandlers?.onDelete) {
+      console.warn('[DataTable] No delete handler provided');
+      return false;
+    }
+
+    try {
+      const success = await eventHandlers.onDelete(id);
+      
+      try {
+        await triggerRefresh('post-delete');
+      } catch (refreshError) {
+        console.error('[DataTable] Error during post-delete refresh:', refreshError);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('[DataTable] Error in delete:', error);
+      
+      try {
+        await triggerRefresh('post-delete-error');
+      } catch (refreshError) {
+        console.error('[DataTable] Error during post-delete-error refresh:', refreshError);
+      }
+      
+      throw error;
+    }
+  }, [eventHandlers?.onDelete, triggerRefresh]);
+
+  const stableLoadingManager = useRef(loadingManager);
+  useEffect(() => {
+    stableLoadingManager.current = loadingManager;
+  }, [loadingManager]);
+
+  useEffect(() => {
+    // Only run once on mount
+    const hasData = data && data.length > 0;
+    if (hasData && isLoading) {
       setIsLoading(false);
     }
-  }, [internalData, eventHandlers?.onDataChange]);
-  
-  // Cải thiện batch delete handler với logic đúng
-  const handleBatchDelete = useCallback(async (selectedRows: T[]): Promise<boolean> => {
-    if (selectedRows.length === 0) return false;
+    
+    // Cleanup on unmount only
+    return () => {
+      setIsLoading(false);
+      loadingManager.clearAllLoading();
+    };
+  }, []); 
 
-    // Nếu có handler tùy chỉnh, dùng nó trước
-    if (eventHandlers?.onDelete) {
-      try {
-        setIsLoading(true);
-        
-        const results: Array<{id: string | number; success: boolean; error?: any}> = [];
-        
-        for (const row of selectedRows) {
-          const rowId = row.id;
-          if (rowId !== undefined) {
-            try {
-              const success = await eventHandlers.onDelete(rowId);
-              results.push({ id: rowId, success });
-            } catch (error) {
-              console.error(`Error deleting row with ID ${rowId}:`, error);
-              results.push({ id: rowId, success: false, error });
-            }
-          }
-        }
-        
-        const successCount = results.filter(r => r.success).length;
-        
-        if (successCount > 0) {
-          const successfullyDeletedIds = results
-            .filter(result => result.success)
-            .map(result => result.id);
-          
-          // Cập nhật selection
-          setSelectedRowKeys(prev => prev.filter(key => !successfullyDeletedIds.includes(key)));
-          
-          // Nếu có refresh handler, gọi nó
-          if (eventHandlers?.onRefresh) {
-            setTimeout(() => eventHandlers.onRefresh?.(), 100);
-          } 
-          // Nếu không có refresh handler, cập nhật dữ liệu nội bộ
-          else {
-            const newData = internalData.filter(item => {
-              const itemId = item.id;
-              return itemId === undefined || !successfullyDeletedIds.includes(itemId);
-            });
-            setInternalData(newData);
-            
-            // Thông báo thay đổi nếu có callback
-            if (eventHandlers?.onDataChange) {
-              eventHandlers.onDataChange(newData);
-            }
-          }
-        }
-        
-        return successCount > 0;
-      } catch (error) {
-        console.error("Error in user-provided batch delete operation:", error);
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const shouldShowLoading = useMemo(() => {
+    return loading && data.length === 0;
+  }, [loading, data.length]);
 
-    // Sử dụng built-in batch delete nếu không có handler tùy chỉnh
-    console.log('Using built-in batch delete');
-    return await builtInBatchDelete(selectedRows);
-  }, [eventHandlers?.onDelete, eventHandlers?.onRefresh, eventHandlers?.onDataChange, internalData, builtInBatchDelete]);
-
-  // Use table settings hook
-  const { 
-    settings: tableSettings, 
-    updateSetting: updateTableSetting, 
-    resetSettings: resetTableSettings,
-    getThemeConfig,
-    getCurrentStorageKey,
-    saveSettingsWithIdentifier,
-    isClient
-  } = useSafeTableSettings({
-    initialSettings: {
-      size,
-      theme: theme?.theme || 'system',
-      variant: theme?.variant || 'default',
-      striped,
-      hover,
-      bordered,
-      sticky,
-      colorScheme: theme?.colorScheme || 'default',
-      borderRadius: theme?.borderRadius || 'md'
-    },
-    // Use persistSettings options from props if provided
-    tableId: persistSettings?.persistKey || props.tableId || 'rpt-table',
-    useUrlAsKey: persistSettings?.useUrlAsKey,
-    tableIdentifier: persistSettings?.tableIdentifier,
-    persistKey: persistSettings?.persistKey,
-    onChange: persistSettings?.onChange
-  });
-  
-  // Merge default configs with props
+  // Merge default configs with props - REMOVE automatic theme detection
   const mergedSettings = useMemo(() => {
-    // Start with DataTableProvider defaults
+    // Start with DataTableProvider defaults only
     const baseSettings = {
       size: defaultConfig.size || 'medium',
       striped: defaultConfig.striped ?? false,
@@ -326,7 +272,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       animate: defaultConfig.animations?.enabled ?? true,
       pagination: defaultConfig.pagination ?? true,
       theme: defaultConfig.theme || {
-        theme: 'system',
+        theme: 'light',
         variant: 'default',
         colorScheme: 'default',
         borderRadius: 'md'
@@ -349,7 +295,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       },
     };
 
-    // Override with explicit props (props take precedence over defaults)
+    // Override with explicit props only (props take precedence over defaults)
     return {
       size: size !== undefined ? size : baseSettings.size,
       striped: striped !== undefined ? striped : baseSettings.striped,
@@ -358,7 +304,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       sticky: sticky !== undefined ? sticky : baseSettings.sticky,
       animate: animate !== undefined ? animate : baseSettings.animate,
       pagination: pagination !== undefined ? pagination : baseSettings.pagination,
-      theme: theme || baseSettings.theme,
+      theme: theme || baseSettings.theme, // Use explicit theme prop or provider defaults
       dialog: dialog || baseSettings.dialog,
       loadingConfig: loadingConfig || baseSettings.loadingConfig,
       persistSettings: {
@@ -367,15 +313,15 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
         ...(persistSettings || baseSettings.persistSettings),
       },
       filteringOptions: {
-        advancedFiltering: filteringOptions.advancedFiltering !== undefined ? 
+        advancedFiltering: filteringOptions.advancedFiltering !== undefined ?
           filteringOptions.advancedFiltering : baseSettings.filteringOptions.advancedFiltering,
-        allowFilterPresets: filteringOptions.allowFilterPresets !== undefined ? 
+        allowFilterPresets: filteringOptions.allowFilterPresets !== undefined ?
           filteringOptions.allowFilterPresets : baseSettings.filteringOptions.allowFilterPresets,
-        allowComplexFilters: filteringOptions.allowComplexFilters !== undefined ? 
+        allowComplexFilters: filteringOptions.allowComplexFilters !== undefined ?
           filteringOptions.allowComplexFilters : baseSettings.filteringOptions.allowComplexFilters,
-        persistFilters: filteringOptions.persistFilters !== undefined ? 
+        persistFilters: filteringOptions.persistFilters !== undefined ?
           filteringOptions.persistFilters : baseSettings.filteringOptions.persistFilters,
-        persistKey: filteringOptions.persistKey || getCurrentStorageKey()
+        persistKey: ''
       },
     };
   }, [
@@ -386,14 +332,54 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     sticky, defaultConfig.sticky,
     animate, defaultConfig.animations?.enabled,
     pagination, defaultConfig.pagination,
-    theme, defaultConfig.theme,
+    theme, defaultConfig.theme, // Remove automatic theme detection dependencies
     dialog, defaultConfig.dialog,
     loadingConfig, defaultConfig.loading,
     persistSettings, defaultConfig.persistSettings,
     props.tableId, filteringOptions, defaultConfig.filterDefaults,
-    getCurrentStorageKey
   ]);
+
+  // Use table settings hook
+  const { 
+    settings: tableSettings, 
+    updateSetting: updateTableSetting, 
+    resetSettings: resetTableSettings,
+    getThemeConfig,
+    getCurrentStorageKey,
+    saveSettingsWithIdentifier,
+    isClient
+  } = useSafeTableSettings({
+    initialSettings: {
+      size: mergedSettings.size,
+      theme: mergedSettings.theme?.theme || 'light', // Use provider defaults
+      variant: mergedSettings.theme?.variant || 'default',
+      striped: mergedSettings.striped,
+      hover: mergedSettings.hover,
+      bordered: mergedSettings.bordered,
+      sticky: mergedSettings.sticky,
+      colorScheme: mergedSettings.theme?.colorScheme || 'default',
+      borderRadius: mergedSettings.theme?.borderRadius || 'md'
+    },
+    // Use persistSettings options from props if provided
+    tableId: persistSettings?.persistKey || props.tableId || 'rpt-table',
+    useUrlAsKey: persistSettings?.useUrlAsKey,
+    tableIdentifier: persistSettings?.tableIdentifier,
+    persistKey: persistSettings?.persistKey,
+    onChange: persistSettings?.onChange
+  });
   
+  // // CRITICAL FIX: Update the mergedSettings filteringOptions.persistKey after getCurrentStorageKey is available
+  // useEffect(() => {
+  //   if (getCurrentStorageKey && mergedSettings.filteringOptions.persistKey === '') {
+  //     mergedSettings.filteringOptions.persistKey = getCurrentStorageKey();
+  //   }
+  // }, [getCurrentStorageKey, mergedSettings.filteringOptions]);
+
+  // CRITICAL FIX: Use a stable persistent key without causing re-renders
+  const stablePersistKey = useMemo(() => {
+    return getCurrentStorageKey ? getCurrentStorageKey() : 'rpt-table-default';
+  }, [getCurrentStorageKey]);
+
   // Use the table filter hook for advanced filtering
   const {
     filters: filterValues,
@@ -413,20 +399,160 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     filterConfigs: filters,
     serverSide: false,
     persist: filteringOptions.persistFilters,
-    persistKey: filteringOptions.persistKey || getCurrentStorageKey()
+    persistKey: filteringOptions.persistKey || stablePersistKey 
   });
 
-  // Mark the component as mounted on client side
-  useEffect(() => {
-    setClientSideRendered(true);
-    
-    // Log storage key being used if in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Table settings are being stored with key:', getCurrentStorageKey());
-    }
-  }, [getCurrentStorageKey]);
+  // CRITICAL FIX: Stabilize mergedSettings to prevent infinite loops
+  const stableMergedSettings = useMemo(() => {
+    const baseSettings = {
+      size: defaultConfig.size || 'medium',
+      striped: defaultConfig.striped ?? false,
+      bordered: defaultConfig.bordered ?? false,
+      hover: defaultConfig.hover ?? true,
+      sticky: defaultConfig.sticky ?? false,
+      animate: defaultConfig.animations?.enabled ?? true,
+      pagination: defaultConfig.pagination ?? true,
+      theme: defaultConfig.theme || {
+        theme: 'light',
+        variant: 'default',
+        colorScheme: 'default',
+        borderRadius: 'md'
+      },
+      dialog: defaultConfig.dialog || undefined,
+      loadingConfig: {
+        variant: defaultConfig.loading?.variant || 'overlay',
+        spinnerSize: defaultConfig.loading?.spinnerSize || 'md',
+        text: defaultConfig.loading?.text || 'Đang tải...',
+        spinnerType: defaultConfig.loading?.spinnerType || 'spinner',
+        skeletonRows: defaultConfig.loading?.skeletonRows || 5,
+        skeletonColumns: defaultConfig.loading?.skeletonColumns || 5,
+      },
+      persistSettings: defaultConfig.persistSettings ? { enabled: true } : {},
+      filteringOptions: {
+        advancedFiltering: defaultConfig.filterDefaults?.advancedFiltering,
+        allowFilterPresets: defaultConfig.filterDefaults?.allowPresets,
+        allowComplexFilters: defaultConfig.filterDefaults?.allowComplexFilters,
+        persistFilters: defaultConfig.filterDefaults?.persistFilters,
+      },
+    };
 
-  // Use the column visibility hook
+    return {
+      size: size !== undefined ? size : baseSettings.size,
+      striped: striped !== undefined ? striped : baseSettings.striped,
+      bordered: bordered !== undefined ? bordered : baseSettings.bordered,
+      hover: hover !== undefined ? hover : baseSettings.hover,
+      sticky: sticky !== undefined ? sticky : baseSettings.sticky,
+      animate: animate !== undefined ? animate : baseSettings.animate,
+      pagination: pagination !== undefined ? pagination : baseSettings.pagination,
+      theme: theme || baseSettings.theme,
+      dialog: dialog || baseSettings.dialog,
+      loadingConfig: loadingConfig || baseSettings.loadingConfig,
+      persistSettings: {
+        persistKey: props.tableId || 'rpt-table',
+        useUrlAsKey: true,
+        ...(persistSettings || baseSettings.persistSettings),
+      },
+      filteringOptions: {
+        advancedFiltering: filteringOptions.advancedFiltering !== undefined ?
+          filteringOptions.advancedFiltering : baseSettings.filteringOptions.advancedFiltering,
+        allowFilterPresets: filteringOptions.allowFilterPresets !== undefined ?
+          filteringOptions.allowFilterPresets : baseSettings.filteringOptions.allowFilterPresets,
+        allowComplexFilters: filteringOptions.allowComplexFilters !== undefined ?
+          filteringOptions.allowComplexFilters : baseSettings.filteringOptions.allowComplexFilters,
+        persistFilters: filteringOptions.persistFilters !== undefined ?
+          filteringOptions.persistFilters : baseSettings.filteringOptions.persistFilters,
+        persistKey: stablePersistKey 
+      },
+    };
+  }, [
+    size, striped, bordered, hover, sticky, animate, pagination,
+    defaultConfig.size, defaultConfig.striped, defaultConfig.bordered, defaultConfig.hover, 
+    defaultConfig.sticky, defaultConfig.animations?.enabled, defaultConfig.pagination,
+    props.tableId, stablePersistKey,
+    filteringOptions.advancedFiltering, filteringOptions.allowFilterPresets,
+    filteringOptions.allowComplexFilters, filteringOptions.persistFilters
+  ]);
+
+  const stableThemeConfig = useMemo(() => {
+    if (tableSettings && isClient) {
+      return {
+        theme: tableSettings.theme || stableMergedSettings.theme?.theme || 'light',
+        variant: tableSettings.variant || stableMergedSettings.theme?.variant || 'default',
+        colorScheme: tableSettings.colorScheme || stableMergedSettings.theme?.colorScheme || 'default',
+        borderRadius: tableSettings.borderRadius || stableMergedSettings.theme?.borderRadius || 'md'
+      };
+    }
+    
+    return {
+      theme: stableMergedSettings.theme?.theme || 'light',
+      variant: stableMergedSettings.theme?.variant || 'default', 
+      colorScheme: stableMergedSettings.theme?.colorScheme || 'default',
+      borderRadius: stableMergedSettings.theme?.borderRadius || 'md'
+    };
+  }, [
+    tableSettings?.theme, tableSettings?.variant, tableSettings?.colorScheme, tableSettings?.borderRadius,
+    stableMergedSettings.theme?.theme, stableMergedSettings.theme?.variant,
+    stableMergedSettings.theme?.colorScheme, stableMergedSettings.theme?.borderRadius,
+    isClient
+  ]);
+
+  const stableTableFeatures = useMemo(() => {
+    return {
+      striped: tableSettings?.striped ?? striped,
+      bordered: tableSettings?.bordered ?? bordered,
+      highlightOnHover: tableSettings?.hover ?? hover,
+      stickyHeader: tableSettings?.sticky ?? sticky
+    };
+  }, [
+    tableSettings?.striped, tableSettings?.bordered, 
+    tableSettings?.hover, tableSettings?.sticky,
+    striped, bordered, hover, sticky
+  ]);
+
+  const handleTableSettingsChange = useCallback((settings: TableSettings) => {
+    console.log('Table settings changed:', settings);
+    
+    // Only update specific settings to avoid triggering unnecessary re-renders
+    if (settings.size !== tableSettings?.size) updateTableSetting('size', settings.size);
+    if (settings.theme !== tableSettings?.theme) updateTableSetting('theme', settings.theme);
+    if (settings.variant !== tableSettings?.variant) updateTableSetting('variant', settings.variant);
+    if (settings.colorScheme !== tableSettings?.colorScheme) updateTableSetting('colorScheme', settings.colorScheme);
+    if (settings.borderRadius !== tableSettings?.borderRadius) updateTableSetting('borderRadius', settings.borderRadius);
+    if (settings.striped !== tableSettings?.striped) updateTableSetting('striped', !!settings.striped);
+    if (settings.bordered !== tableSettings?.bordered) updateTableSetting('bordered', !!settings.bordered);
+    if (settings.hover !== tableSettings?.hover) updateTableSetting('hover', settings.hover !== false);
+    if (settings.sticky !== tableSettings?.sticky) updateTableSetting('sticky', !!settings.sticky);
+    
+    persistSettings?.onChange?.(settings);
+    
+    eventHandlers?.onDataChange?.(data);
+  }, [updateTableSetting, persistSettings, eventHandlers, data, tableSettings]);
+
+  const stableAdvancedFiltering = useMemo(() => {
+    if (!stableMergedSettings.filteringOptions.advancedFiltering) return undefined;
+    
+    return {
+      enabled: stableMergedSettings.filteringOptions.advancedFiltering,
+      allowPresets: stableMergedSettings.filteringOptions.allowFilterPresets,
+      allowComplexFilters: stableMergedSettings.filteringOptions.allowComplexFilters,
+      initialPresets: filterPresets.map(preset => ({
+        ...preset,
+        createdAt: typeof preset.createdAt === 'string' 
+          ? new Date(preset.createdAt).getTime() 
+          : preset.createdAt
+      })),
+      onPresetsChange: filteringOptions.onFilterPresetsChange,
+      persistKey: stablePersistKey
+    };
+  }, [
+    stableMergedSettings.filteringOptions.advancedFiltering,
+    stableMergedSettings.filteringOptions.allowFilterPresets,
+    stableMergedSettings.filteringOptions.allowComplexFilters,
+    filterPresets.length, // Only depend on length to avoid reference changes
+    filteringOptions.onFilterPresetsChange,
+    stablePersistKey
+  ]);
+
   const { 
     columnVisibility, 
     visibleColumns: hookVisibleColumns, 
@@ -437,7 +563,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
   } = useColumnVisibility({
     columns,
     persist: true,
-    persistKey: 'rpt-columns', // Key for localStorage
+    persistKey: 'rpt-columns',
     onVisibilityChange: (visibility) => {
       // Notify about column visibility changes
       eventHandlers?.onColumnVisibilityChange?.(
@@ -467,65 +593,48 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     submitDialog,
     closeDialog,
   } = useTableDialog<T>({
-    onSubmit: async (data: Record<string, any>, type: DialogType) => {
+    onSubmit: async (data: Record<string, any>, type: DialogType | null): Promise<boolean> => {
+      // Make sure type is not null before proceeding
+      if (!type) return false;
+      
       // Add explicit type assertion to ensure type is recognized as DialogType
       const dialogType = type as DialogType;
       
       // Special handling for delete operations
       if (dialogType === 'delete') {
-        console.log('Delete operation detected - skipping form validation');
         try {
-          // Extract ID for deletion
+          // Ensure we have an ID to delete with proper type checking
           const deleteId = data && typeof data === 'object' && 'id' in data ? data.id : undefined;
-          console.log('Handling delete for id:', deleteId);
           
-          // Nếu có user handler, sử dụng nó
-          if (eventHandlers?.onDelete) {
-            const success = await eventHandlers.onDelete(deleteId);
-            
-            // Call after submission handlers if needed
-            if (builtInActions?.formHandling?.onAfterSubmit) {
-              builtInActions.formHandling.onAfterSubmit(dialogType, data, success);
-            }
-            
-            if (eventHandlers?.onAfterSubmit) {
-              eventHandlers.onAfterSubmit(dialogType, data, success);
-            }
-            
-            return success;
-          } 
-          // Nếu không có user handler, sử dụng built-in
-          else if (deleteId !== undefined) {
-            console.log('Using built-in delete function');
-            const success = await builtInOnDelete(deleteId);
-            
-            // Call after submission handlers if needed
-            if (builtInActions?.formHandling?.onAfterSubmit) {
-              builtInActions.formHandling.onAfterSubmit(dialogType, data, success);
-            }
-            
-            if (eventHandlers?.onAfterSubmit) {
-              eventHandlers.onAfterSubmit(dialogType, data, success);
-            }
-            
-            return success;
+          if (deleteId === undefined || (typeof deleteId !== 'string' && typeof deleteId !== 'number')) {
+            console.error('[DataTable] Cannot delete: Invalid ID found in data', data);
+            return false;
           }
           
-          return false;
+          // This ensures both API call and proper refresh
+          const success = await builtInOnDelete(deleteId);
+          
+          // Call after submission handlers if needed
+          if (builtInActions?.formHandling?.onAfterSubmit) {
+            builtInActions.formHandling.onAfterSubmit(dialogType, data, success);
+          }
+          
+          if (eventHandlers?.onAfterSubmit) {
+            eventHandlers.onAfterSubmit(dialogType, data, success);
+          }
+          
+          return success;
         } catch (error) {
-          console.error('Error in delete operation:', error);
+          console.error('[DataTable] Error in delete operation:', error);
           return false;
         }
       }
       
-      // Log the submitted data to help debug
-      console.log(`Submitting ${type} dialog with data:`, JSON.stringify(data));
-      
       // Use form handling context to get validated data
       if (builtInActions?.formHandling?.autoHandleFormSubmission) {
         try {
-          // Get validated data from form
-          const validatedData = await formHandling.validateAndGetFormData(type as DialogMode);
+          // Get validated data from form - explicitly handle the null case
+          const validatedData = await formHandling.validateAndGetFormData(type);
           
           // If validation failed, don't proceed
           if (!validatedData.isValid || !validatedData.data) {
@@ -554,8 +663,8 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           let processedData: Record<string, any> = safeData;
           if (type === 'edit' && data && typeof data === 'object' && data.id) {
             processedData = {
+              id: data.id,
               ...safeData,
-              id: data.id // Ensure ID is preserved for edit operations
             };
           }
           
@@ -563,9 +672,9 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           if (builtInActions.formHandling.onBeforeSubmit) {
             const beforeResult = await builtInActions.formHandling.onBeforeSubmit(type as DialogMode, processedData);
             if (beforeResult === false) {
-              return false; // Prevent submission
+              return false; 
             } else if (beforeResult !== undefined && beforeResult !== null) {
-              processedData = beforeResult; // Use transformed data
+              processedData = beforeResult;
             }
           }
           
@@ -573,9 +682,9 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           if (eventHandlers?.onBeforeSubmit) {
             const beforeResult = await eventHandlers.onBeforeSubmit(type as DialogMode, processedData);
             if (beforeResult === false) {
-              return false; // Prevent submission
+              return false;
             } else if (beforeResult !== undefined && beforeResult !== null) {
-              processedData = beforeResult; // Use transformed data
+              processedData = beforeResult; 
             }
           }
           
@@ -597,20 +706,14 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           let success = false;
           switch (type) {
             case 'create':
-              console.log('Calling onCreate with data:', processedData);
               success = eventHandlers?.onCreate ? await eventHandlers.onCreate(processedData) : true;
               break;
             case 'edit':
-              // Ensure we have both the processed data AND the ID for updates
-              // Type-safe access to ID
               const recordId = 'id' in processedData ? processedData.id : undefined;
-              console.log(`Calling onUpdate with data: ${JSON.stringify(processedData)}, id: ${recordId}`);
-              success = eventHandlers?.onUpdate ? await eventHandlers.onUpdate(processedData, recordId) : true;
+              success = eventHandlers?.onUpdate ? await eventHandlers.onUpdate(recordId, processedData) : true;
               break;
             case 'delete':
-              // Type-safe access to ID for delete operations
               const deleteId = data && typeof data === 'object' && 'id' in data ? data.id : undefined;
-              console.log('Calling onDelete with id:', deleteId);
               success = eventHandlers?.onDelete ? await eventHandlers.onDelete(deleteId) : true;
               break;
             default:
@@ -666,25 +769,21 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           return false;
         }
       } else {
-        // Original direct submission behavior for backward compatibility
         try {
           let success: boolean;
           
           switch (type) {
             case 'create':
-              console.log('Legacy: Calling onCreate with data:', data);
               success = eventHandlers?.onCreate ? await eventHandlers.onCreate(data) : true;
               break;
             case 'edit':
               // For edit operations, ensure we always have the ID with type safety
               const editId = data && typeof data === 'object' && 'id' in data ? data.id : undefined;
-              console.log(`Legacy: Calling onUpdate with data: ${JSON.stringify(data)}, id: ${editId}`);
-              success = eventHandlers?.onUpdate ? await eventHandlers.onUpdate(data, editId) : true;
+              success = eventHandlers?.onUpdate ? await eventHandlers.onUpdate(editId, data) : true;
               break;
             case 'delete':
               // Type-safe access to ID for delete
               const deleteId = data && typeof data === 'object' && 'id' in data ? data.id : undefined;
-              console.log('Legacy: Calling onDelete with id:', deleteId);
               success = eventHandlers?.onDelete ? await eventHandlers.onDelete(deleteId) : true;
               break;
             default:
@@ -709,7 +808,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
   const isSearchEnabled = globalSearch?.enabled === true || typeof globalSearch === 'object';
   const searchConfig = typeof globalSearch === 'object' ? globalSearch : {} as GlobalSearchConfig;
   
-  // Apply global search and other logic to internalData thay vì data
+  // Apply global search and other logic to internalData instead of data
   const processedData = useMemo(() => {
     let result = hasActiveFilters ? filteredData : [...internalData];
     
@@ -983,59 +1082,32 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
   };
   
   // Handle refresh
-  const handleRefresh = () => {
-    if (eventHandlers?.onRefresh) {
-      eventHandlers.onRefresh();
-    }
-  };
+  const handleRefresh = useCallback(async () => {
+    await triggerRefresh('manual refresh');
+  }, [triggerRefresh]);
 
-  // Handle create action
+  // Handle create action - sửa cách khởi tạo initialData
   const handleCreateAction = () => {
-    // Fix: Create a proper initial object with required BaseTableData fields
-    const initialData = { id: undefined } as T;
-    openCreateDialog(initialData, 'Thêm mới');
-  };
-  
-  // Handle table settings change
-  const handleTableSettingsChange = (settings: TableSettings) => {
-    console.log('Table settings changed:', settings);
-    
-    // Update all settings rather than just calling onDataChange
-    if (settings) {
-      if (settings.size) updateTableSetting('size', settings.size);
-      if (settings.theme) updateTableSetting('theme', settings.theme);
-      if (settings.variant) updateTableSetting('variant', settings.variant);
-      if (settings.colorScheme) updateTableSetting('colorScheme', settings.colorScheme);
-      if (settings.borderRadius) updateTableSetting('borderRadius', settings.borderRadius);
+    try {
+      // Khởi tạo đúng cách để tránh lỗi type
+      const initialData = {} as Partial<T>;
       
-      // Boolean settings need special handling as they could be false
-      updateTableSetting('striped', !!settings.striped);
-      updateTableSetting('bordered', !!settings.bordered);
-      updateTableSetting('hover', settings.hover !== false); // true by default
-      updateTableSetting('sticky', !!settings.sticky);
-    }
-    
-    // Call callback from persistSettings if provided
-    if (persistSettings?.onChange) {
-      persistSettings.onChange(settings);
-    }
-    
-    // Keep the original callback if needed
-    if (eventHandlers?.onDataChange) {
-      eventHandlers.onDataChange(data);
+      // Gọi openCreateDialog với explicit typing
+      openCreateDialog(initialData as T, 'Thêm mới');
+    } catch (err) {
+      console.error("Error in handleCreateAction:", err);
     }
   };
   
-  // Handle save table identifier
-  const handleSaveTableIdentifier = (identifier: string) => {
+  // CRITICAL FIX: Add back handleSaveTableIdentifier function
+  const handleSaveTableIdentifier = useCallback((identifier: string) => {
     if (!identifier.trim()) return;
     
     try {
-      // Use the saveSettingsWithIdentifier function from useTableSettings hook
+      console.log(`[DataTable] Saving table identifier: ${identifier}`);
       const success = saveSettingsWithIdentifier(identifier);
 
       if (success) {
-        // Show success notification
         console.log(`Table settings saved with identifier: ${identifier}`);
         
         if (persistSettings?.onChange) {
@@ -1047,16 +1119,11 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     } catch (error) {
       console.error('Error while saving table identifier:', error);
     }
-  };
+  }, [saveSettingsWithIdentifier, persistSettings, tableSettings]);
 
   // Check for empty state
   const isEmptyState = !loading && data.length === 0;
   
-  // Get table size from settings, with SSR safety
-  const effectiveSize = isClient && tableSettings?.size 
-    ? tableSettings.size 
-    : size;
-
   // Map from TableSettings size to standardized TableSize
   const normalizeTableSize = (sizeValue: string | TableSize | undefined): TableSize => {
     if (!sizeValue) return 'medium';
@@ -1076,9 +1143,29 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     }
   };
 
-  // Use the normalization function
-  const tableSize: TableSize = normalizeTableSize(effectiveSize);
-  
+  const effectiveTableSize = useMemo(() => {
+    // Get size from settings first, then fallback to props
+    const settingsSize = tableSettings?.size;
+    const propsSize = size;
+    
+    return settingsSize || propsSize || 'medium';
+  }, [tableSettings?.size, size, isClient, tableSettings]);
+
+  // CRITICAL FIX: Normalize the effective size for Table component
+  const normalizedTableSize = useMemo(() => {
+    const targetSize = effectiveTableSize;
+    
+    // Handle different size formats and ensure it's a valid TableSize
+    switch (targetSize) {
+      case 'small':
+        return 'small';
+      case 'large':
+        return 'large';
+      default:
+        return 'medium';
+    }
+  }, [effectiveTableSize]);
+
   // Get sort direction for a column
   const getSortDirection = (accessor?: string): SortDirection | undefined => {
     if (!accessor) return undefined;
@@ -1086,7 +1173,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     return sort?.direction;
   };
   
-  // Create row actions from builtInActions and custom actions
+  // Create row actions from built-in actions and custom actions - thêm debug và sửa cách gọi dialog
   const rowActions: ActionConfig<T>[] = useMemo(() => {
     const allActions: ActionConfig<T>[] = [];
     
@@ -1100,7 +1187,12 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           type: 'view',
           tooltip: 'Xem chi tiết',
           onClick: (record) => {
-            openViewDialog(record, 'Xem chi tiết');
+            try {
+              openViewDialog(record, 'Xem chi tiết');
+              
+            } catch (err) {
+              console.error("Error opening view dialog:", err);
+            }
           },
           ...(typeof builtInActions.view === 'object' ? builtInActions.view : {})
         };
@@ -1115,7 +1207,19 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           type: 'edit',
           tooltip: 'Chỉnh sửa',
           onClick: (record) => {
-            openEditDialog(record, 'Chỉnh sửa');
+            try {
+              if (!record) {
+                console.error("Cannot edit null/undefined record");
+                return;
+              }
+              
+              // Clone record để tránh mutation
+              const recordCopy = { ...record };
+              openEditDialog(recordCopy, 'Chỉnh sửa');
+              
+            } catch (err) {
+              console.error("Error opening edit dialog:", err);
+            }
           },
           ...(typeof builtInActions.edit === 'object' ? builtInActions.edit : {})
         };
@@ -1123,7 +1227,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       }
       
       // Add delete action - always available với built-in functionality
-      if (builtInActions.delete !== false) {
+      if (builtInActions?.delete !== false) {
         const deleteAction: ActionConfig<T> = {
           key: 'delete',
           label: 'Xóa',
@@ -1131,12 +1235,31 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           tooltip: 'Xóa mục này',
           variant: 'destructive',
           onClick: (record) => {
-            // Open delete dialog with confirmation
-            openDeleteDialog(
-              record, 
-              'Xác nhận xóa', 
-              'Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.'
-            );
+            try {
+              // Đảm bảo record không null/undefined
+              if (!record) {
+                console.error("[DataTable] Cannot delete null/undefined record");
+                return;
+              }
+              
+              // Đảm bảo record có ID
+              if (record.id === undefined) {
+                console.error("[DataTable] Cannot delete record without ID", record);
+                return;
+              }
+              
+              // Clone record để tránh mutation
+              const recordCopy = { ...record };
+              
+              // Open delete dialog with confirmation
+              openDeleteDialog(
+                recordCopy, 
+                'Xác nhận xóa', 
+                'Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.'
+              );
+            } catch (err) {
+              console.error("[DataTable] Error opening delete dialog:", err);
+            }
           },
           ...(typeof builtInActions.delete === 'object' ? builtInActions.delete : {})
         };
@@ -1150,20 +1273,25 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     }
     
     return allActions;
-  }, [builtInActions, actions, openDeleteDialog]);
-  
+  }, [builtInActions, actions, openViewDialog, openEditDialog, openDeleteDialog]);
   // Extract form components from builtInActions with automatic wrapping
   const formComponents = useMemo(() => {
     if (!builtInActions) return {} as Record<DialogType, React.ComponentType<any> | undefined>;
     
     const autoHandleSubmission = builtInActions.formHandling?.autoHandleFormSubmission;
+    const skipInitialValidation = builtInActions.formHandling?.skipInitialValidation;
     
     // Create wrapped components with proper typing
     const wrapComponent = <P extends DataTableFormProps>(
       Component: React.ComponentType<P> | undefined,
       type: DialogMode
     ) => {
-      if (!Component || !autoHandleSubmission) return Component;
+      if (!Component) return Component;
+      
+      // For components that don't need form handling, return as is
+      if (!autoHandleSubmission) return Component;
+      
+      // Use withFormHandling HOC
       return withFormHandling(Component, type);
     };
     
@@ -1197,6 +1325,8 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
         undefined
     };
   };
+
+  const skipInitialValidation = builtInActions?.formHandling?.skipInitialValidation;
   
   // Detect when data changes to mark updated rows
   useEffect(() => {
@@ -1214,14 +1344,6 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     }
   }, [data]);
 
-  // Auto-detect user columns for better display
-  const isUserColumn = (column: TableColumn<T>): boolean => {
-    const key = column.accessorKey as string;
-    const id = column.id as string;
-    return key === 'name' || id === 'name' || key === 'user' || id === 'user' || 
-           column.meta?.isUser === true;
-  };
-
   // Auto-detect status columns for better display
   const isStatusColumn = (column: TableColumn<T>): boolean => {
     const key = column.accessorKey as string;
@@ -1230,11 +1352,15 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
            column.meta?.isStatus === true;
   };
 
-  // Create button for add new record
+  // Create button for add new record - sử đã đúng handleCreateAction
   const addButton = builtInActions?.create !== false && (
     <button
+      key="add-button"
       className="rpt-add-button"
-      onClick={handleCreateAction}
+      onClick={(e) => {
+        e.preventDefault();
+        handleCreateAction();
+      }}
       aria-label="Add new record"
     >
       <span className="rpt-add-button-icon">+</span>
@@ -1247,7 +1373,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     // When on the client-side, use columnVisibility to filter columns
     if (isClient) {
       return columns.filter(column => {
-        const columnId = String(column.id || column.accessorKey);
+        const columnId = column.id || column.accessorKey as string;
         return columnVisibility[columnId] !== false;
       });
     }
@@ -1256,119 +1382,10 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     return columns.filter(column => column.defaultVisible !== false);
   }, [columns, columnVisibility, isClient]);
 
-  // Get theme config based on settings and prioritize local settings over global ones
-  const effectiveThemeConfig = useMemo(() => {
-    // First check if we have local table settings that should override global configs
-    if (tableSettings) {
-      // Create a theme config from the table settings that will override global config
-      const localSettings: TableThemeConfig = {
-        theme: tableSettings.theme,
-        variant: tableSettings.variant,
-        colorScheme: tableSettings.colorScheme,
-        borderRadius: tableSettings.borderRadius
-      };
-      
-      // Log settings to help debugging
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('DataTable using settings:', tableSettings);
-      }
-      
-      // Return local settings (any undefined values will use defaults in ThemeProvider)
-      return localSettings;
-    }
-    
-    // Fall back to the theme prop if provided
-    return theme || {};
-  }, [tableSettings, theme]);
-  
-  // Properly apply table features based on settings
-  const tableFeatures = useMemo(() => {
-    const isStriped = tableSettings?.striped ?? striped;
-    const isBordered = tableSettings?.bordered ?? bordered;
-    const isHover = tableSettings?.hover ?? hover;
-    const isStickyHeader = tableSettings?.sticky ?? sticky;
-    
-    return {
-      striped: isStriped,
-      bordered: isBordered,
-      highlightOnHover: isHover,
-      stickyHeader: isStickyHeader
-    };
-  }, [tableSettings, striped, bordered, hover, sticky]);
-  
-  // // Generate table features from size and props
-  // const tableFeatures = useMemo(() => ({
-  //   striped: striped || defaultConfig?.striped || false,
-  //   highlightOnHover: highlightOnHover || defaultConfig?.highlightOnHover || false,
-  //   bordered: bordered || defaultConfig?.bordered || false,
-  //   stickyHeader: stickyHeader || defaultConfig?.stickyHeader || false,
-  //   maxHeight: typeof maxHeight === 'undefined' ? defaultConfig?.maxHeight : maxHeight,
-  //   scrollBar: scrollBar || defaultConfig?.scrollBar || false,
-  //   overflowXAuto: !!overflowXAuto,
-  //   animationLevel: animationLevel || defaultConfig?.animationLevel || 'medium',
-  //   density: effectiveSize
-  // }), [striped, highlightOnHover, bordered, stickyHeader, maxHeight, 
-  //     scrollBar, overflowXAuto, defaultConfig, animationLevel, effectiveSize]);
-      
-  // Helper method to render the table's empty state
-  const renderEmptyState = () => {
-    if (emptyStateRenderer) {
-      return emptyStateRenderer();
-    }
-    
-    // Safely access tableSettings.emptyState properties with fallbacks
-    const emptyStateConfig = tableSettings?.emptyState || {};
-    const emptyStateAction = emptyStateConfig.action;
-    const emptyStateTitle = emptyStateConfig.title || "Không có dữ liệu";
-    const emptyStateMessage = emptyStateConfig.message || "Không tìm thấy kết quả nào phù hợp với tiêu chí tìm kiếm.";
-    
-    return (
-      <EmptyState 
-        title={emptyStateTitle}
-        message={emptyStateMessage}
-        animationStyle={animate ? "fade-in" : "none"}
-        iconSize="lg"
-        action={emptyStateAction}
-        animate={animate}
-      />
-    );
-  };
-
-  // For better loading state management, let's add a dedicated function
-  const renderLoadingState = () => {
-    if (!loading) return null;
-    
-    // Ensure all necessary properties are defined with fallbacks
-    const effectiveLoadingConfig = {
-      variant: loadingConfig?.variant || mergedSettings.loadingConfig.variant,
-      spinnerSize: loadingConfig?.spinnerSize || mergedSettings.loadingConfig.spinnerSize,
-      text: loadingConfig?.text || mergedSettings.loadingConfig.text,
-      spinnerType: loadingConfig?.spinnerType || mergedSettings.loadingConfig.spinnerType,
-      skeletonRows: loadingConfig?.skeletonRows || mergedSettings.loadingConfig.skeletonRows,
-      skeletonColumns: loadingConfig?.skeletonColumns || (columns.length > 0 ? columns.length : mergedSettings.loadingConfig.skeletonColumns)
-    };
-    
-    // Create optimized loading experience based on configuration
-    return (
-      <TableLoading 
-        loading={true} 
-        type={effectiveLoadingConfig.spinnerType}
-        size={effectiveLoadingConfig.spinnerSize}
-        variant={effectiveLoadingConfig.variant}
-        text={effectiveLoadingConfig.text}
-        skeletonRows={effectiveLoadingConfig.skeletonRows}
-        skeletonColumns={effectiveLoadingConfig.skeletonColumns}
-        blur={true}
-        disablePointerEvents={true}
-        reducedMotion={!animate} // Use reducedMotion if animations are disabled
-      />
-    );
-  };
-
   // Table content to render within ThemeProvider
   const tableContent = (
     <div className={cn('rpt-container', className)}>
-      {/* Toolbar with title, search and actions */}
+      {/* Toolbar - FIXED: Never disable actions */}
       {(title || description || isSearchEnabled || actions || columns.length > 0) && (
         <TableToolbar
           title={title}
@@ -1384,20 +1401,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
           hasActiveFilters={hasActiveFilters}
-          advancedFiltering={mergedSettings.filteringOptions.advancedFiltering ? {
-            enabled: mergedSettings.filteringOptions.advancedFiltering,
-            allowPresets: mergedSettings.filteringOptions.allowFilterPresets,
-            allowComplexFilters: mergedSettings.filteringOptions.allowComplexFilters,
-            // Convert filterPresets to match expected type with createdAt as number
-            initialPresets: filterPresets.map(preset => ({
-              ...preset,
-              createdAt: typeof preset.createdAt === 'string' 
-                ? new Date(preset.createdAt).getTime() 
-                : preset.createdAt
-            })),
-            onPresetsChange: filteringOptions.onFilterPresetsChange,
-            persistKey: mergedSettings.filteringOptions.persistKey
-          } : undefined}
+          advancedFiltering={stableAdvancedFiltering}
           onRefresh={handleRefresh}
           columns={columns}
           visibleColumns={visibleColumns}
@@ -1406,8 +1410,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           onShowAllColumns={showAllColumns}
           onResetColumns={resetColumnVisibility}
           columnVisibility={columnVisibility}
-          createButton={addButton}
-          hasCreated={!!builtInActions?.create}
+          createButton={builtInActions?.create !== false ? addButton : null}
           exportFormats={availableFormats}
           onExport={exportData}
           onExportCurrentView={() => exportCurrentView('excel')}
@@ -1421,7 +1424,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
             } : undefined}
           onUpdateTableSettings={updateTableSetting}
           onTableSettingsChange={handleTableSettingsChange}
-          tableTheme={effectiveThemeConfig}
+          tableTheme={stableThemeConfig}
           tableSize={tableSettings?.size}
           tableStriped={tableSettings?.striped}
           tableHover={tableSettings?.hover}
@@ -1429,20 +1432,20 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           tableStickyHeader={tableSettings?.sticky}
           currentTableIdentifier={persistSettings?.tableIdentifier || ''}
           onSaveTableIdentifier={handleSaveTableIdentifier}
+          disabled={false}
         />
       )}
       
-      {/* Table with loading state */}
+      {/* Table with optimized loading states */}
       <TableContainer
         className={cn(
-          tableFeatures.stickyHeader && 'rpt-fixed-header',
-          tableFeatures.striped && 'rpt-zebra-striping',
-          tableFeatures.highlightOnHover && 'rpt-table-hover',
-          tableFeatures.bordered && 'rpt-table-bordered',
+          stableTableFeatures.stickyHeader && 'rpt-fixed-header',
+          stableTableFeatures.striped && 'rpt-zebra-striping',
+          stableTableFeatures.highlightOnHover && 'rpt-table-hover',
+          stableTableFeatures.bordered && 'rpt-table-bordered'
         )}
       >
-        {/* Replace the existing loading section with the optimized version */}
-        {renderLoadingState()}
+        {/* CRITICAL FIX: Never show overlay */}
         
         {error && (
           errorStateRenderer ? 
@@ -1452,22 +1455,27 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
         
         {!error && (
           <>
-            <div className={cn("rpt-table-wrapper", tableFeatures.stickyHeader && 'rpt-fixed-header')}>
+            <div className={cn(
+              "rpt-table-wrapper", 
+              stableTableFeatures.stickyHeader && 'rpt-fixed-header',
+              shouldShowLoading && 'rpt-table-wrapper-loading'
+            )}>
               <Table
                 data={data}
                 columns={columns}
-                size={tableSize}
-                striped={tableFeatures.striped}
-                bordered={tableFeatures.bordered}
-                highlightOnHover={tableFeatures.highlightOnHover}
+                size={normalizedTableSize} // CRITICAL FIX: Use normalizedTableSize
+                striped={stableTableFeatures.striped}
+                bordered={stableTableFeatures.bordered}
+                highlightOnHover={stableTableFeatures.highlightOnHover}
                 className={tableClassName}
-                stickyHeader={tableFeatures.stickyHeader}
+                stickyHeader={stableTableFeatures.stickyHeader}
               >
+
                 <TableHead>
                   <TableHeadRow>
                     {/* Selection column if enabled */}
                     {isSelectionEnabled && (
-                      <TableHeadCell className="rpt-select-cell">
+                      <TableHeadCell key="selection-header" className="rpt-select-cell">
                         <Checkbox
                           checked={isAllSelected}
                           indeterminate={!isAllSelected && isSomeSelected}
@@ -1480,9 +1488,11 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                     {/* Header cells */}
                     {visibleColumns.map(column => {
                       const { id, key, dataIndex, title, width, align, sortable } = transformColumn(column);
+                      const columnId = column.id || column.accessorKey as string || `column-${id}`;
+                      
                       return (
                         <TableHeadCell 
-                          key={key || id}
+                          key={`header-${columnId}`}
                           width={width}
                           align={align}
                           sortable={sortable}
@@ -1495,14 +1505,51 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                     })}
                     
                     {/* Actions column if needed */}
-                    {hasRowActions && <TableHeadCell isAction={true} className="rpt-action-header-cell">Thao tác</TableHeadCell>}
+                    {hasRowActions && (
+                      <TableHeadCell key="actions-header" isAction={true} className="rpt-action-header-cell">
+                        Thao tác
+                      </TableHeadCell>
+                    )}
                   </TableHeadRow>
                 </TableHead>
                 
                 <TableBody>
-                  {isEmptyState ? (
-                    <tr>
-                      <td colSpan={visibleColumns.length + (isSelectionEnabled ? 1 : 0) + (hasRowActions ? 1 : 0)}>
+                  {/* CRITICAL FIX: Better loading state handling */}
+                  {shouldShowLoading && (mergedSettings.loadingConfig.variant === 'skeleton' || !mergedSettings.loadingConfig.variant) ? (
+                    // Show loading skeleton rows - only when skeleton variant is used AND actually loading
+                    Array.from({ length: mergedSettings.loadingConfig.skeletonRows || 5 }).map((_, index) => (
+                      <tr key={`skeleton-${index}`} className="rpt-skeleton-row">
+                        {/* Selection column skeleton */}
+                        {isSelectionEnabled && (
+                          <td key={`skeleton-selection-${index}`} className="rpt-select-cell">
+                            <div className="rpt-skeleton rpt-skeleton-checkbox"></div>
+                          </td>
+                        )}
+                        
+                        {/* Data column skeletons */}
+                        {visibleColumns.map((column, colIndex) => {
+                          const columnId = column.id || column.accessorKey as string || `column-${colIndex}`;
+                          return (
+                            <td key={`skeleton-cell-${index}-${columnId}`} className="rpt-cell">
+                              <div className="rpt-skeleton rpt-skeleton-text"></div>
+                            </td>
+                          );
+                        })}
+                        
+                        {/* Action column skeleton - don't show action buttons when loading */}
+                        {hasRowActions && (
+                          <td key={`skeleton-actions-${index}`} className="rpt-action-cell">
+                            <div className="rpt-skeleton rpt-skeleton-actions"></div>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  ) : isEmptyState ? (
+                    <tr key="empty-state">
+                      <td 
+                        key="empty-cell"
+                        colSpan={visibleColumns.length + (isSelectionEnabled ? 1 : 0) + (hasRowActions ? 1 : 0)}
+                      >
                         {emptyStateRenderer ? 
                           emptyStateRenderer() : 
                           <EmptyState 
@@ -1515,7 +1562,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                       </td>
                     </tr>
                   ) : (
-                    <AnimatePresence>
+                    <AnimatePresence mode="wait" key={`table-data-${data.length}`}>
                       {paginatedData.map((row, rowIndex) => {
                         const rowId = getRowKey(row, rowIndex);
                         const isSelected = isSelectionEnabled && selectedRowKeys.includes(rowId);
@@ -1523,7 +1570,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                         
                         return (
                           <TableRow
-                            key={rowId}
+                            key={`row-${rowId}`}
                             rowData={row}
                             rowIndex={rowIndex}
                             onClick={(rowData, index, e) => handleRowClick(rowData as T, index, e)}
@@ -1536,7 +1583,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                           >
                             {/* Selection cell if enabled */}
                             {isSelectionEnabled && (
-                              <TableCell className="rpt-select-cell">
+                              <TableCell key={`selection-${rowId}`} className="rpt-select-cell">
                                 <Checkbox
                                   checked={isSelected}
                                   onChange={() => handleToggleSelection(rowId)}
@@ -1546,9 +1593,10 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                             )}
                             
                             {/* Data cells */}
-                            {visibleColumns.map(column => {
+                            {visibleColumns.map((column, columnIndex) => {
                               const { key, id, dataIndex, render, meta } = transformColumn(column);
-                              const cellId = `${rowId}-${key || id}`;
+                              const columnId = column.id || column.accessorKey as string || `column-${columnIndex}`;
+                              const cellId = `${rowId}-${columnId}`;
                               const value = row[dataIndex];
                               const isStatusCell = isStatusColumn(column);
                               
@@ -1569,9 +1617,9 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
                               );
                             })}
                             
-                            {/* Row actions if provided */}
-                            {hasRowActions && (
-                              <TableCell isAction={true} className="rpt-action-cell">
+                            {/* Row actions - ONLY show when not loading and has data */}
+                            {hasRowActions && !loading && !isLoading && (
+                              <TableCell key={`actions-${rowId}`} isAction={true} className="rpt-action-cell">
                                 <TableRowActions 
                                   rowData={row}
                                   rowIndex={rowIndex}
@@ -1612,27 +1660,6 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       </TableContainer>
 
       {/* Dialog for CRUD operations */}
-      {/* <AppendableDialog
-        activeDialog={dialogOpen ? (dialogType as DialogType) : undefined}
-        activeRecord={dialogData}
-        dialogTitle={dialogTitle}
-        dialogDescription={dialogDescription}
-        loading={dialogLoading}
-        error={dialogError ? dialogError.message : null}
-        onClose={closeDialog}
-        onSubmit={submitDialog}
-        formComponents={formComponents}
-        closeOnClickOutside={dialog?.closeOnClickOutside}
-        closeOnEsc={dialog?.closeOnEsc}
-        width={dialog?.width}
-        actionsPosition="right"
-        buttonSize="md"
-        elevatedButtons={true}
-        loadingEffect="overlay"
-        reducedMotion={!animate}
-      /> */}
-      
-      {/* New OptimizedDialog implementation */}
       <OptimizedDialog
         open={dialogOpen}
         dialogType={dialogType}
@@ -1647,34 +1674,41 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
         width={dialog?.width || '500px'}
         closeOnClickOutside={dialog?.closeOnClickOutside}
         closeOnEsc={dialog?.closeOnEsc}
-        actionsPosition="right"
-        buttonSize="md"
+        actionsPosition={'right'}
+        buttonSize={'md'}
         elevatedButtons={true}
         reducedMotion={!animate}
+        validateOnMount={dialog?.validateOnMount || false}
+        skipInitialValidation={skipInitialValidation || false}
       />
       
-      {/* New Batch Actions Bar */}
+      {/* Batch Actions Bar - FIXED: Never disable */}
       <BatchActionsBar
         selectedCount={selectedRowKeys.length}
         selectedRows={data.filter(row => {
           const id = getRowKey(row, 0);
           return selectedRowKeys.includes(id);
         })}
-        onDelete={handleBatchDelete} // Use our improved handleBatchDelete function
+        onDelete={builtInBatchDelete}
         onClearSelection={() => setSelectedRowKeys([])}
         animate={animate}
+        isLoading={loadingManager.isOperationRunning('batch-delete')}
+        disabled={false} // CRITICAL FIX: Never disable
+        loadingText="Đang xử lý..."
       />
     </div>
   );
 
-  // Wrap with ThemeProvider using effective theme settings
+  // Wrap with ThemeProvider using stable theme settings
   return (
-    <ThemeProvider themeConfig={effectiveThemeConfig}>
+    <ThemeProvider themeConfig={stableThemeConfig}>
       {tableContent}
     </ThemeProvider>
   );
 }
 
-export const DataTable = React.memo(DataTableWithFormHandling);
-DataTable.displayName = 'DataTable';
+export const DataTable = React.memo(DataTableWithFormHandling) as <T extends BaseTableData = BaseTableData>(
+  props: DataTableProps<T> & { ref?: React.Ref<any> }
+) => React.ReactElement;
+
 export default DataTable;

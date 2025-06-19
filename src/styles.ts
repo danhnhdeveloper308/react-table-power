@@ -8,14 +8,14 @@ import './styles/button.css';
 import './styles/table.css';
 import './styles/form-components.css';
 import './styles/theme.css';
-import './styles/dialog.css';
+import './styles/dialog.css'; // Đảm bảo dialog.css được import đúng cách
 import './styles/column-visibility.css';
 import "./styles/checkbox.css";
 import "./styles/loading.css";
 import "./styles/settings.css";
-import "./styles/features.css"; // Import the new features CSS file - priority order matters!
-import "./styles/advanced-filter-panel.css"; // Import the advanced filter panel styles
-import "./styles/scrollbar.css"; // Import custom scrollbar styles
+import "./styles/features.css";
+import "./styles/advanced-filter-panel.css";
+import "./styles/scrollbar.css";
 
 // No exports - this file is meant to be used only for importing styles
 import { CSSProperties } from 'react';

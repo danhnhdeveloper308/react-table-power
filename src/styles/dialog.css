@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9000; /* Giảm z-index để toast có thể hiển thị trên dialog */
   padding: 1rem;
   overflow-y: auto;
   backdrop-filter: blur(2px);
@@ -34,6 +34,7 @@
   position: relative;
   overflow: hidden;
   transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  z-index: 9001; /* Đảm bảo dialog có z-index thấp hơn toast */
 }
 
 /* Dialog animation states */
@@ -277,7 +278,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
   width: 100%;
   position: relative; /* Ensure proper stacking context */
 }
@@ -482,4 +482,14 @@
   .rpt-dialog-close {
     border: 1px solid ButtonText;
   }
+}
+
+/* Dialog container - đảm bảo không conflict với toast */
+.rpt-dialog-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9000; /* Thấp hơn toast z-index */
 }

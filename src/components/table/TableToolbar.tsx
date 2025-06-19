@@ -63,7 +63,7 @@ export interface TableToolbarProps<T extends BaseTableData = BaseTableData> {
   onExportSelected?: () => void;
 
   // Refresh
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<void>;
 
   // Column visibility
   columns?: TableColumn<T>[];
@@ -109,6 +109,8 @@ export interface TableToolbarProps<T extends BaseTableData = BaseTableData> {
    * Selected rows data
    */
   selectedRows?: T[];
+
+  disabled?: boolean;
 }
 
 export function TableToolbar<T extends BaseTableData = BaseTableData>({
@@ -188,6 +190,7 @@ export function TableToolbar<T extends BaseTableData = BaseTableData>({
 
   // Selected rows and batch actions
   selectedRows = [],
+  disabled = false
 }: TableToolbarProps<T>): React.ReactElement {
   const [showFilters, setShowFilters] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
@@ -322,18 +325,32 @@ export function TableToolbar<T extends BaseTableData = BaseTableData>({
     setShowBatchActions(selectedRows.length > 0);
   }, [selectedRows]);
 
-  // Handle refresh with animation
-  const handleRefresh = () => {
-    if (onRefresh && !isRefreshing) {
+  // Handle refresh with animation and proper async support
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh || isRefreshing) return;
+    
+    try {
       setIsRefreshing(true);
-      onRefresh();
-
+      
+      // Call the refresh handler (could be async)
+      const refreshResult = onRefresh();
+      
+      // If the refresh handler returns a promise, wait for it
+      if (refreshResult && typeof refreshResult === 'object' && 'then' in refreshResult) {
+        await refreshResult;
+      }
+      
+      console.log('[TableToolbar] Data refresh completed successfully');
+    } catch (error) {
+      console.error('[TableToolbar] Error during data refresh:', error);
+      // Could emit an error event here if needed
+    } finally {
       // Reset refreshing state after animation
       setTimeout(() => {
         setIsRefreshing(false);
       }, 1000);
     }
-  };
+  }, [onRefresh, isRefreshing]);
 
   // Handle table settings update
   const handleUpdateSetting = useCallback(<K extends keyof TableSettingsType>(key: K, value: TableSettingsType[K]) => {
@@ -658,7 +675,7 @@ export function TableToolbar<T extends BaseTableData = BaseTableData>({
                 className="rpt-refresh-btn"
                 onClick={handleRefresh}
                 title="Refresh data"
-                disabled={isRefreshing}
+                disabled={isRefreshing || disabled}
               >
                 <Refresh
                   size={16}

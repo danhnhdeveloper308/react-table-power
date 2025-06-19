@@ -47,7 +47,6 @@ const DialogContent = memo(
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison for the memo
     return (
       prevProps.isLoading === nextProps.isLoading &&
       prevProps.error === nextProps.error &&
@@ -68,10 +67,10 @@ const DialogFooter = memo(
     buttonSize = 'md',
     actionsPosition = 'right',
     elevatedButtons = true,
-    isFormDirty = false,
     isReadOnly = false,
-    disableSubmitUntilDirty = true,
-  }: { 
+    isFormValid = true,
+    disabled = false
+  }: {
     dialogType: DialogType | null;
     onCancel: () => void;
     onSubmit: () => void;
@@ -79,9 +78,9 @@ const DialogFooter = memo(
     buttonSize?: string;
     actionsPosition?: string;
     elevatedButtons?: boolean;
-    isFormDirty?: boolean;
     isReadOnly?: boolean;
-    disableSubmitUntilDirty?: boolean;
+    isFormValid?: boolean;
+    disabled?: boolean;
   }) => {
     // Determine submit button label based on dialog type
     const submitLabel = {
@@ -101,9 +100,10 @@ const DialogFooter = memo(
       custom: 'Đang xử lý...'
     }[dialogType ?? "custom"] || 'Đang xử lý...';
 
-    // Calculate if submit button should be disabled
-    const isSubmitButtonDisabled = isSubmitting || 
-      (disableSubmitUntilDirty && !isFormDirty && dialogType !== 'delete');
+    const isSubmitButtonDisabled = 
+      isSubmitting || 
+      disabled ||
+      (dialogType !== 'delete' && !isFormValid);
 
     return (
       <div className="rpt-dialog-footer">
@@ -112,7 +112,6 @@ const DialogFooter = memo(
           `rpt-dialog-actions-${actionsPosition}`,
           elevatedButtons && "rpt-dialog-actions-elevated"
         )}>
-          {/* Cancel Button */}
           <button
             className={cn(
               "rpt-button",
@@ -126,7 +125,6 @@ const DialogFooter = memo(
             Hủy
           </button>
 
-          {/* Submit Button */}
           {dialogType !== 'view' && !isReadOnly && (
             <button
               className={cn(
@@ -138,25 +136,13 @@ const DialogFooter = memo(
               onClick={onSubmit}
               disabled={isSubmitButtonDisabled}
               type="button"
-              title={!isFormDirty && disableSubmitUntilDirty ? "Chưa có thay đổi nào" : ""}
+              title={!isFormValid ? "Vui lòng điền đầy đủ thông tin" : ""}
             >
               {isSubmitting ? loadingLabel : submitLabel}
             </button>
           )}
         </div>
       </div>
-    );
-  },
-  (prevProps, nextProps) => {
-    // Only re-render when these props change
-    return (
-      prevProps.dialogType === nextProps.dialogType &&
-      prevProps.isSubmitting === nextProps.isSubmitting &&
-      prevProps.buttonSize === nextProps.buttonSize &&
-      prevProps.actionsPosition === nextProps.actionsPosition &&
-      prevProps.elevatedButtons === nextProps.elevatedButtons &&
-      prevProps.isFormDirty === nextProps.isFormDirty &&
-      prevProps.isReadOnly === nextProps.isReadOnly
     );
   }
 );
@@ -166,22 +152,16 @@ DialogFooter.displayName = 'DialogFooter';
 // Types for the form component props
 export interface OptimizedFormComponentProps {
   data?: any;
-  // Fix the return type to allow undefined
-  onSubmit?: (data: any) => Promise<boolean> | boolean | undefined;
+  onSubmit?: (data: any, type: DialogType | null) => Promise<boolean> | boolean;
   onClose?: () => void;
   dialogType: DialogType | null;
   loading?: boolean;
   error?: string | Error | null;
   isReadOnly?: boolean;
   ref?: React.Ref<any>;
-  /**
-   * Function to notify parent when form becomes dirty/changed
-   */
   onFormDirty?: (isDirty: boolean) => void;
-  /**
-   * Whether form validation errors should be shown
-   */
-  showValidationErrors?: boolean;
+  skipInitialValidation?: boolean;
+  dialogRef?: React.RefObject<HTMLDivElement>;
 }
 
 // Types for the dialog props
@@ -193,7 +173,7 @@ export interface OptimizedDialogProps<T extends BaseTableData = BaseTableData> {
   data?: T | null;
   formComponent?: React.ComponentType<OptimizedFormComponentProps>;
   onClose?: () => void;
-  onSubmit?: (data: any, type: DialogType | null) => Promise<boolean> | boolean | undefined;
+  onSubmit?: (data: any, type: DialogType | null) => Promise<boolean> | boolean;
   loading?: boolean;
   error?: string | Error | null;
   width?: string | number;
@@ -203,15 +183,13 @@ export interface OptimizedDialogProps<T extends BaseTableData = BaseTableData> {
   buttonSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   elevatedButtons?: boolean;
   reducedMotion?: boolean;
-  /**
-   * Whether to disable submit button until form is dirty
-   * @default true
-   */
   disableSubmitUntilDirty?: boolean;
+  validateOnMount?: boolean;
+  skipInitialValidation?: boolean;
 }
 
-// The main optimized dialog component
-export function OptimizedDialog<T extends BaseTableData = BaseTableData>({
+// Simple dialog implementation without conditional hooks
+function SimpleDialogImplementation<T extends BaseTableData = BaseTableData>({
   open = false,
   dialogType = 'custom',
   dialogTitle,
@@ -229,49 +207,67 @@ export function OptimizedDialog<T extends BaseTableData = BaseTableData>({
   buttonSize = 'md',
   elevatedButtons = true,
   reducedMotion = false,
-  disableSubmitUntilDirty = true
+  validateOnMount = false,
+  skipInitialValidation = true
 }: OptimizedDialogProps<T>) {
-  // Local state for controlled values
+  
+  // ALL HOOKS ARE CALLED UNCONDITIONALLY AT THE TOP LEVEL
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormDirty, setIsFormDirty] = useState(false);
-  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const formRef = useRef<any>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  
-  // Track if form has been touched (any field interacted with)
+  const dataRef = useRef<T | null | undefined>(data);
+  const dialogTypeRef = useRef<DialogType | null>(dialogType);
+  const onSubmitRef = useRef(onSubmit);
   const [formTouched, setFormTouched] = useState(false);
   
-  // Form context for validation and submission
+  // ALWAYS call useFormHandling - never conditionally
   const formContext = useFormHandling();
   
-  // Reset form dirty state and validation errors when dialog opens or type changes
+  // ALL useEffect hooks are called unconditionally
+  useEffect(() => {
+    dataRef.current = data;
+    dialogTypeRef.current = dialogType;
+  }, [data, dialogType]);
+  
+  useEffect(() => {
+    onSubmitRef.current = onSubmit;
+  }, [onSubmit]);
+  
+  // Reset states effect
   useEffect(() => {
     if (!open) {
       setIsSubmitting(false);
       setIsFormDirty(false);
-      setShowValidationErrors(false);
+      setIsFormValid(false);
       setFormTouched(false);
       setLocalError(null);
-    } else {
-      // For delete operations, automatically set as dirty to enable submit button
-      if (dialogType === 'delete') {
-        setIsFormDirty(true);
-      } else {
-        setIsFormDirty(false);
-        setShowValidationErrors(false);
-        setFormTouched(false);
-        setLocalError(null);
-      }
+      setHasAttemptedSubmit(false);
+      setHasInteracted(false);
+      return;
     }
-  }, [open, dialogType]);
+    
+    if (dialogType === 'delete') {
+      setIsFormDirty(true);
+      setIsFormValid(true);
+    } else {
+      setIsFormDirty(false);
+      setIsFormValid(!validateOnMount);
+      setFormTouched(false);
+      setLocalError(null);
+      setHasAttemptedSubmit(false);
+      setHasInteracted(false);
+    }
+  }, [open, dialogType, validateOnMount]);
 
-  // Handle Escape key press
+  // Escape key effect
   useEffect(() => {
-    if (!open || !closeOnEsc) return;
-
     const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isSubmitting && !loading) {
+      if (open && closeOnEsc && e.key === 'Escape' && !isSubmitting && !loading) {
         onClose?.();
       }
     };
@@ -280,189 +276,231 @@ export function OptimizedDialog<T extends BaseTableData = BaseTableData>({
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [closeOnEsc, open, isSubmitting, loading, onClose]);
 
-  // Handle backdrop click
+  // Form validity tracking effect
+  useEffect(() => {
+    if (dialogType === 'delete') {
+      setIsFormValid(true);
+      return;
+    }
+    
+    if (dialogType === 'create' && !validateOnMount) {
+      setIsFormValid(true);
+      return;
+    }
+    
+    if (formContext && dialogType && open) {
+      try {
+        const initialValidity = formContext.isFormValid(dialogType as DialogMode);
+        setIsFormValid(initialValidity);
+      } catch (error) {
+        console.error('Error checking form validity:', error);
+        setIsFormValid(true);
+      }
+    }
+  }, [dialogType, formContext, open, validateOnMount]);
+
+  // Form change detection effect
+  useEffect(() => {
+    if (!open || !dialogRef.current) return;
+    
+    if (formContext || (formRef.current && (typeof formRef.current.isDirty === 'function'))) {
+      return;
+    }
+    
+    const formElements = dialogRef.current.querySelectorAll('input, select, textarea');
+    
+    const handleFormChange = () => {
+      setFormTouched(true);
+      setIsFormDirty(true);
+      
+      if (!hasAttemptedSubmit) {
+        setLocalError(null);
+      }
+    };
+    
+    formElements.forEach(element => {
+      element.addEventListener('input', handleFormChange);
+      element.addEventListener('change', handleFormChange);
+    });
+    
+    return () => {
+      formElements.forEach(element => {
+        element.removeEventListener('input', handleFormChange);
+        element.removeEventListener('change', handleFormChange);
+      });
+    };
+  }, [open, dialogType, formContext, hasAttemptedSubmit]);
+
+  // ALL useCallback hooks are called unconditionally
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget && closeOnClickOutside && !isSubmitting && !loading) {
       onClose?.();
     }
   }, [closeOnClickOutside, isSubmitting, loading, onClose]);
 
-  // Handle form dirty state changes - improved to track any interaction
   const handleFormDirty = useCallback((isDirty: boolean) => {
     setIsFormDirty(isDirty);
+    
     if (isDirty) {
+      setHasInteracted(true);
       setFormTouched(true);
     }
-  }, []);
-  
-  // Register listeners for form field interactions - to detect any changes
-  useEffect(() => {
-    if (!open || !dialogRef.current) return;
     
-    // Find all form elements
-    const formElements = dialogRef.current.querySelectorAll('input, select, textarea');
-    
-    // Handler for any interaction with form fields
-    const handleFormInteraction = () => {
-      setFormTouched(true);
-      setIsFormDirty(true);
-    };
-    
-    // Add listeners to each form element
-    formElements.forEach(element => {
-      element.addEventListener('input', handleFormInteraction);
-      element.addEventListener('change', handleFormInteraction);
-      element.addEventListener('focus', handleFormInteraction);
-    });
-    
-    // Cleanup
-    return () => {
-      formElements.forEach(element => {
-        element.removeEventListener('input', handleFormInteraction);
-        element.removeEventListener('change', handleFormInteraction);
-        element.removeEventListener('focus', handleFormInteraction);
-      });
-    };
-  }, [open, dialogType]);
+    if (formContext && dialogTypeRef.current) {
+      formContext.setFormDirty(isDirty, dialogTypeRef.current as DialogMode);
+    }
+  }, [formContext]);
 
-  // Handle dialog submission in an optimized way
+  // CRITICAL FIX: Enhanced error recovery effect
+  useEffect(() => {
+    // Clear loading state if error occurs
+    if (error && isSubmitting) {
+      console.log('[OptimizedDialog] Error detected, clearing loading state');
+      setIsSubmitting(false);
+      setLocalError(typeof error === 'string' ? error : error.message);
+    }
+  }, [error, isSubmitting]);
+
+  // CRITICAL FIX: Auto-recovery from stuck loading states
+  useEffect(() => {
+    if (isSubmitting) {
+      // Emergency timeout to prevent stuck loading
+      const emergencyTimeout = setTimeout(() => {
+        console.warn('[OptimizedDialog] Emergency recovery from stuck loading state');
+        setIsSubmitting(false);
+        setLocalError('Thao tác bị gián đoạn. Vui lòng thử lại.');
+      }, 30000); // 30 second emergency timeout
+
+      return () => clearTimeout(emergencyTimeout);
+    }
+  }, [isSubmitting]);
+
+  // CRITICAL FIX: Enhanced submit with comprehensive error handling
   const handleSubmit = useCallback(async () => {
-    if (!dialogType || !onSubmit || isSubmitting || loading) return;
+    const currentDialogType = dialogTypeRef.current;
+    const currentData = dataRef.current;
+    
+    if (!currentDialogType || !onSubmitRef.current || isSubmitting || loading) {
+      return;
+    }
+    
+    setHasAttemptedSubmit(true);
+    setHasInteracted(true);
+    setIsSubmitting(true);
+    setLocalError(null);
     
     try {
-      setIsSubmitting(true);
-      setLocalError(null);
+      console.log('[OptimizedDialog] Starting submission for type:', currentDialogType);
       
-      // Show validation errors when submitting
-      setShowValidationErrors(true);
+      if (currentDialogType === 'delete') {
+        try {
+          const result = onSubmitRef.current(currentData || {}, currentDialogType);
+          const finalResult = result instanceof Promise ? await result : result;
+          
+          console.log('[OptimizedDialog] Delete result:', finalResult);
+          
+          // CRITICAL FIX: Always clear loading state
+          setIsSubmitting(false);
+          
+          // Don't close dialog here - let parent handle it based on result
+          return;
+        } catch (deleteError) {
+          console.error('[OptimizedDialog] Delete operation failed:', deleteError);
+          
+          // CRITICAL FIX: Specific error handling for delete operations
+          const errorMessage = deleteError instanceof Error 
+            ? deleteError.message 
+            : 'Xóa thất bại. Vui lòng thử lại.';
+          
+          setLocalError(errorMessage);
+          setIsSubmitting(false);
+          
+          // Keep dialog open on delete error for user to see the error and retry
+          return;
+        }
+      }
       
-      // Special case for delete operations
-      if (dialogType === 'delete') {
-        const result = await onSubmit(data, dialogType);
+      // Handle other dialog types
+      if (formContext && currentDialogType) {
+        try {
+          const { isValid, data: formData, errors } = await formContext.validateAndGetFormData(currentDialogType as DialogMode);
+          
+          if (!isValid || !formData) {
+            const errorMessage = errors && typeof errors === 'object' && '_form' in errors 
+              ? String(errors._form) 
+              : 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+            setLocalError(errorMessage);
+            setIsSubmitting(false);
+            return;
+          }
+          
+          if (formData && Object.keys(formData).length === 0 && (currentDialogType !== 'delete' as DialogType)) {
+            setLocalError('Không có dữ liệu được nhập. Vui lòng điền vào form.');
+            setIsSubmitting(false);
+            return;
+          }
+          
+          const finalData = currentDialogType === 'edit' && currentData 
+            ? { ...currentData, ...formData } 
+            : formData;
+          
+          if (currentDialogType === 'edit' && currentData?.id && !finalData.id) {
+            finalData.id = currentData.id;
+          }
+          
+          const result = onSubmitRef.current(finalData, currentDialogType);
+          const finalResult = result instanceof Promise ? await result : result;
+          
+          console.log('[OptimizedDialog] Form submission result:', finalResult);
+          setIsSubmitting(false);
+          
+          // Don't close dialog here - let parent handle it
+          return;
+        } catch (err) {
+          console.error('[OptimizedDialog] Form submission error:', err);
+          
+          const errorMessage = err instanceof Error 
+            ? err.message 
+            : 'Có lỗi xảy ra khi gửi biểu mẫu. Vui lòng thử lại.';
+          
+          setLocalError(errorMessage);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Fallback: use original data
+      try {
+        const result = onSubmitRef.current(currentData || {}, currentDialogType);
+        const finalResult = result instanceof Promise ? await result : result;
+        
+        console.log('[OptimizedDialog] Fallback submission result:', finalResult);
         setIsSubmitting(false);
         
-        if (result === true || result === undefined) {
-          onClose?.();
-        }
+        // Don't close dialog here - let parent handle it
+        return;
+      } catch (err) {
+        console.error('[OptimizedDialog] Fallback submission error:', err);
         
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : 'Có lỗi xảy ra. Vui lòng thử lại.';
+        
+        setLocalError(errorMessage);
+        setIsSubmitting(false);
         return;
       }
-      
-      // For other operations, use form validation
-      if (formRef.current) {
-        // Try to use form context first
-        if (formContext) {
-          try {
-            const validation = await formContext.validateAndGetFormData(dialogType as DialogMode);
-            
-            // Check if validation failed but returned no specific errors
-            // This often happens with empty forms and no required fields
-            if (!validation.isValid && Object.keys(validation.errors).length === 0) {
-              // For create operations, we need at least some data
-              if (dialogType === 'create' && (!validation.data || Object.keys(validation.data).length === 0)) {
-                setLocalError("Vui lòng điền thông tin trước khi tạo mới");
-                setIsSubmitting(false);
-                return;
-              }
-            }
-            
-            // Otherwise proceed if we have data
-            if (validation.data) {
-              // Preserve ID for edit operations
-              if (dialogType === 'edit' && data && 'id' in data && !('id' in validation.data)) {
-                (validation.data as any).id = (data as any).id;
-              }
-              
-              const result = await onSubmit(validation.data, dialogType);
-              setIsSubmitting(false);
-              
-              if (result === true || result === undefined) {
-                onClose?.();
-              }
-              
-              return;
-            } else {
-              // No data but also no errors - general error
-              setLocalError("Form không chứa dữ liệu hợp lệ");
-              setIsSubmitting(false);
-              return;
-            }
-          } catch (err) {
-            console.error("Validation error:", err);
-            setLocalError(err instanceof Error ? err.message : "Lỗi xác thực dữ liệu");
-            setIsSubmitting(false);
-            return;
-          }
-        }
-        
-        // Direct form access as fallback
-        if (typeof formRef.current.getValidatedValues === 'function') {
-          try {
-            const formData = await formRef.current.getValidatedValues();
-            
-            if (formData) {
-              // Preserve ID for edit operations
-              if (dialogType === 'edit' && data && 'id' in data && !('id' in formData)) {
-                (formData as any).id = (data as any).id;
-              }
-              
-              const result = await onSubmit(formData, dialogType);
-              setIsSubmitting(false);
-              
-              if (result === true || result === undefined) {
-                onClose?.();
-              }
-              
-              return;
-            } else {
-              setLocalError("Form không chứa dữ liệu hợp lệ");
-              setIsSubmitting(false);
-              return;
-            }
-          } catch (err) {
-            console.error('Form validation error:', err);
-            setLocalError(err instanceof Error ? err.message : "Lỗi xác thực dữ liệu");
-            setIsSubmitting(false);
-            return;
-          }
-        }
-        
-        // Fallback to using data directly if we've reached this point
-        // For create operations, check if we have at least some data
-        if (dialogType === 'create' && (!data || Object.keys(data || {}).length === 0)) {
-          setLocalError("Vui lòng điền thông tin trước khi tạo mới");
-          setIsSubmitting(false);
-          return;
-        }
-        
-        const result = await onSubmit(data || {}, dialogType);
-        setIsSubmitting(false);
-        
-        if (result === true || result === undefined) {
-          onClose?.();
-        }
-      } else {
-        // No form ref, use data directly
-        // For create operations, check if we have at least some data
-        if (dialogType === 'create' && (!data || Object.keys(data || {}).length === 0)) {
-          setLocalError("Vui lòng điền thông tin trước khi tạo mới");
-          setIsSubmitting(false);
-          return;
-        }
-        
-        const result = await onSubmit(data || {}, dialogType);
-        setIsSubmitting(false);
-        
-        if (result === true || result === undefined) {
-          onClose?.();
-        }
-      }
     } catch (err) {
-      console.error('Dialog submission error:', err);
-      setLocalError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi gửi biểu mẫu");
+      console.error('[OptimizedDialog] Unexpected error during submission:', err);
+      
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Có lỗi không mong muốn xảy ra. Vui lòng thử lại.';
+      
+      setLocalError(errorMessage);
       setIsSubmitting(false);
     }
-  }, [dialogType, onSubmit, isSubmitting, loading, onClose, data, formContext]);
+  }, [isSubmitting, loading, onClose, formContext]);
 
   // Don't render if not open
   if (!open) {
@@ -491,91 +529,93 @@ export function OptimizedDialog<T extends BaseTableData = BaseTableData>({
     transition: { duration: 0.2 }
   };
 
-  // Check if the form is in read-only mode
   const isReadOnly = dialogType === 'view';
-
-  // Use combined error for display
   const displayError = localError || error;
+  const isDelete = dialogType === 'delete';
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="rpt-dialog-container">
-          <motion.div
-            className="rpt-dialog-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleBackdropClick}
-          >
-            <motion.div
-              ref={dialogRef}
-              className={cn('rpt-dialog', `rpt-dialog-${dialogType}`)}
-              style={{ width }}
-              {...animationSettings}
-              onClick={(e) => e.stopPropagation()}
+    <div className="rpt-dialog-container">
+      <motion.div
+        className="rpt-dialog-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleBackdropClick}
+        style={{ 
+          // CRITICAL FIX: Ensure dialog is above loading overlays
+          zIndex: 1000 
+        }}
+      >
+        <motion.div
+          className={cn("rpt-dialog", `rpt-dialog-${buttonSize}`)}
+          style={{ 
+            width, 
+            maxWidth: '95vw',
+            maxHeight: '95vh',
+            zIndex: 1001 
+          }}
+          {...animationSettings}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="rpt-dialog-header">
+            <h2 className="rpt-dialog-title">{title}</h2>
+            {/* {dialogDescription && (
+              <p className="rpt-dialog-description">{dialogDescription}</p>
+            )} */}
+            <button 
+              className="rpt-dialog-close" 
+              onClick={onClose}
+              aria-label="Close dialog"
             >
-              {/* Dialog Header */}
-              <div className="rpt-dialog-header">
-                <h2 className="rpt-dialog-title">{title}</h2>
-                <button
-                  className="rpt-dialog-close"
-                  onClick={onClose}
-                  disabled={isSubmitting || loading}
-                  type="button"
-                  aria-label="Close dialog"
-                >
-                  ×
-                </button>
-              </div>
+              ×
+            </button>
+          </div>
 
-              {/* Dialog Content - Using memoized component */}
-              <DialogContent 
-                error={displayError}
-                description={dialogDescription}
-                isLoading={loading || isSubmitting}
-              >
-                {dialogType === 'delete' ? (
-                  <div className="rpt-dialog-delete-confirmation">
-                    <p>Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.</p>
-                  </div>
-                ) : FormComponent ? (
-                  <FormComponent
-                    ref={formRef}
-                    data={data}
-                    dialogType={dialogType}
-                    onSubmit={(formData) => onSubmit?.(formData, dialogType)}
-                    onClose={onClose}
-                    loading={loading || isSubmitting}
-                    error={displayError}
-                    isReadOnly={isReadOnly}
-                    onFormDirty={handleFormDirty}
-                    showValidationErrors={showValidationErrors}
-                  />
-                ) : (
-                  <div className="rpt-dialog-placeholder">
-                    Không tìm thấy form component cho {dialogType}
-                  </div>
-                )}
-              </DialogContent>
-
-              {/* Dialog Footer - Updated isFormDirty logic */}
-              <DialogFooter
+          <DialogContent
+            error={(hasAttemptedSubmit || hasInteracted) ? displayError : null}
+            description={dialogDescription}
+            isLoading={isSubmitting || loading}
+          >
+            {FormComponent && (
+              <FormComponent
+                data={data}
                 dialogType={dialogType}
-                onCancel={onClose!}
-                onSubmit={handleSubmit}
-                isSubmitting={isSubmitting || loading}
-                buttonSize={buttonSize}
-                actionsPosition={actionsPosition}
-                elevatedButtons={elevatedButtons}
-                isFormDirty={isFormDirty || formTouched}
                 isReadOnly={isReadOnly}
-                disableSubmitUntilDirty={disableSubmitUntilDirty}
+                onSubmit={onSubmit}
+                onClose={onClose}
+                loading={isSubmitting || loading}
+                error={(hasAttemptedSubmit || hasInteracted) ? displayError : null}
+                onFormDirty={handleFormDirty}
+                skipInitialValidation={skipInitialValidation || !validateOnMount}
+                ref={formRef}
+                dialogRef={dialogRef}
               />
-            </motion.div>
-          </motion.div>
-        </div>
-      )}
+            )}
+          </DialogContent>
+
+          <DialogFooter
+            dialogType={dialogType}
+            onCancel={onClose!}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting || loading}
+            buttonSize={buttonSize}
+            actionsPosition={actionsPosition}
+            elevatedButtons={elevatedButtons}
+            isReadOnly={isReadOnly}
+            isFormValid={dialogType === 'delete' || dialogType === 'create' ? true : isFormValid}
+            disabled={isSubmitting || loading || (dialogType === 'edit' && !isFormValid)}
+          />
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+// Safe wrapper that handles AnimatePresence
+export function OptimizedDialog<T extends BaseTableData = BaseTableData>(props: OptimizedDialogProps<T>) {
+  return (
+    <AnimatePresence>
+      {props.open && <SimpleDialogImplementation {...props} />}
     </AnimatePresence>
   );
 }

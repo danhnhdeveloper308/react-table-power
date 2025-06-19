@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { cn } from '../../utils/cn';
+import { enableScrollbarHoverDetection } from '../../utils/scrollbarHover';
 
 export interface TableContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -88,6 +89,8 @@ export const TableContainer: React.FC<TableContainerProps> = ({
   hover,
   ...props
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Generate specific height style if provided or use default in CSS
   const heightStyle = maxHeight ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight } : {};
   
@@ -108,6 +111,13 @@ export const TableContainer: React.FC<TableContainerProps> = ({
     bordered && 'rpt-table-bordered'
   );
 
+  useEffect(() => {
+    // Enable scrollbar hover detection
+    if (containerRef.current) {
+      enableScrollbarHoverDetection(containerRef.current);
+    }
+  }, []);
+
   return (
     <div
       className={containerClasses}
@@ -116,6 +126,7 @@ export const TableContainer: React.FC<TableContainerProps> = ({
       <div 
         className={scrollContainerClasses}
         style={heightStyle}
+        ref={containerRef}
       >
         {children}
       </div>

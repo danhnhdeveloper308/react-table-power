@@ -3,30 +3,22 @@
  * Consistent scrollbar styling across components
  */
 
-/* Global scrollbar styling */
+/* Global scrollbar styling - Base thin scrollbar */
 .rpt-scrollable {
   scrollbar-width: thin;
   scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
-  transition: var(--rpt-scrollbar-transition);
-}
-
-.rpt-scrollable:hover {
-  scrollbar-width: auto;
-  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
 }
 
 /* Webkit based browsers (Chrome, Safari, Edge) */
 .rpt-scrollable::-webkit-scrollbar {
-  width: var(--rpt-scrollbar-width);
-  height: var(--rpt-scrollbar-width);
+  width: var(--rpt-scrollbar-width, 6px);
+  height: var(--rpt-scrollbar-width, 6px);
   background-color: var(--rpt-scrollbar-bg);
-  transition: var(--rpt-scrollbar-transition);
 }
 
-.rpt-scrollable:hover::-webkit-scrollbar {
-  width: var(--rpt-scrollbar-hover-width);
-  height: var(--rpt-scrollbar-hover-width);
-}
+/* CRITICAL FIX: Remove hover effect on container - scrollbar width should only change when hovering the scrollbar itself */
+/* This selector won't work in practice because you can't target scrollbar hover in CSS */
+/* Instead, we'll use a different approach */
 
 .rpt-scrollable::-webkit-scrollbar-track {
   background: var(--rpt-scrollbar-bg);
@@ -36,9 +28,10 @@
 .rpt-scrollable::-webkit-scrollbar-thumb {
   background: var(--rpt-scrollbar-thumb-color);
   border-radius: 10px;
-  transition: var(--rpt-scrollbar-transition);
+  transition: background-color 0.2s ease;
 }
 
+/* Only change color on thumb hover, not width */
 .rpt-scrollable::-webkit-scrollbar-thumb:hover {
   background: var(--rpt-scrollbar-thumb-hover-color);
 }
@@ -48,118 +41,132 @@
   background: var(--rpt-scrollbar-bg);
 }
 
-/* Dark theme adjustments */
-.dark-theme .rpt-scrollable,
-[data-theme="dark"] .rpt-scrollable {
-  scrollbar-color: var(--rpt-scrollbar-thumb-color-dark) var(--rpt-scrollbar-bg-dark);
-}
-
-.dark-theme .rpt-scrollable:hover,
-[data-theme="dark"] .rpt-scrollable:hover {
-  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color-dark) var(--rpt-scrollbar-bg-dark);
-}
-
-.dark-theme .rpt-scrollable::-webkit-scrollbar,
-[data-theme="dark"] .rpt-scrollable::-webkit-scrollbar {
-  background-color: var(--rpt-scrollbar-bg-dark);
-}
-
-.dark-theme .rpt-scrollable::-webkit-scrollbar-track,
-[data-theme="dark"] .rpt-scrollable::-webkit-scrollbar-track {
-  background: var(--rpt-scrollbar-bg-dark);
-}
-
-.dark-theme .rpt-scrollable::-webkit-scrollbar-thumb,
-[data-theme="dark"] .rpt-scrollable::-webkit-scrollbar-thumb {
-  background: var(--rpt-scrollbar-thumb-color-dark);
-}
-
-.dark-theme .rpt-scrollable::-webkit-scrollbar-thumb:hover,
-[data-theme="dark"] .rpt-scrollable::-webkit-scrollbar-thumb:hover {
-  background: var(--rpt-scrollbar-thumb-hover-color-dark);
-}
-
-/* Custom Scrollbar Styles */
-
-/* Webkit browsers (Chrome, Safari, Edge) */
-.rpt-container *::-webkit-scrollbar {
+/* Table wrapper scrollbar - more prominent for horizontal scrolling but no hover width change */
+.rpt-table-wrapper::-webkit-scrollbar {
   width: 8px;
   height: 8px;
+  background-color: var(--rpt-scrollbar-bg);
 }
 
-.rpt-container *::-webkit-scrollbar-track {
-  background: var(--rpt-color-surface);
-  border-radius: var(--rpt-radius-sm);
-}
-
-.rpt-container *::-webkit-scrollbar-thumb {
-  background: var(--rpt-color-border);
-  border-radius: var(--rpt-radius-sm);
-  transition: background-color var(--rpt-transition-fast);
-}
-
-.rpt-container *::-webkit-scrollbar-thumb:hover {
-  background: var(--rpt-color-text-secondary);
-}
-
-.rpt-container *::-webkit-scrollbar-corner {
-  background: var(--rpt-color-surface);
-}
-
-/* Firefox */
-.rpt-container * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--rpt-color-border) var(--rpt-color-surface);
-}
-
-/* Table specific scrollbars */
-.rpt-table-wrapper::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
+/* REMOVE: No hover width change for table wrapper */
+/* .rpt-table-wrapper::-webkit-scrollbar:hover - This doesn't work anyway */
 
 .rpt-table-wrapper::-webkit-scrollbar-track {
-  background: var(--rpt-color-surface);
-  border-radius: var(--rpt-radius-md);
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 6px;
 }
 
 .rpt-table-wrapper::-webkit-scrollbar-thumb {
-  background: var(--rpt-color-border);
-  border-radius: var(--rpt-radius-md);
-  border: 2px solid var(--rpt-color-surface);
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 6px;
+  border: 1px solid var(--rpt-scrollbar-bg);
+  transition: background-color 0.2s ease;
 }
 
 .rpt-table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: var(--rpt-color-text-secondary);
+  background: var(--rpt-scrollbar-thumb-hover-color);
 }
 
-/* Dropdown scrollbars */
+/* Dialog content scrollbar */
+.rpt-dialog-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background-color: var(--rpt-scrollbar-bg);
+}
+
+/* REMOVE: No hover width change */
+/* .rpt-dialog-content::-webkit-scrollbar:hover - This doesn't work */
+
+.rpt-dialog-content::-webkit-scrollbar-track {
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 5px;
+}
+
+.rpt-dialog-content::-webkit-scrollbar-thumb {
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.rpt-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: var(--rpt-scrollbar-thumb-hover-color);
+}
+
+/* Dropdown scrollbars - smaller and more subtle, NO hover width change */
 .rpt-column-visibility-list::-webkit-scrollbar,
+.rpt-column-dropdown::-webkit-scrollbar,
 .rpt-export-dropdown-content::-webkit-scrollbar,
 .rpt-action-dropdown-content::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
+  background-color: transparent;
 }
 
+/* REMOVE: No hover width change for dropdowns */
+/* All ::-webkit-scrollbar:hover selectors are removed */
+
 .rpt-column-visibility-list::-webkit-scrollbar-track,
+.rpt-column-dropdown::-webkit-scrollbar-track,
 .rpt-export-dropdown-content::-webkit-scrollbar-track,
 .rpt-action-dropdown-content::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 .rpt-column-visibility-list::-webkit-scrollbar-thumb,
+.rpt-column-dropdown::-webkit-scrollbar-thumb,
 .rpt-export-dropdown-content::-webkit-scrollbar-thumb,
 .rpt-action-dropdown-content::-webkit-scrollbar-thumb {
-  background: var(--rpt-color-border);
-  border-radius: var(--rpt-radius-sm);
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 .rpt-column-visibility-list::-webkit-scrollbar-thumb:hover,
+.rpt-column-dropdown::-webkit-scrollbar-thumb:hover,
 .rpt-export-dropdown-content::-webkit-scrollbar-thumb:hover,
 .rpt-action-dropdown-content::-webkit-scrollbar-thumb:hover {
-  background: var(--rpt-color-text-secondary);
+  background: var(--rpt-scrollbar-thumb-hover-color);
 }
 
-/* Utility classes for scrollbar control */
+/* Firefox scrollbar - can't control width on hover, so keep consistent */
+.rpt-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
+}
+
+/* Dark theme adjustments */
+.dark-theme .rpt-scrollable,
+[data-theme="dark"] .rpt-scrollable {
+  scrollbar-color: var(--rpt-scrollbar-thumb-color-dark, #64748b) var(--rpt-scrollbar-bg-dark, #1e293b);
+}
+
+/* Container scrollbar improvements - NO hover width change */
+.rpt-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background-color: var(--rpt-scrollbar-bg);
+}
+
+/* REMOVE: No hover width change */
+/* .rpt-container::-webkit-scrollbar:hover - This doesn't work */
+
+.rpt-container::-webkit-scrollbar-track {
+  background: var(--rpt-scrollbar-bg);
+  border-radius: 6px;
+}
+
+.rpt-container::-webkit-scrollbar-thumb {
+  background: var(--rpt-scrollbar-thumb-color);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.rpt-container::-webkit-scrollbar-thumb:hover {
+  background: var(--rpt-scrollbar-thumb-hover-color);
+}
+
+/* Utility classes */
 .rpt-scrollbar-hidden {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -167,10 +174,6 @@
 
 .rpt-scrollbar-hidden::-webkit-scrollbar {
   display: none;
-}
-
-.rpt-scrollable {
-  overflow: auto;
 }
 
 .rpt-scrollable-x {
@@ -183,55 +186,57 @@
   overflow-x: hidden;
 }
 
-/* Smooth scrolling */
-.rpt-container {
-  scroll-behavior: smooth;
-}
-
-/* Hover effects for scrollable areas */
-.rpt-scrollable:hover::-webkit-scrollbar-thumb {
-  background: var(--rpt-color-text-muted);
-}
-
-.rpt-scrollable:hover {
-  scrollbar-color: var(--rpt-color-text-muted) var(--rpt-color-surface);
-}
-
-/* Mobile optimization */
+/* Mobile optimization - keep scrollbars thin on mobile */
 @media (max-width: 640px) {
-  .rpt-scrollable::-webkit-scrollbar {
-    width: calc(var(--rpt-scrollbar-width) / 2) !important;
-    height: calc(var(--rpt-scrollbar-width) / 2) !important;
+  .rpt-scrollable::-webkit-scrollbar,
+  .rpt-table-wrapper::-webkit-scrollbar,
+  .rpt-container::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
   }
   
-  .rpt-scrollable:hover::-webkit-scrollbar {
-    width: var(--rpt-scrollbar-width) !important;
-    height: var(--rpt-scrollbar-width) !important;
-  }
+  /* REMOVE: No hover effects on mobile */
 }
 
 /* Touch device optimization */
 @media (pointer: coarse) {
-  .rpt-scrollable {
+  .rpt-scrollable,
+  .rpt-table-wrapper,
+  .rpt-container {
     -webkit-overflow-scrolling: touch;
   }
   
-  .rpt-scrollable::-webkit-scrollbar {
-    width: calc(var(--rpt-scrollbar-width) / 1.5) !important;
-    height: calc(var(--rpt-scrollbar-width) / 1.5) !important;
-  }
-  
-  .rpt-scrollable:hover::-webkit-scrollbar {
-    width: var(--rpt-scrollbar-width) !important; 
-    height: var(--rpt-scrollbar-width) !important;
+  /* Slightly thicker scrollbars on touch devices but no hover effects */
+  .rpt-scrollable::-webkit-scrollbar,
+  .rpt-table-wrapper::-webkit-scrollbar,
+  .rpt-container::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
   }
 }
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .rpt-scrollable,
   .rpt-scrollable::-webkit-scrollbar,
-  .rpt-scrollable::-webkit-scrollbar-thumb {
+  .rpt-scrollable::-webkit-scrollbar-thumb,
+  .rpt-table-wrapper::-webkit-scrollbar,
+  .rpt_table-wrapper::-webkit-scrollbar-thumb,
+  .rpt-container::-webkit-scrollbar,
+  .rpt-container::-webkit-scrollbar-thumb {
     transition: none !important;
   }
+}
+
+/* Smooth scrolling */
+.rpt-container,
+.rpt-table-wrapper,
+.rpt-dialog-content {
+  scroll-behavior: smooth;
+}
+
+/* ALTERNATIVE APPROACH: Use JavaScript for hover detection on scrollbar */
+/* This would require JavaScript implementation to detect actual scrollbar hover */
+.rpt-scrollbar-hover-detected::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px !important;
 }

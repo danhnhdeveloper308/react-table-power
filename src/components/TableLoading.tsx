@@ -67,6 +67,11 @@ export interface TableLoadingProps {
    * @default false
    */
   reducedMotion?: boolean;
+
+  /**
+   * Inline styles to apply to the loading container
+   */
+  style?: React.CSSProperties;
 }
 
 export function TableLoading({
@@ -76,11 +81,12 @@ export function TableLoading({
   variant = 'overlay',
   text = 'Loading...',
   skeletonRows = 5,
-  skeletonColumns = 4,
+  skeletonColumns = 5,
   className,
   blur = true,
   disablePointerEvents = true,
   reducedMotion = false,
+  style,
 }: TableLoadingProps): React.ReactElement | null {
   if (!loading) {
     return null;
@@ -141,6 +147,7 @@ export function TableLoading({
           reducedMotion && 'rpt-reduced-motion',
           className
         )}
+        style={style}
       >
         {renderSkeleton()}
       </div>
@@ -158,6 +165,7 @@ export function TableLoading({
         reducedMotion && 'rpt-reduced-motion',
         className
       )}
+      style={style}
       role="status"
       aria-live="polite"
       aria-busy={loading}

@@ -10,6 +10,14 @@ export { useColumnVisibility } from './useColumnVisibility';
 export { useDataTable } from './useDataTable';
 export { useAnimationPreference } from './useAnimationPreference';
 export { useSafeTableSettings } from './useSafeTableSettings';
+export { useLoadingStateManager } from './useLoadingStateManager';
 
-// Note: We're using named exports rather than default exports to maintain consistency
-// and allow better tree-shaking for the library
+// CRITICAL FIX: Export safe requestAnimationFrame utility
+export const safeRequestAnimationFrame = (callback: () => void) => {
+  if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+    return window.requestAnimationFrame(callback);
+  } else {
+    // Fallback for SSR environments
+    return setTimeout(callback, 16); // ~60fps
+  }
+};

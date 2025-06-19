@@ -24,8 +24,8 @@ export function Table<T extends BaseTableData = BaseTableData>({
   
   // Map size to the appropriate CSS class
   const sizeMap: Record<TableSize, string> = {
-    small: 'rpt-table-compact',
-    medium: '', // No specific class for medium as it's the default
+    small: 'rpt-table-small',
+    medium: 'rpt-table-medium', // No specific class for medium as it's the default
     large: 'rpt-table-large'
   };
   
@@ -86,14 +86,6 @@ export function Table<T extends BaseTableData = BaseTableData>({
   useEffect(() => {
     // Debug log for diagnostics
     if (process.env.NODE_ENV !== 'production') {
-      console.log('Table mounted with props:', {
-        size, striped, bordered, highlightOnHover, stickyHeader,
-        classes: {
-          table: tableClasses,
-          container: containerClass
-        }
-      });
-
       // Check for parent container to apply sticky header class
       if (stickyHeader && tableRef.current) {
         // Find closest rpt-table-container

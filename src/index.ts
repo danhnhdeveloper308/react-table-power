@@ -1,4 +1,7 @@
 import { useColumnVisibility } from './hooks/useColumnVisibility';
+import AutoForm from './components/form/AutoForm';
+import { FormAdapter } from './utils/formAdapters';
+import { safeRequestAnimationFrame } from './index';
 // CSS Auto-injection for React Power Table
 let cssInjected = false;
 
@@ -49,6 +52,28 @@ if (typeof window !== 'undefined') {
 // CSS imports are now handled by the separate styles.ts entry point
 // If you need styles, import from 'react-power-table/styles'
 
+// Export form handling context first to ensure it's available
+export {
+  FormHandlingProvider,
+  useFormHandling,
+  withFormHandling,
+  // useReactHookFormAdapter,
+  // useFormikAdapter
+} from './contexts/FormHandlingContext';
+
+// Export hooks that depend on context
+export { useTableDialog } from './hooks/useTableDialog';
+export { useOptimizedDialog } from './hooks/useOptimizedDialog';
+export { useTableExport } from './hooks/useTableExport';
+export { useTableSettings, type TableSettings } from './hooks/useTableSettings';
+export { useSafeTableSettings } from './hooks/useSafeTableSettings';
+export { useColumnVisibility } from './hooks/useColumnVisibility';
+export { useTableFilter } from './hooks/useTableFilter';
+export { useDataTable } from './hooks/useDataTable';
+export { useAnimationPreference } from './hooks/useAnimationPreference';
+export { useAutoForm } from './hooks/useAutoForm';
+export { useLoadingStateManager } from './hooks/useLoadingStateManager';
+
 // Export components
 export { default as DataTable } from './components/DataTable';
 export { default as TableContainer } from './components/table/TableContainer';
@@ -61,6 +86,21 @@ export { default as ThemeProvider } from './components/ThemeProvider';
 export { default as EmptyState } from './components/EmptyState';
 export { default as ErrorState } from './components/ErrorState';
 export { default as LoadingSpinner } from './components/LoadingSpinner';
+export { default as AutoForm } from './components/form/AutoForm';
+
+// Export form handling utilities and adapters
+export { 
+  type FormAdapter,
+  createFormAdapter, 
+  createReactHookFormAdapter, 
+  createFormikAdapter, 
+  createGenericFormAdapter 
+} from './utils/formAdapters';
+
+// Export new dialog components
+export { default as OptimizedDialog } from './components/OptimizedDialog';
+export { default as FormDialogManager } from './components/FormDialogManager';
+export { default as DialogLoadingState } from './components/DialogLoadingState';
 
 // Export new modular table components
 export { 
@@ -102,25 +142,6 @@ export {
   Plus
 } from './icons';
 
-// Export hooks
-export { useTableDialog } from './hooks/useTableDialog';
-export { useTableExport } from './hooks/useTableExport';
-export { useTableSettings, type TableSettings } from './hooks/useTableSettings';
-export { useSafeTableSettings } from './hooks/useSafeTableSettings';
-export { useColumnVisibility } from './hooks/useColumnVisibility';
-export { useTableFilter } from './hooks/useTableFilter';
-export { useDataTable } from './hooks/useDataTable';
-export { useAnimationPreference } from './hooks/useAnimationPreference';
-
-// Export form handling context
-export {
-  FormHandlingProvider,
-  useFormHandling,
-  withFormHandling,
-  useReactHookFormAdapter,
-  useFormikAdapter
-} from './contexts/FormHandlingContext';
-
 // Export DataTableProvider and related hooks
 export {
   DataTableProvider,
@@ -144,5 +165,11 @@ export type { ThemeVariables } from './utils/theme';
 // Export types
 export * from './types';
 
+// Explicitly export DataTableFormProps to fix the TypeScript error
+export type { DataTableFormProps } from './types';
+
 // Export CSS injection function for manual control
 export { injectCSS };
+
+// Export hooks
+export * from './hooks';

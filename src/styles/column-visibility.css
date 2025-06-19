@@ -7,7 +7,7 @@
 .rpt-column-visibility {
   position: relative;
   display: inline-flex;
-  z-index: 20;
+  z-index: 20; /* Lower than dropdown content */
 }
 
 /* Toggle button */
@@ -126,7 +126,7 @@
   border-radius: var(--rpt-border-radius);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
               0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  z-index: 50;
+  z-index: 1001; /* Higher than action buttons and table content */
   transition: all var(--rpt-transition-duration) ease; /* Added transition for smooth appearance */
 }
 

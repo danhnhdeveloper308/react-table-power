@@ -215,6 +215,55 @@
   margin-left: 4px;
 }
 
+/* Skeleton loading styles */
+.rpt-skeleton {
+  background: linear-gradient(90deg, 
+    rgba(190, 190, 190, 0.2) 25%, 
+    rgba(129, 129, 129, 0.24) 37%, 
+    rgba(190, 190, 190, 0.2) 63%
+  );
+  background-size: 400% 100%;
+  animation: rpt-skeleton-loading 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.rpt-skeleton-text {
+  height: 16px;
+  width: 80%;
+}
+
+.rpt-skeleton-checkbox {
+  height: 16px;
+  width: 16px;
+  border-radius: 2px;
+}
+
+.rpt-skeleton-actions {
+  height: 32px;
+  width: 100%;
+  border-radius: 6px;
+}
+
+@keyframes rpt-skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode skeleton */
+.dark .rpt-skeleton,
+[data-theme="dark"] .rpt-skeleton {
+  background: linear-gradient(90deg, 
+    rgba(64, 64, 64, 0.2) 25%, 
+    rgba(96, 96, 96, 0.24) 37%, 
+    rgba(64, 64, 64, 0.2) 63%
+  );
+  background-size: 400% 100%;
+}
+
 /* Light and dark mode auto detection */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -285,4 +334,51 @@
   .rpt-head-cell, .rpt-cell {
     border: 1px solid #000 !important;
   }
+}
+
+/* CRITICAL FIX: Loading state management */
+.rpt-container.rpt-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.rpt-container.rpt-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 50;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  pointer-events: none;
+}
+
+/* Dark mode loading overlay */
+[data-theme="dark"] .rpt-container.rpt-loading::before,
+.rpt-theme-dark .rpt-container.rpt-loading::before {
+  background-color: rgba(30, 41, 59, 0.7);
+}
+
+/* CRITICAL FIX: Ensure loading indicators are always visible */
+.rpt-loading-indicator {
+  position: relative;
+  z-index: 51;
+  pointer-events: auto;
+}
+
+/* CRITICAL FIX: Prevent layout shifts during loading */
+.rpt-container.rpt-loading .rpt-table-wrapper {
+  min-height: 200px;
+}
+
+/* CRITICAL FIX: Animation performance optimization */
+.rpt-container.rpt-loading * {
+  animation-play-state: paused !important;
+}
+
+.rpt-container.rpt-loading .rpt-loading-indicator * {
+  animation-play-state: running !important;
 }

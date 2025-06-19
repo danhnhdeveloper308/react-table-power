@@ -380,9 +380,17 @@ export const TableDialog: React.FC<TableDialogProps> = ({
       
       // Register this dialog's type with form handling
       if (FormComponent) {
-        // Fix: Create a valid FormRef object instead of passing null
-        const formRef: React.MutableRefObject<any> = { current: null };
-        formHandling.registerForm(formRef, type);
+        // Fix: Pass the dialog type (not a ref object) and provide a valid API object
+        formHandling.registerForm(type, {
+          // Provide required methods that FormHandling expects
+          validate: async () => true,
+          getValues: () => data || {},
+          getValidatedValues: async () => data || {},
+          isDirty: () => false,
+          isValid: () => true,
+          reset: () => {},
+          getErrors: () => ({}),
+        });
       }
       
       return () => {
@@ -390,7 +398,7 @@ export const TableDialog: React.FC<TableDialogProps> = ({
       };
     }
     return undefined;
-  }, [open, type, FormComponent]);
+  }, [open, type, FormComponent, data]);
   
   // Format error for display
   const formatErrorMessage = (err: string | Error | null): string => {

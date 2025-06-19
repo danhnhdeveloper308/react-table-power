@@ -1,784 +1,580 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
-// Make sure we import the full DialogMode type
-import { DialogMode, BaseTableData } from '../types';
-import { getFormErrors as getFormErrorsUtil, getFormValues as getFormValuesUtil, checkFormValidity, setFormErrors as setFormErrorsUtil } from '../utils/formHelpers';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode, useRef, useEffect } from 'react';
+import { DialogMode } from '../types';
 
-export type FormRef = React.MutableRefObject<any>;
+// Add FormRef type definition
+export type FormRef = React.RefObject<any>;
 
+// Form API interface - Ensure getValues is explicitly a function type
+interface FormAPI {
+  getValues: () => Record<string, any>;
+  getValidatedValues: () => Promise<Record<string, any>>;
+  reset: (values?: Record<string, any>) => void;
+  validate: () => Promise<boolean>;
+  isDirty: () => boolean;
+  isValid: () => boolean;
+  getErrors: () => Record<string, any>;
+  setError?: (field: string, message: string) => void;
+  submit?: () => Promise<boolean>;
+}
+
+// Form state interface
+interface FormState {
+  isValid: boolean;
+  isDirty: boolean;
+  errors: Record<string, any>;
+}
+
+// Context interface
 export interface FormHandlingContextType {
-  /**
-   * Get form validation errors
-   */
-  getFormErrors: (type?: DialogMode) => Record<string, any>;
-  
-  /**
-   * Check if form is valid - returns promise for async validation
-   */
-  isFormValid: (type?: DialogMode) => Promise<boolean>;
-  
-  /**
-   * Get current form values
-   */
-  getFormValues: (type?: DialogMode) => Record<string, any> | null;
-  
-  /**
-   * Register a form with the context
-   */
-  registerForm: (formRef: FormRef, type: DialogMode) => void;
-  
-  /**
-   * Unregister a form
-   */
+  // Form registration
+  registerForm: (type: DialogMode, api: FormAPI) => void;
   unregisterForm: (type: DialogMode) => void;
   
-  /**
-   * Reset form to initial state
-   */
-  resetForm: (type?: DialogMode) => void;
+  // Form state getters
+  isFormDirty: (type: DialogMode) => boolean;
+  isFormValid: (type: DialogMode) => boolean;
+  getFormValues: (type: DialogMode) => Record<string, any>;
+  getFormErrors: (type: DialogMode) => Record<string, any>;
   
-  /**
-   * Submit form programmatically
-   */
-  submitForm: (type?: DialogMode) => Promise<Record<string, any> | null>;
+  // Form state setters
+  setFormDirty: (isDirty: boolean, type: DialogMode) => void;
+  setFormValid: (isValid: boolean, type: DialogMode) => void;
+  setFormErrors: (errors: Record<string, any>, type: DialogMode) => void;
   
-  /**
-   * Set form values programmatically
-   */
-  setFormValues: (values: Record<string, any>, type?: DialogMode) => void;
-  
-  /**
-   * Set form errors programmatically
-   */
-  setFormErrors: (errors: Record<string, any>, type?: DialogMode) => void;
-  
-  /**
-   * Update form status
-   */
-  updateFormStatus: (type: DialogMode, status: { 
-    isValid?: boolean;
-    isDirty?: boolean;
-    isSubmitting?: boolean;
-  }) => void;
-  
-  /**
-   * Get current registered form ref
-   */
-  getFormRef: (type?: DialogMode) => FormRef | null;
-  
-  /**
-   * Check if form is dirty (has changes)
-   */
-  isFormDirty: (type?: DialogMode) => boolean;
-  
-  /**
-   * Check if form is submitting
-   */
-  isFormSubmitting: (type?: DialogMode) => boolean;
-
-  /**
-   * Validate form and get form data if valid
-   * Combines validation and data retrieval in one method
-   */
-  validateAndGetFormData: (type?: DialogMode) => Promise<{
+  // Form operations
+  resetForm: (type: DialogMode, values?: Record<string, any>) => void;
+  validateForm: (type: DialogMode) => Promise<boolean>;
+  validateAndGetFormData: (type: DialogMode) => Promise<{
     isValid: boolean;
     data: Record<string, any> | null;
-    errors: Record<string, any>;
+    errors: Record<string, any> | null;
   }>;
-
-  /**
-   * Check if a form is initialized
-   */
-  isFormInitialized: (type?: DialogMode) => boolean;
+  submitForm: (type: DialogMode) => Promise<boolean>;
   
-  /**
-   * Clear all form errors
-   */
-  clearFormErrors: (type?: DialogMode) => void;
+  // Active form type
+  activeFormType: DialogMode | null;
+  setActiveFormType: (type: DialogMode | null) => void;
 }
 
-interface FormRegistryItem {
-  formRef: FormRef;
-  isValid?: boolean;
-  isDirty?: boolean;
-  isSubmitting?: boolean;
-}
-
-interface FormHandlingProviderProps {
-  children: React.ReactNode;
-  defaultMode?: DialogMode;
-}
-
+// Create context with a default value
 const FormHandlingContext = createContext<FormHandlingContextType | null>(null);
 
 /**
  * Provider component for form handling functionality
  */
-export const FormHandlingProvider: React.FC<FormHandlingProviderProps> = ({ 
-  children,
-  defaultMode = 'create' 
-}) => {
-  const [currentMode, setCurrentMode] = useState<DialogMode>(defaultMode);
-  const formRegistry = useRef<Record<DialogMode, FormRegistryItem | undefined>>({
-    create: undefined,
-    edit: undefined,
-    delete: undefined, // Ensure 'delete' is included here
-    view: undefined,
-    custom: undefined
-  });
-
-  // Register a form with the context
-  const registerForm = useCallback((formRef: FormRef, type: DialogMode) => {
-    formRegistry.current[type] = { formRef, isValid: false, isDirty: false, isSubmitting: false };
-    setCurrentMode(type);
-  }, []);
-
-  // Unregister a form from the context
+export function FormHandlingProvider({ children }: { children: ReactNode }) {
+  // Track registered forms - use ref-based approach to prevent update loops
+  const [forms, setForms] = useState<Record<string, FormAPI>>({});
+  const formsRef = useRef<Record<string, FormAPI>>({});
+  
+  // Track form states with a ref to prevent circular updates
+  const [formStates, setFormStates] = useState<Record<string, FormState>>({});
+  const formStatesRef = useRef<Record<string, FormState>>({});
+  
+  // Track active form type
+  const [activeFormType, setActiveFormType] = useState<DialogMode | null>(null);
+  
+  // CRITICAL FIX: Remove the problematic useEffect hooks that cause infinite loops
+  // Instead, update refs synchronously during state updates
+  
+  // Register a form - prevent duplicate registrations and infinite loops
+  const registerForm = useCallback((type: DialogMode, api: FormAPI) => {
+    console.log(`[FormHandlingContext] Registering form for ${type}`);
+    
+    // Update both state and ref in the same update cycle
+    setForms(prev => {
+      const newForms = { ...prev, [type]: api };
+      formsRef.current = newForms; // Update ref immediately
+      return newForms;
+    });
+    
+    // Initialize form state if needed
+    setFormStates(prev => {
+      // Don't update if already exists with same state
+      if (prev[type] && JSON.stringify(prev[type]) === JSON.stringify({
+        isValid: true,
+        isDirty: false,
+        errors: {}
+      })) {
+        return prev;
+      }
+      
+      const newStates = {
+        ...prev,
+        [type]: {
+          isValid: true,
+          isDirty: false,
+          errors: {}
+        }
+      };
+      formStatesRef.current = newStates; // Update ref immediately
+      return newStates;
+    });
+    
+    // Set as active form if no active form exists - prevent loops
+    setActiveFormType(current => current !== null ? current : type);
+  }, []); // Remove all dependencies to prevent loops
+  
+  // Unregister form with more safety checks
   const unregisterForm = useCallback((type: DialogMode) => {
-    formRegistry.current[type] = undefined;
-  }, []);
-
-  // Get the current form ref based on type
-  const getFormRef = useCallback((type?: DialogMode): FormRef | null => {
-    const modeToUse = type || currentMode;
-    const registration = formRegistry.current[modeToUse];
-    return registration?.formRef || null;
-  }, [currentMode]);
-
-  // Update form status - moved up before it's used
-  const updateFormStatus = useCallback((type: DialogMode, status: {
-    isValid?: boolean;
-    isDirty?: boolean;
-    isSubmitting?: boolean;
-  }) => {
-    const registration = formRegistry.current[type];
-    if (!registration) return;
+    console.log(`[FormHandlingContext] Unregistering form for ${type}`);
     
-    formRegistry.current[type] = {
-      ...registration,
-      ...status
-    };
-  }, []);
-
-  // Get form errors for the specified form type
-  const getFormErrors = useCallback((type?: DialogMode): Record<string, any> => {
-    const formRef = getFormRef(type);
-    if (!formRef) return {};
+    if (!type) return; // Safety check
     
-    // Fix: Pass only formRef to getFormErrorsUtil
-    return getFormErrorsUtil(formRef);
-  }, [getFormRef]);
+    // Remove form API reference
+    setForms(prev => {
+      if (!prev[type]) return prev;
+      
+      const newForms = { ...prev };
+      delete newForms[type];
+      formsRef.current = newForms; // Update ref immediately
+      return newForms;
+    });
+    
+    // Remove form state
+    setFormStates(prev => {
+      if (!prev[type]) return prev;
+      
+      const newStates = { ...prev };
+      delete newStates[type];
+      formStatesRef.current = newStates; // Update ref immediately
+      return newStates;
+    });
+    
+    // Clear active form type if this was the active one
+    setActiveFormType(current => current === type ? null : current);
+  }, []); // Remove dependencies to prevent loops
 
-  // Check if form is valid
-  const isFormValid = useCallback(async (type?: DialogMode): Promise<boolean> => {
-    const formRef = getFormRef(type);
-    if (!formRef) return true; // If no form, consider it valid
+  // CRITICAL FIX: Use only refs for these getters to prevent loops
+  const isFormDirty = useCallback((type: DialogMode) => {
+    const formState = formStatesRef.current[type];
+    if (formState !== undefined) {
+      return formState.isDirty;
+    }
+    
+    const form = formsRef.current[type];
+    if (form?.isDirty) {
+      try {
+        return form.isDirty();
+      } catch (error) {
+        console.error(`[FormHandlingContext] Error checking if form ${type} is dirty:`, error);
+      }
+    }
+    
+    return false;
+  }, []); // Remove dependencies
+  
+  const isFormValid = useCallback((type: DialogMode) => {
+    const formState = formStatesRef.current[type];
+    if (formState !== undefined) {
+      return formState.isValid;
+    }
+    
+    const form = formsRef.current[type];
+    if (form?.isValid) {
+      try {
+        const isValid = form.isValid();
+        return isValid;
+      } catch (error) {
+        console.error(`[FormHandlingContext] Error checking if form ${type} is valid:`, error);
+      }
+    }
+    
+    return true;
+  }, []); // Remove dependencies
+  
+  const getFormValues = useCallback((type: DialogMode) => {
+    const form = formsRef.current[type];
+    if (form && typeof form.getValues === 'function') {
+      try {
+        return form.getValues();
+      } catch (error) {
+        console.error(`[FormHandlingContext] Error getting form values for ${type}:`, error);
+      }
+    }
+    return {};
+  }, []); // Remove dependencies
+  
+  const getFormErrors = useCallback((type: DialogMode) => {
+    const formState = formStatesRef.current[type];
+    if (formState) {
+      return formState.errors;
+    }
+    
+    const form = formsRef.current[type];
+    if (form?.getErrors) {
+      return form.getErrors();
+    }
+    
+    return {};
+  }, []); // Remove dependencies
+  
+  // CRITICAL FIX: Prevent setState loops in these functions
+  const setFormDirty = useCallback((isDirty: boolean, type: DialogMode) => {
+    if (type === undefined || type === null) return;
+    
+    const currentState = formStatesRef.current[type];
+    if (currentState && currentState.isDirty === isDirty) return;
+    
+    setFormStates(prev => {
+      const current = prev[type];
+      if (!current || current.isDirty === isDirty) return prev;
+      
+      const newStates = {
+        ...prev, 
+        [type]: { ...current, isDirty }
+      };
+      formStatesRef.current = newStates; // Update ref immediately
+      return newStates;
+    });
+  }, []); // Remove dependencies
+  
+  const setFormValid = useCallback((isValid: boolean, type: DialogMode) => {
+    if (type === undefined || type === null) return;
+    
+    const currentState = formStatesRef.current[type];
+    if (currentState && currentState.isValid === isValid) return;
+    
+    setFormStates(prev => {
+      const current = prev[type];
+      if (!current || current.isValid === isValid) return prev;
+      
+      const newStates = {
+        ...prev, 
+        [type]: { ...current, isValid }
+      };
+      formStatesRef.current = newStates; // Update ref immediately
+      return newStates;
+    });
+  }, []); // Remove dependencies
+
+  const setFormErrors = useCallback((errors: Record<string, any>, type: DialogMode) => {
+    if (type === undefined || type === null) return;
+    
+    const currentState = formStatesRef.current[type];
+    if (currentState && JSON.stringify(currentState.errors) === JSON.stringify(errors)) return;
+    
+    setFormStates(prev => {
+      const current = prev[type];
+      if (!current) return prev;
+      
+      const newStates = {
+        ...prev,
+        [type]: { ...current, errors }
+      };
+      formStatesRef.current = newStates; // Update ref immediately
+      return newStates;
+    });
+  }, []); // Remove dependencies
+
+  // CRITICAL FIX: Use formsRef.current instead of forms state
+  const resetForm = useCallback((type: DialogMode, values?: Record<string, any>) => {
+    const form = formsRef.current[type];
+    if (form?.reset) {
+      // CRITICAL FIX: Only reset when values are provided
+      // This prevents unwanted resets during error scenarios
+      if (values !== undefined) {
+        form.reset(values);
+      }
+    }
+    
+    // Reset form state only when explicitly requested
+    if (values !== undefined) {
+      setFormStates(prev => {
+        const current = prev[type] || { isValid: true, isDirty: false, errors: {} };
+        const newStates = {
+          ...prev,
+          [type]: {
+            ...current,
+            isDirty: false,
+            errors: {}
+          }
+        };
+        formStatesRef.current = newStates; // Update ref immediately
+        return newStates;
+      });
+    }
+  }, []); // Remove dependencies
+  
+  const validateForm = useCallback(async (type: DialogMode) => {
+    const form = formsRef.current[type];
+    if (!form) return true;
     
     try {
-      // Fix: Pass only formRef to checkFormValidity
-      return await checkFormValidity(formRef);
+      if (form.validate) {
+        const isValid = await form.validate();
+        
+        // Update form state without causing loops
+        setFormValid(isValid, type);
+        
+        return isValid;
+      }
+      
+      return isFormValid(type);
     } catch (error) {
-      console.error('Error checking form validity:', error);
+      console.error(`[FormHandlingContext] Error validating form for ${type}:`, error);
       return false;
     }
-  }, [getFormRef]);
-
-  // Get form values
-  const getFormValues = useCallback((type?: DialogMode): Record<string, any> | null => {
-    const formRef = getFormRef(type);
-    if (!formRef) return null;
+  }, [isFormValid, setFormValid]); // Keep only essential dependencies
+  
+  // Validate and get form data - completely rewritten to fix registration issues
+  const validateAndGetFormData = useCallback(async (type: DialogMode) => {
+    console.log(`[FormHandlingContext] Validating form for ${type}. Available forms:`, Object.keys(formsRef.current));
     
-    // Fix: Pass only formRef to getFormValuesUtil
-    return getFormValuesUtil(formRef);
-  }, [getFormRef]);
-
-  // Reset form to initial state
-  const resetForm = useCallback((type?: DialogMode) => {
-    const formRef = getFormRef(type);
-    if (!formRef || !formRef.current) return;
+    // Get form reference with retry logic
+    let form = formsRef.current[type];
     
-    try {
-      // Try using specific reset method based on form library
-      if (typeof formRef.current.reset === 'function') {
-        formRef.current.reset();
-      }
-      
-      // React Hook Form
-      if (typeof formRef.current.resetForm === 'function') {
-        formRef.current.resetForm();
-      }
-      
-      // Formik
-      if (formRef.current.resetForm) {
-        formRef.current.resetForm();
-      }
-    } catch (error) {
-      console.error('Error resetting form:', error);
-    }
-  }, [getFormRef]);
-
-  // Submit form programmatically
-  const submitForm = useCallback(async (type?: DialogMode): Promise<Record<string, any> | null> => {
-    const formRef = getFormRef(type);
-    if (!formRef || !formRef.current) return null;
-    
-    try {
-      const modeToUse = type || currentMode;
-      updateFormStatus(modeToUse, { isSubmitting: true });
-      
-      // Try various submission methods based on form library
-      
-      // Custom handleSubmit method
-      if (typeof formRef.current.handleSubmit === 'function') {
-        await formRef.current.handleSubmit();
-        return getFormValues(modeToUse);
-      }
-      
-      // React Hook Form - returns values on success
-      if (formRef.current.handleSubmit && typeof formRef.current.getValues === 'function') {
-        const onSubmit = (data: Record<string, any>) => data;
-        await formRef.current.handleSubmit(onSubmit)();
-        return formRef.current.getValues();
-      }
-      
-      // Formik
-      if (formRef.current.submitForm && typeof formRef.current.submitForm === 'function') {
-        await formRef.current.submitForm();
-        return formRef.current.values;
-      }
-      
-      // Native form submission
-      if (formRef.current.submit && typeof formRef.current.submit === 'function') {
-        formRef.current.submit();
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      return null;
-    } finally {
-      const modeToUse = type || currentMode;
-      updateFormStatus(modeToUse, { isSubmitting: false });
-    }
-  }, [getFormRef, currentMode, updateFormStatus, getFormValues]);
-
-  // Set form values programmatically
-  const setFormValues = useCallback((values: Record<string, any>, type?: DialogMode) => {
-    const formRef = getFormRef(type);
-    if (!formRef || !formRef.current) return;
-    
-    try {
-      // Try various methods based on form library
-      
-      // Custom setValues method
-      if (typeof formRef.current.setValues === 'function') {
-        formRef.current.setValues(values);
-        return;
-      }
-      
-      // React Hook Form
-      if (typeof formRef.current.reset === 'function') {
-        formRef.current.reset(values);
-        return;
-      }
-      
-      // Formik
-      if (typeof formRef.current.setValues === 'function') {
-        formRef.current.setValues(values);
-        return;
-      }
-    } catch (error) {
-      console.error('Error setting form values:', error);
-    }
-  }, [getFormRef]);
-
-  // Set form errors programmatically
-  const setFormErrorsCallback = useCallback((errors: Record<string, any>, type?: DialogMode) => {
-    const formRef = getFormRef(type);
-    if (!formRef) return;
-    
-    // Fix: Make sure we're calling with the correct number of arguments
-    setFormErrorsUtil(formRef, errors);
-  }, [getFormRef]);
-
-  // Check if form is dirty (has changes)
-  const isFormDirty = useCallback((type?: DialogMode): boolean => {
-    const modeToUse = type || currentMode;
-    const registration = formRegistry.current[modeToUse];
-    
-    if (!registration) return false;
-    
-    // Check if we have an explicit isDirty value
-    if (registration.isDirty !== undefined) {
-      return registration.isDirty;
+    // If form not found, wait a bit and try again (registration might be in progress)
+    if (!form) {
+      console.log(`[FormHandlingContext] Form not immediately found for ${type}, retrying...`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      form = formsRef.current[type];
     }
     
-    // Try to get the value from the form library
-    const formRef = registration.formRef;
-    if (!formRef || !formRef.current) return false;
-    
-    // React Hook Form
-    if (formRef.current.formState && formRef.current.formState.isDirty !== undefined) {
-      return formRef.current.formState.isDirty;
-    }
-    
-    // Formik
-    if (formRef.current.dirty !== undefined) {
-      return formRef.current.dirty;
-    }
-    
-    return false;
-  }, [currentMode]);
-
-  // Check if form is submitting
-  const isFormSubmitting = useCallback((type?: DialogMode): boolean => {
-    const modeToUse = type || currentMode;
-    const registration = formRegistry.current[modeToUse];
-    
-    if (!registration) return false;
-    
-    // Check if we have an explicit isSubmitting value
-    if (registration.isSubmitting !== undefined) {
-      return registration.isSubmitting;
-    }
-    
-    // Try to get the value from the form library
-    const formRef = registration.formRef;
-    if (!formRef || !formRef.current) return false;
-    
-    // React Hook Form
-    if (formRef.current.formState && formRef.current.formState.isSubmitting !== undefined) {
-      return formRef.current.formState.isSubmitting;
-    }
-    
-    // Formik
-    if (formRef.current.isSubmitting !== undefined) {
-      return formRef.current.isSubmitting;
-    }
-    
-    return false;
-  }, [currentMode]);
-
-  // Validate form and get data if valid - combines validation and data retrieval
-  const validateAndGetFormData = useCallback(async (type?: DialogMode) => {
-    // Special handling for delete operations - always return valid
-    if (type === 'delete') {
-      console.log("Delete operation detected in validateAndGetFormData - bypassing validation");
+    // Handle missing form
+    if (!form) {
+      console.error(`[FormHandlingContext] Form not found for ${type} after retry. Available forms:`, Object.keys(formsRef.current));
       return {
-        isValid: true,
-        data: {} as Record<string, any>,
-        errors: {}
+        isValid: false,
+        data: null,
+        errors: { _form: `Form not found for ${type}` } as Record<string, any>
       };
     }
     
-    const formRef = getFormRef(type);
-    const result = {
-      isValid: false,
-      data: null as Record<string, any> | null,
-      errors: {} as Record<string, any>
-    };
-    
-    if (!formRef) {
-      console.warn("No form reference found for validation");
-      return result;
-    }
-    
     try {
-      if (!formRef.current) {
-        console.warn("Form reference exists but current is null");
-        return result;
-      }
-      
-      // First try with form's built-in validation methods
-      if (typeof formRef.current.getValidatedValues === 'function') {
+      // APPROACH 1: Use getValidatedValues if available
+      if (typeof form.getValidatedValues === 'function') {
         try {
-          // This is the preferred way - get validated data in one call
-          result.data = await formRef.current.getValidatedValues();
-          result.isValid = true;
-          return result;
-        } catch (validationError: any) {
-          console.log("Form validation failed using getValidatedValues", validationError);
-          // Extract validation errors - ensure we handle undefined values
-          if (validationError && typeof validationError === 'object') {
-            if (validationError.errors && typeof validationError.errors === 'object') {
-              result.errors = validationError.errors;
-            } else {
-              result.errors = getFormErrorsUtil(formRef);
-            }
-          } else {
-            result.errors = getFormErrorsUtil(formRef);
+          console.log(`[FormHandlingContext] Getting validated values for ${type} using getValidatedValues`);
+          const data = await form.getValidatedValues();
+          console.log(`[FormHandlingContext] Received data:`, data);
+          
+          // Ensure we have actual data
+          if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+            console.warn(`[FormHandlingContext] No data returned from getValidatedValues for ${type}`);
           }
           
-          // Special case: If no errors were returned, but we failed validation, 
-          // check if we have data - this often happens with empty forms
-          if (Object.keys(result.errors).length === 0) {
-            console.log("No validation errors found, checking if we have form data");
-            // Try to get values
-            result.data = getFormValuesUtil(formRef);
-            if (result.data && Object.keys(result.data).length > 0) {
-              console.log("Form has data despite 'failed' validation - proceeding");
-              result.isValid = true;
+          return {
+            isValid: true,
+            data: data || {},
+            errors: null
+          };
+        } catch (error) {
+          console.error(`[FormHandlingContext] Validation failed for ${type}:`, error);
+          
+          // Handle validation errors
+          let errors: Record<string, any> = { _form: 'Validation failed' };
+          
+          if (typeof form.getErrors === 'function') {
+            try {
+              const formErrors = form.getErrors();
+              if (formErrors && typeof formErrors === 'object') {
+                errors = formErrors;
+                if (!('_form' in errors)) {
+                  errors._form = 'Validation failed';
+                }
+              }
+            } catch (err) {
+              console.error(`[FormHandlingContext] Error getting validation errors:`, err);
             }
           }
           
-          return result;
+          setFormValid(false, type);
+          setFormErrors(errors, type);
+          
+          return {
+            isValid: false,
+            data: null,
+            errors
+          };
         }
       }
       
-      // Try React Hook Form pattern
-      if (typeof formRef.current.handleSubmit === 'function' && typeof formRef.current.getValues === 'function') {
+      // APPROACH 2: Use validate + getValues if available
+      if (typeof form.validate === 'function' && typeof form.getValues === 'function') {
+        console.log(`[FormHandlingContext] Using validate + getValues for ${type}`);
+        let isValid = false;
+        
         try {
-          // Execute validation manually
-          const isValid = await new Promise<boolean>(resolve => {
-            formRef.current.handleSubmit(() => resolve(true))(() => resolve(false));
-          });
-          
-          result.isValid = isValid;
-          
-          if (isValid) {
-            result.data = formRef.current.getValues();
-          } else {
-            // Ensure formState exists and has errors property before accessing
-            if (formRef.current.formState && typeof formRef.current.formState === 'object') {
-              if (formRef.current.formState.errors && typeof formRef.current.formState.errors === 'object') {
-                result.errors = formRef.current.formState.errors;
-              }
+          isValid = await form.validate();
+        } catch (err) {
+          console.error(`[FormHandlingContext] Error validating form:`, err);
+          isValid = false;
+        }
+        
+        if (isValid) {
+          try {
+            const data = form.getValues();
+            console.log(`[FormHandlingContext] Got values:`, data);
+            
+            // Ensure we have data
+            if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+              console.warn(`[FormHandlingContext] Empty data from getValues for ${type}`);
             }
             
-            // Special case: Empty form with no validation rules but we failed validation
-            if (Object.keys(result.errors).length === 0) {
-              result.data = formRef.current.getValues();
-              if (result.data && Object.keys(result.data).length > 0) {
-                result.isValid = true;
+            return {
+              isValid: true,
+              data: data || {},
+              errors: null
+            };
+          } catch (err) {
+            console.error(`[FormHandlingContext] Error getting form values:`, err);
+            return {
+              isValid: false,
+              data: null,
+              errors: { _form: 'Error getting form values' } as Record<string, any>
+            };
+          }
+        } else {
+          // Handle validation failure
+          let errors: Record<string, any> = { _form: 'Validation failed' };
+          
+          if (typeof form.getErrors === 'function') {
+            try {
+              const formErrors = form.getErrors();
+              if (formErrors && typeof formErrors === 'object') {
+                errors = { ...formErrors };
+                if (!('_form' in errors)) {
+                  errors._form = 'Validation failed';
+                }
               }
+            } catch (err) {
+              console.error(`[FormHandlingContext] Error getting validation errors:`, err);
             }
           }
           
-          return result;
-        } catch (error) {
-          console.error("Error using React Hook Form validation", error);
-          // Safely access formState.errors with proper type checking
-          if (formRef.current.formState && typeof formRef.current.formState === 'object') {
-            if (formRef.current.formState.errors && typeof formRef.current.formState.errors === 'object') {
-              result.errors = formRef.current.formState.errors;
-            }
-          }
-          return result;
+          return {
+            isValid: false,
+            data: null,
+            errors
+          };
         }
       }
       
-      // Try Formik pattern
-      if (formRef.current.validateForm && typeof formRef.current.validateForm === 'function') {
+      // APPROACH 3: Just try to get values directly if no validation is available
+      console.log(`[FormHandlingContext] Using fallback approach for ${type}`);
+      if (typeof form.getValues === 'function') {
         try {
-          const errors = await formRef.current.validateForm();
-          result.isValid = !errors || Object.keys(errors || {}).length === 0;
+          const data = form.getValues();
+          console.log(`[FormHandlingContext] Got values via fallback:`, data);
           
-          if (result.isValid) {
-            result.data = formRef.current.values;
-          } else {
-            // Ensure errors is an object before assigning
-            result.errors = errors && typeof errors === 'object' ? errors : {};
-            
-            // Special case: Empty form with no validation rules
-            if (Object.keys(result.errors).length === 0) {
-              result.data = formRef.current.values;
-              if (result.data && Object.keys(result.data).length > 0) {
-                result.isValid = true;
-              }
-            }
-          }
-          
-          return result;
-        } catch (error) {
-          console.error("Error using Formik validation", error);
-          // Safely access errors with proper type checking
-          if (formRef.current.errors && typeof formRef.current.errors === 'object') {
-            result.errors = formRef.current.errors;
-          }
-          return result;
+          return {
+            isValid: true,
+            data: data || {},
+            errors: null
+          };
+        } catch (err) {
+          console.error(`[FormHandlingContext] Error getting form values in fallback:`, err);
         }
       }
       
-      // Generic approach - still try to get data even if validation isn't available
-      result.errors = getFormErrorsUtil(formRef);
-      result.isValid = Object.keys(result.errors).length === 0;
-      result.data = getFormValuesUtil(formRef);
-      
-      // If we have data but no validation method was found, consider it valid
-      // This helps with forms that don't have explicit validation
-      if (result.data && Object.keys(result.data).length > 0) {
-        result.isValid = true;
-      }
-      
-      return result;
+      // Last resort - return empty data
+      console.warn(`[FormHandlingContext] No viable method to get form data for ${type}`);
+      return {
+        isValid: true,
+        data: {},
+        errors: null
+      };
     } catch (error) {
-      console.error('Error in validateAndGetFormData:', error);
-      result.errors = { _error: error instanceof Error ? error.message : 'Unknown validation error' };
-      return result;
+      console.error(`[FormHandlingContext] Unexpected error in validateAndGetFormData:`, error);
+      
+      return {
+        isValid: false,
+        data: null,
+        errors: { _form: error instanceof Error ? error.message : 'Unknown error' } as Record<string, any>
+      };
     }
-  }, [getFormRef]);
-
-  // Check if form is initialized
-  const isFormInitialized = useCallback((type?: DialogMode): boolean => {
-    const formRef = getFormRef(type);
-    return !!formRef && !!formRef.current;
-  }, [getFormRef]);
-
-  // Clear form errors
-  const clearFormErrors = useCallback((type?: DialogMode): void => {
-    const formRef = getFormRef(type);
-    if (!formRef || !formRef.current) return;
+  }, [setFormValid, setFormErrors]);
+  
+  // Submit form
+  const submitForm = useCallback(async (type: DialogMode) => {
+    const form = forms[type];
+    if (!form) return false;
     
     try {
-      // Try various methods based on form library
-      
-      // Custom clearErrors method
-      if (typeof formRef.current.clearErrors === 'function') {
-        formRef.current.clearErrors();
-        return;
+      // Use form's submit method if available
+      if (form.submit) {
+        return await form.submit();
       }
       
-      // React Hook Form
-      if (typeof formRef.current.clearErrors === 'function') {
-        formRef.current.clearErrors();
-        return;
-      }
-      
-      // Formik
-      if (formRef.current.setErrors) {
-        formRef.current.setErrors({});
-        return;
-      }
-      
-      // Generic approach - set empty object
-      setFormErrorsCallback({}, type);
+      // Fall back to validate + getValues
+      const isValid = await validateForm(type);
+      return isValid;
     } catch (error) {
-      console.error('Error clearing form errors:', error);
+      console.error(`[FormHandlingContext] Error submitting form for ${type}:`, error);
+      return false;
     }
-  }, [getFormRef, setFormErrorsCallback]);
-
-  const contextValue = {
-    getFormErrors,
-    isFormValid,
-    getFormValues,
+  }, [forms, validateForm]);
+  
+  // CRITICAL FIX: Create context value with stable references and minimal dependencies
+  const contextValue = useMemo(() => ({
     registerForm,
     unregisterForm,
-    resetForm,
-    submitForm,
-    setFormValues,
-    setFormErrors: setFormErrorsCallback,
-    updateFormStatus,
-    getFormRef,
     isFormDirty,
-    isFormSubmitting,
+    isFormValid,
+    getFormValues,
+    getFormErrors,
+    setFormDirty,
+    setFormValid,
+    setFormErrors,
+    resetForm,
+    validateForm,
     validateAndGetFormData,
-    isFormInitialized,
-    clearFormErrors
-  };
+    submitForm,
+    activeFormType,
+    setActiveFormType
+  }), [
+    // CRITICAL FIX: Remove all dependencies to prevent loops
+    // These functions are already memoized with useCallback with empty deps
+    // Only include activeFormType which is primitive state
+    activeFormType
+  ]);
 
   return (
     <FormHandlingContext.Provider value={contextValue}>
       {children}
     </FormHandlingContext.Provider>
   );
-};
+}
 
 /**
  * Hook to access the form handling context
  * @throws Error if used outside FormHandlingProvider
  */
-export const useFormHandling = (): FormHandlingContextType => {
+export const useFormHandling = () => {
   const context = useContext(FormHandlingContext);
-
-  if (context === null) {
+  if (!context) {
     throw new Error('useFormHandling must be used within a FormHandlingProvider');
   }
-  
   return context;
 };
 
 /**
- * Safe version of useFormHandling that doesn't throw if outside provider
- * @returns FormHandlingContextType | null
+ * Higher-order component to wrap form components
+ * Works with both regular components and ref-forwarded components
  */
-export const useSafeFormHandling = (): FormHandlingContextType | null => {
-  return useContext(FormHandlingContext);
-};
-
-/**
- * Higher-order component that provides form handling functionality
- * @param Component The component to wrap
- * @param dialogType Optional dialog type to register with the form handling context
- * @returns A new component with form handling props
- */
-export function withFormHandling<P extends Record<string, any>>(
+export function withFormHandling<P extends {}>(
   Component: React.ComponentType<P>,
-  dialogType?: DialogMode
-): React.FC<Omit<P, keyof FormHandlingContextType>> {
-  const WithFormHandling: React.FC<Omit<P, keyof FormHandlingContextType>> = (props) => {
+  formType: DialogMode
+) {
+  const WithFormHandling = (props: P) => {
     const formHandling = useFormHandling();
-    const formRef = React.useRef(null);
     
-    // Register form with context if dialogType is provided
+    // Set active form type when component mounts
     React.useEffect(() => {
-      if (dialogType && formRef.current) {
-        formHandling.registerForm({ current: formRef.current }, dialogType);
-        
-        return () => {
-          formHandling.unregisterForm(dialogType);
-        };
-      }
-      return undefined;
-    }, [formHandling, dialogType]);
+      formHandling.setActiveFormType(formType);
+      return () => {
+        // Clear active form type when component unmounts if it matches
+        if (formHandling.activeFormType === formType) {
+          formHandling.setActiveFormType(null);
+        }
+      };
+    }, []);
     
-    return <Component 
-      {...(props as P)} 
-      {...formHandling} 
-      ref={formRef}
-    />;
+    return <Component {...props} />;
   };
   
-  WithFormHandling.displayName = `WithFormHandling(${
-    Component.displayName || Component.name || 'Component'
-  })${dialogType ? `-${dialogType}` : ''}`;
+  WithFormHandling.displayName = `WithFormHandling(${Component.displayName || Component.name || 'Component'})`;
   
   return WithFormHandling;
 }
-
-/**
- * Hook to integrate React Hook Form with the FormHandlingContext
- * @param methods The React Hook Form methods object from useForm()
- * @param type Optional dialog type to register with
- */
-export function useReactHookFormAdapter(methods: any, type?: DialogMode) {
-  const formHandling = useFormHandling();
-  const { control, formState, getValues, handleSubmit, reset, setError, clearErrors } = methods;
-  const formRef = React.useRef({ ...methods });
-  
-  // Update formRef when methods change
-  React.useEffect(() => {
-    formRef.current = { ...methods };
-  }, [methods]);
-  
-  // Register the form with FormHandlingContext when type changes
-  React.useEffect(() => {
-    if (type) {
-      formHandling.registerForm(formRef, type);
-      
-      return () => {
-        formHandling.unregisterForm(type);
-      };
-    }
-    return undefined;
-  }, [formHandling, type]);
-  
-  // Update form status when form state changes
-  React.useEffect(() => {
-    if (type && formState) {
-      formHandling.updateFormStatus(type, {
-        isDirty: formState.isDirty,
-        isSubmitting: formState.isSubmitting,
-        isValid: !formState.errors || Object.keys(formState.errors).length === 0
-      });
-    }
-  }, [formHandling, formState, type]);
-  
-  return {
-    formRef,
-    control,
-    formState,
-    getValues,
-    handleSubmit,
-    reset,
-    setError,
-    clearErrors
-  };
-}
-
-/**
- * Hook to integrate Formik with the FormHandlingContext
- * @param formikProps The Formik props or instance
- * @param type Optional dialog type to register with
- */
-export function useFormikAdapter(formikProps: any, type?: DialogMode) {
-  const formHandling = useFormHandling();
-  const formRef = React.useRef(formikProps);
-  
-  // Update formRef when formikProps change
-  React.useEffect(() => {
-    formRef.current = formikProps;
-  }, [formikProps]);
-  
-  // Register the form with FormHandlingContext
-  React.useEffect(() => {
-    if (type) {
-      formHandling.registerForm(formRef, type);
-      
-      return () => {
-        formHandling.unregisterForm(type);
-      };
-    }
-    return undefined;
-  }, [formHandling, type]);
-  
-  // Update form status when Formik state changes
-  React.useEffect(() => {
-    if (type) {
-      formHandling.updateFormStatus(type, {
-        isDirty: formikProps.dirty,
-        isSubmitting: formikProps.isSubmitting,
-        isValid: !formikProps.errors || Object.keys(formikProps.errors).length === 0
-      });
-    }
-  }, [formHandling, formikProps.dirty, formikProps.isSubmitting, formikProps.errors, type]);
-  
-  return {
-    formRef,
-    ...formikProps
-  };
-}
-
-/**
- * Hook to integrate Final Form with the FormHandlingContext
- * @param formProps The Final Form form instance
- * @param type Optional dialog type to register with
- */
-export function useFinalFormAdapter(formProps: any, type?: DialogMode) {
-  const formHandling = useFormHandling();
-  const formRef = React.useRef(formProps);
-  
-  // Update formRef when formProps change
-  React.useEffect(() => {
-    formRef.current = formProps;
-  }, [formProps]);
-  
-  // Register the form with FormHandlingContext
-  React.useEffect(() => {
-    if (type) {
-      formHandling.registerForm(formRef, type);
-      
-      return () => {
-        formHandling.unregisterForm(type);
-      };
-    }
-    return undefined;
-  }, [formHandling, type]);
-  
-  // Update form status when form state changes
-  React.useEffect(() => {
-    if (type && formProps.form) {
-      const state = formProps.form.getState();
-      formHandling.updateFormStatus(type, {
-        isDirty: state.dirty,
-        isSubmitting: state.submitting,
-        isValid: !state.hasValidationErrors
-      });
-    }
-  }, [formHandling, formProps, type]);
-  
-  return {
-    formRef,
-    ...formProps
-  };
-}
-
-export default FormHandlingContext;

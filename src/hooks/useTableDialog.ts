@@ -1,271 +1,313 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { DialogType } from '../types';
+import { DialogType, BaseTableData } from '../types';
+import { title } from 'process';
 
-export interface UseTableDialogOptions<T = any> {
-  /**
-   * Default title for dialogs
-   */
-  defaultTitle?: string;
-  
-  /**
-   * Default description for dialogs
-   */
-  defaultDescription?: string;
-  
-  /**
-   * Custom dialog titles by type
-   */
-  dialogTitles?: {
-    create?: string;
-    edit?: string;
-    view?: string;
-    delete?: string;
-    [key: string]: string | undefined;
+// CRITICAL FIX: Create atomic dialog state manager
+class DialogStateManager {
+  private state = {
+    open: false,
+    type: null as DialogType | null,
+    data: null as any,
+    loading: false,
+    error: null as Error | string | null,
+    title: undefined as string | undefined,
+    description: undefined as string | undefined
   };
   
-  /**
-   * Function to handle dialog submission
-   * Must return a boolean or Promise<boolean> to indicate success
-   */
-  onSubmit?: (data: T, type: DialogType) => Promise<boolean> | boolean;
+  private listeners = new Set<(state: typeof this.state) => void>();
+  private loadingTimeoutRef: NodeJS.Timeout | null = null;
+  private stateHistory: Array<typeof this.state> = [];
+
+  getState() {
+    return { ...this.state };
+  }
+
+  setState(updates: Partial<typeof this.state>) {
+    const prevState = { ...this.state };
+    this.state = { ...this.state, ...updates };
+    
+    // Clear loading timeout if we're no longer loading
+    if (this.loadingTimeoutRef && !this.state.loading) {
+      clearTimeout(this.loadingTimeoutRef);
+      this.loadingTimeoutRef = null;
+    }
+    
+    this.notifyListeners();
+  }
+
+  setLoading(loading: boolean) {
+    if (loading) {
+      // Clear any existing timeout
+      if (this.loadingTimeoutRef) {
+        clearTimeout(this.loadingTimeoutRef);
+      }
+      
+      // Save state before loading
+      this.stateHistory.push({ ...this.state });
+      
+      this.setState({ loading: true, error: null });
+      
+      // CRITICAL FIX: Emergency timeout to prevent stuck loading
+      this.loadingTimeoutRef = setTimeout(() => {
+        console.warn('[DialogStateManager] Emergency clearing stuck loading state');
+        this.setState({ loading: false });
+        this.loadingTimeoutRef = null;
+      }, 30000); // 30 second emergency timeout
+    } else {
+      // Use atomic update to clear loading
+      this.setState({ loading: false });
+      
+      if (this.loadingTimeoutRef) {
+        clearTimeout(this.loadingTimeoutRef);
+        this.loadingTimeoutRef = null;
+      }
+    }
+  }
+
+  close() {
+    // Clear any pending timeouts
+    if (this.loadingTimeoutRef) {
+      clearTimeout(this.loadingTimeoutRef);
+      this.loadingTimeoutRef = null;
+    }
+    
+    // Clear state history
+    this.stateHistory = [];
+    
+    // Atomic close operation
+    this.setState({
+      open: false,
+      loading: false,
+      error: null,
+      type: null,
+      data: null,
+      title: undefined,
+      description: undefined
+    });
+  }
+
+  // CRITICAL FIX: Add error recovery method
+  recoverFromError() {
+    if (this.loadingTimeoutRef) {
+      clearTimeout(this.loadingTimeoutRef);
+      this.loadingTimeoutRef = null;
+    }
+    
+    // Restore previous state if available
+    const previousState = this.stateHistory.pop();
+    if (previousState) {
+      this.setState({
+        ...previousState,
+        loading: false,
+        error: null
+      });
+    } else {
+      this.setState({
+        loading: false,
+        error: null
+      });
+    }
+  }
+
+  subscribe(listener: (state: typeof this.state) => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notifyListeners() {
+    this.listeners.forEach(listener => listener({ ...this.state }));
+  }
 }
 
-export function useTableDialog<T = any>(options: UseTableDialogOptions<T> = {}) {
-  const [open, setOpen] = useState<boolean>(false);
-  const [dialogType, setDialogType] = useState<DialogType | null>(null);
-  const [dialogData, setDialogData] = useState<T | undefined>(undefined);
-  const [dialogTitle, setDialogTitle] = useState<string>('');
-  const [dialogDescription, setDialogDescription] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
+export interface DialogState<T = any> {
+  open: boolean;
+  type?: DialogType;
+  title?: string;
+  description?: string;
+  data?: T | null;
+  loading: boolean;
+  error: Error | string | null;
+}
 
-  // Use a ref to store the last dialog state to avoid unnecessary re-renders
-  const lastDialogState = useRef({
-    type: null as DialogType | null,
-    data: undefined as T | undefined,
-    open: false
-  });
+export interface UseTableDialogReturn<T = any> {
+  open: boolean;
+  dialogType: DialogType | null;
+  dialogData?: T | null;
+  dialogTitle?: string;
+  dialogDescription?: string;
+  loading: boolean;
+  error: Error | string | null;
+  openCreateDialog: (data?: T, title?: string, description?: string) => void;
+  openEditDialog: (data: T, title?: string, description?: string) => void;
+  openViewDialog: (data: T, title?: string, description?: string) => void;
+  openDeleteDialog: (data: T, title?: string, description?: string) => void;
+  openCustomDialog: (type: string, data: any, title?: string, description?: string) => void;
+  closeDialog: () => void;
+  submitDialog: (data: any, type: DialogType | null) => Promise<boolean>;
+}
+
+export interface UseTableDialogProps<T = any> {
+  onSubmit?: (data: any, type: DialogType | null) => Promise<boolean> | boolean;
+  onClose?: () => void;
+  initialState?: Partial<DialogState<T>>;
+}
+
+/**
+ * useTableDialog - Hook for managing dialog state and actions
+ */
+export function useTableDialog<T extends BaseTableData = BaseTableData>({
+  onSubmit,
+  onClose,
+  initialState = {}
+}: UseTableDialogProps<T> = {}): UseTableDialogReturn<T> {
   
-  // Use another ref to track unmounting to prevent state updates after unmount
-  const isMountedRef = useRef(true);
+  // CRITICAL FIX: Use atomic dialog state manager
+  const dialogManager = useRef(new DialogStateManager()).current;
+  const [dialogState, setDialogState] = useState(dialogManager.getState());
 
-  // Set isMounted to false when component unmounts
+  // Store callback in ref to avoid unnecessary rerenders
+  const onSubmitRef = useRef(onSubmit);
+  const onCloseRef = useRef(onClose);
+
+  // Subscribe to dialog state changes
   useEffect(() => {
+    const unsubscribe = dialogManager.subscribe(setDialogState);
     return () => {
-      isMountedRef.current = false;
+      unsubscribe();
     };
-  }, []);
+  }, [dialogManager]);
 
-  // Helper function to get appropriate title based on dialog type
-  const getDialogTitle = useCallback((type: DialogType, customTitle?: string): string => {
-    if (customTitle) return customTitle;
+  // Keep callback refs updated
+  useEffect(() => {
+    onSubmitRef.current = onSubmit;
+    onCloseRef.current = onClose;
+  }, [onSubmit, onClose]);
+
+  // CRITICAL FIX: Atomic dialog operations
+  const openDialog = useCallback((
+    type: DialogType,
+    data?: T | null,
+    title?: string,
+    description?: string
+  ) => {
+    console.log(`Opening ${type} dialog`);
     
-    if (options.dialogTitles && options.dialogTitles[type]) {
-      return options.dialogTitles[type] || '';
-    }
-    
-    switch (type) {
-      case 'create': return 'Thêm mới';
-      case 'edit': return 'Chỉnh sửa';
-      case 'view': return 'Xem chi tiết';
-      case 'delete': return 'Xác nhận xóa';
-      case 'custom': return 'Thao tác';
-      default: return 'Dialog';
-    }
-  }, [options.dialogTitles]);
-
-  // Open dialog with specific type and record
-  const openDialog = useCallback((type: DialogType, data?: T, title?: string, description?: string) => {
-    // Skip if already open with same data and type to prevent re-renders
-    if (
-      open && 
-      type === lastDialogState.current.type && 
-      JSON.stringify(data) === JSON.stringify(lastDialogState.current.data)
-    ) {
-      return;
-    }
-
-    // Chỉ cập nhật state nếu component vẫn mounted
-    if (!isMountedRef.current) return;
-
-    setDialogType(type);
-    setDialogData(data);
-    setDialogTitle(title || getDialogTitle(type));
-    setDialogDescription(description || '');
-    setError(null);
-    
-    // Update ref để theo dõi current dialog state
-    lastDialogState.current = {
+    dialogManager.setState({
+      open: true,
       type,
+      title,
+      description,
       data,
-      open: true
-    };
-    
-    // Open dialog at end to ensure all state is set first
-    setOpen(true);
-  }, [open, getDialogTitle]);
+      loading: false,
+      error: null
+    });
+  }, [dialogManager]);
 
-  // Close dialog
+  // Close dialog with cleanup
   const closeDialog = useCallback(() => {
-    // Kiểm tra component còn mounted không
-    if (!isMountedRef.current) return;
-    
-    // Use setTimeout and refs to avoid state updates after component unmounts
-    setOpen(false);
-    
-    // Record that dialog was closed in lastDialogState
-    lastDialogState.current = {
-      ...lastDialogState.current,
-      open: false
-    };
-    
-    // Use a small delay for animation before resetting state
-    const timer = setTimeout(() => {
-      // Kiểm tra component còn mounted không
-      if (!isMountedRef.current) return;
-      
-      // Only reset state if dialog is still closed
-      if (!lastDialogState.current.open) {  
-        setDialogType(null);
-        setDialogData(undefined);
-        setDialogTitle('');
-        setDialogDescription('');
-        setError(null);
-        setLoading(false);
-      }
-    }, 300);
-    
-    // Cleanup timer on unmount
-    return () => clearTimeout(timer);
-  }, []);
+    dialogManager.close();
+    onCloseRef.current?.();
+  }, [dialogManager]);
 
-  // Submit dialog data with better error handling
+  // CRITICAL FIX: Enhanced submit with better error recovery
   const submitDialog = useCallback(async (data: any, type: DialogType | null): Promise<boolean> => {
-    if (!options.onSubmit || !type) {
-      console.warn('No onSubmit handler provided to useTableDialog');
-      return false;
-    }
-    
-    if (!isMountedRef.current) return false;
+    if (!onSubmitRef.current) return false;
     
     try {
-      setLoading(true);
-      setError(null);
+      dialogManager.setLoading(true);
       
-      // For delete operations, ensure we have valid data
-      if (type === 'delete') {
-        console.log('Processing delete submission with data:', data);
-        
-        if (!data) {
-          console.error('Delete operation called with no data');
-          setError(new Error('No data provided for deletion'));
-          setLoading(false);
-          return false;
-        }
-        
-        // Ensure there's an ID property for delete - critical for built-in functions
-        let recordWithId = data;
-        
-        // Check for missing ID
-        if (typeof data === 'object' && !('id' in data)) {
-          // Try to get ID from _id (MongoDB style)
-          if ('_id' in data) {
-            recordWithId = {
-              ...data,
-              id: data._id
-            };
-          } else {
-            console.error('Delete operation missing ID in data:', data);
-            setError(new Error('Missing ID for delete operation'));
-            setLoading(false);
-            return false;
-          }
-        }
-
-        // Call the submission handler with the enhanced data
-        const result = await options.onSubmit(recordWithId, type);
-        
-        if (!isMountedRef.current) return false;
-        
-        if (result === true) {
-          closeDialog();
-          return true;
-        } else {
-          console.warn('Delete operation did not return success (true)');
-          setLoading(false);
-          return false;
-        }
-      }
+      const safeData = data || {};
+      const result = await onSubmitRef.current(safeData, type);
       
-      // Call handler with data and type
-      const result = await options.onSubmit(data, type);
-      
-      // Kiểm tra component còn mounted không
-      if (!isMountedRef.current) return false;
-      
-      // Only close if result is explicitly true
+      // CRITICAL FIX: Enhanced success handling
       if (result === true) {
-        closeDialog();
+        dialogManager.close(); // This will also clear loading and history
         return true;
+      } else {
+        // CRITICAL FIX: Recover from failed submission
+        dialogManager.recoverFromError();
+        return false;
       }
-      
-      setLoading(false);
-      return false;
     } catch (err) {
-      console.error('Error in dialog submission:', err);
+      console.error('Error in submitDialog:', err);
+      const error = err instanceof Error ? err : new Error(String(err));
       
-      if (!isMountedRef.current) return false;
+      // CRITICAL FIX: Enhanced error handling with recovery
+      dialogManager.setState({
+        loading: false,
+        error,
+        open: true // Keep dialog open on error
+      });
       
-      setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-      setLoading(false);
+      // CRITICAL FIX: Auto-clear error after delay to improve UX
+      setTimeout(() => {
+        if (dialogManager.getState().error === error) {
+          dialogManager.setState({ error: null });
+        }
+      }, 10000); // Clear error after 10 seconds
+      
       return false;
     }
-  }, [options.onSubmit, closeDialog]);
+  }, [dialogManager]);
 
-  // Convenience methods for different dialog types
-  const openCreateDialog = useCallback((initialData?: T, title?: string, description?: string) => {
-    openDialog('create', initialData, title, description);
+  // Dialog operation methods
+  const openCreateDialog = useCallback((
+    data?: T,
+    title?: string,
+    description?: string
+  ) => {
+    openDialog('create', data || null, title || 'Thêm mới', description);
   }, [openDialog]);
 
-  const openEditDialog = useCallback((data: T, title?: string, description?: string) => {
-    openDialog('edit', data, title, description);
+  const openEditDialog = useCallback((
+    data: T,
+    title?: string,
+    description?: string
+  ) => {
+    openDialog('edit', data, title || 'Chỉnh sửa', description);
   }, [openDialog]);
 
-  const openViewDialog = useCallback((data: T, title?: string, description?: string) => {
-    openDialog('view', data, title, description);
+  const openViewDialog = useCallback((
+    data: T,
+    title?: string,
+    description?: string
+  ) => {
+    openDialog('view', data, title || 'Xem chi tiết', description);
   }, [openDialog]);
 
-  // Convenience method for delete with normal confirmation
-  const openDeleteDialog = useCallback((data: T, title?: string, description?: string) => {
-    const deleteTitle = title || 'Xác nhận xóa';
-    const deleteDescription = description || 'Bạn có chắc chắn muốn xóa mục này không?';
-    
-    // Always use normal confirmation dialog
-    openDialog('delete', data, deleteTitle, deleteDescription);
+  const openDeleteDialog = useCallback((
+    data: T,
+    title?: string,
+    description?: string
+  ) => {
+    openDialog('delete', data, title || 'Xác nhận xóa', description || 'Bạn có chắc chắn muốn xóa mục này?');
   }, [openDialog]);
 
-  const openCustomDialog = useCallback((data: T, title?: string, description?: string) => {
-    openDialog('custom', data, title, description);
+  const openCustomDialog = useCallback((
+    type: string,
+    data: any,
+    title?: string,
+    description?: string
+  ) => {
+    openDialog(type as DialogType, data, title, description);
   }, [openDialog]);
 
   return {
-    // Dialog state
-    open,
-    dialogType,
-    dialogData,
-    dialogTitle,
-    dialogDescription,
-    loading,
-    error,
-
-    // Actions
-    openDialog,
+    open: dialogState.open,
+    dialogType: dialogState.type,
+    dialogData: dialogState.data,
+    dialogTitle: dialogState.title,
+    dialogDescription: dialogState.description,
+    loading: dialogState.loading,
+    error: dialogState.error,
     openCreateDialog,
     openEditDialog,
     openViewDialog,
     openDeleteDialog,
     openCustomDialog,
-    submitDialog,
     closeDialog,
+    submitDialog
   };
 }
+
+export default useTableDialog;
