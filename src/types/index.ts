@@ -309,26 +309,31 @@ export interface GlobalSearchConfig {
 
 // ==================== Action Configuration ====================
 export interface ActionConfig<T extends BaseTableData = BaseTableData> {
-  key: string;
-  label?: string;
-  icon?: React.ReactNode;
-  onClick?: (record: T, index: number) => void;
-  hidden?: (record: T) => boolean;
-  disabled?: (record: T) => boolean;
-  tooltip?: string;
-  variant?: ButtonVariant;
-  permissions?: string[];
-  type?: 'create' | 'edit' | 'delete' | 'view' | 'custom';
-  confirmation?: {
-    title: string;
-    description: string;
-    confirmText?: string;
-    cancelText?: string;
-  };
-  formComponent?: React.ComponentType<any>;
-  position?: ActionPosition;
-  colorScheme?: ColorScheme;
-  showInToolbar?: boolean;
+  readonly key: string;
+  readonly label?: string;
+  readonly icon?: React.ReactNode;
+  readonly onClick?: (record: T, index: number) => void | Promise<void>;
+  readonly hidden?: (record: T) => boolean;
+  readonly disabled?: (record: T) => boolean;
+  readonly tooltip?: string;
+  readonly variant?: ButtonVariant;
+  readonly permissions?: readonly string[];
+  readonly type?: ActionType;
+  readonly confirmation?: ConfirmationConfig;
+  readonly formComponent?: React.ComponentType<DataTableFormProps>;
+  readonly position?: ActionPosition;
+  readonly colorScheme?: ColorScheme;
+  readonly showInToolbar?: boolean;
+}
+
+export type ActionType = 'create' | 'edit' | 'delete' | 'view' | 'custom';
+
+export interface ConfirmationConfig {
+  readonly title: string;
+  readonly description: string;
+  readonly confirmText?: string;
+  readonly cancelText?: string;
+  readonly variant?: 'warning' | 'danger' | 'info';
 }
 
 // ==================== Built-in Action Configuration ====================
