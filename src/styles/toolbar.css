@@ -86,17 +86,16 @@
 .rpt-toolbar-search-input {
   width: 100%;
   height: var(--rpt-toolbar-btn-height);
-  padding-left: 2rem;
-  padding-right: 2rem;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
   border-radius: var(--rpt-border-radius);
-  border: 1px solid var(--rpt-border-color);
+  border: var(--rpt-border-width) solid var(--rpt-border-color);
   background-color: var(--rpt-input-bg);
-  color: var(--rpt-input-text);
-  font-size: 0.875rem;
+  color: var(--rpt-text-color);
+  font-size: var(--rpt-text-sm);
   outline: none;
-  transition: border-color var(--rpt-transition-duration) ease,
-              background-color var(--rpt-transition-duration) ease,
-              box-shadow var(--rpt-transition-duration) ease;
+  transition: all var(--rpt-transition-duration) var(--rpt-transition-timing);
+  box-shadow: var(--rpt-shadow-sm);
 }
 
 .rpt-toolbar-search-input:focus {
