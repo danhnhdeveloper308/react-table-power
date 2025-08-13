@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { z } from 'zod'
 import { DataTable } from 'react-table-power'
-import { EnhancedFormDialogManager } from 'react-table-power/src/components/EnhancedFormDialogManager'
+import { EnhancedFormDialogManager } from '../../src/components/EnhancedFormDialogManager'
 import { useFormContext, Controller } from 'react-hook-form'
 import 'react-table-power/styles.ts'
 
