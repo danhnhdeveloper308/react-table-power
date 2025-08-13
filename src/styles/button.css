@@ -29,12 +29,19 @@
 
 .rpt-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+  box-shadow: var(--rpt-focus-shadow), var(--rpt-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.rpt-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--rpt-shadow-sm);
 }
 
 .rpt-btn:disabled {
-  opacity: 0.65;
+  opacity: 0.5;
   pointer-events: none;
+  filter: grayscale(50%);
 }
 
 /* Text content of button */
