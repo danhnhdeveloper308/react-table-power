@@ -34,14 +34,8 @@ const columns = [
     header: 'Status',
     sortable: true,
     cell: ({ row, value }: any) => {
-      console.log('Cell render debug:', {
-        row: row,
-        original: row?.original,
-        value: value,
-        getValue: row?.getValue ? row.getValue('status') : 'no getValue'
-      });
-
-      const status = row?.original?.status || value || 'unknown';
+      // row is the actual row data object, not a TanStack Table row
+      const status = row?.status || value || 'unknown';
       return (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
           status === 'active' ? 'bg-green-100 text-green-800' :
