@@ -195,4 +195,7 @@ export const TableRow = <T extends BaseTableData = BaseTableData>({
   );
 };
 
-export default TableRow;
+// Memoized version for performance
+const MemoizedTableRow = React.memo(TableRow) as typeof TableRow;
+
+export default MemoizedTableRow;
