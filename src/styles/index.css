@@ -271,26 +271,70 @@
   }
 }
 
-/* Improved responsive classes */
+/* Modern responsive design improvements */
 @media (max-width: 640px) {
   .rpt-container {
-    border-radius: calc(var(--rpt-border-radius) / 2); /* Smaller radius on mobile */
+    border-radius: var(--rpt-border-radius);
+    margin: var(--rpt-space-2);
   }
-  
+
+  .rpt-toolbar {
+    padding: var(--rpt-space-4);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--rpt-space-3);
+  }
+
+  .rpt-toolbar-left {
+    max-width: 100%;
+    margin-right: 0;
+  }
+
+  .rpt-toolbar-right {
+    justify-content: stretch;
+    flex-direction: column;
+    gap: var(--rpt-space-2);
+  }
+
+  .rpt-toolbar-search {
+    max-width: 100%;
+    order: -1;
+  }
+
   /* Optimize buttons for touch */
   .rpt-btn, .rpt-action-btn {
-    min-height: 36px; /* Ensure touch target size meets standards */
+    min-height: 44px; /* Apple's recommended touch target size */
+    padding: var(--rpt-space-3) var(--rpt-space-4);
   }
-  
-  /* Ensure tables don't overflow */
+
+  /* Improve table scrolling on mobile */
   .rpt-table-wrapper {
-    margin-right: -1px;
-    margin-left: -1px;
+    margin: 0 calc(-1 * var(--rpt-space-2));
+    border-radius: 0;
   }
-  
-  /* Ensure font size is readable on mobile */
-  .rpt-text-xs {
-    font-size: 0.75rem !important;
+
+  /* Better typography on mobile */
+  .rpt-toolbar-title {
+    font-size: var(--rpt-text-lg);
+  }
+
+  .rpt-toolbar-description {
+    font-size: var(--rpt-text-sm);
+  }
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .rpt-toolbar {
+    padding: var(--rpt-space-4) var(--rpt-space-6);
+  }
+
+  .rpt-toolbar-search {
+    max-width: 250px;
+  }
+
+  .rpt-table {
+    font-size: var(--rpt-text-sm);
   }
 }
 
@@ -299,7 +343,11 @@
   .rpt-container {
     max-height: 85vh;
   }
-  
+
+  .rpt-toolbar {
+    padding: var(--rpt-space-2) var(--rpt-space-4);
+  }
+
   /* Optimize dialogs for landscape */
   .rpt-dialog {
     max-height: 85vh;

@@ -5,38 +5,63 @@
 
 /* Base theme variables - light theme by default */
 :root, [data-theme="light"] {
-  /* Colors */
-  --rpt-primary: #3b82f6;
-  --rpt-primary-light: #93c5fd;
-  --rpt-primary-dark: #2563eb;
-  --rpt-success: #10b981;
-  --rpt-warning: #f59e0b;
-  --rpt-danger: #ef4444;
-  --rpt-info: #3b82f6;
-  
-  /* Background colors */
+  /* Modern color palette */
+  --rpt-primary: #2563eb;
+  --rpt-primary-50: #eff6ff;
+  --rpt-primary-100: #dbeafe;
+  --rpt-primary-200: #bfdbfe;
+  --rpt-primary-500: #3b82f6;
+  --rpt-primary-600: #2563eb;
+  --rpt-primary-700: #1d4ed8;
+  --rpt-primary-900: #1e3a8a;
+
+  --rpt-success: #16a34a;
+  --rpt-success-50: #f0fdf4;
+  --rpt-success-100: #dcfce7;
+  --rpt-success-600: #16a34a;
+
+  --rpt-warning: #ca8a04;
+  --rpt-warning-50: #fefce8;
+  --rpt-warning-100: #fef3c7;
+  --rpt-warning-600: #ca8a04;
+
+  --rpt-danger: #dc2626;
+  --rpt-danger-50: #fef2f2;
+  --rpt-danger-100: #fee2e2;
+  --rpt-danger-600: #dc2626;
+
+  --rpt-info: #0ea5e9;
+  --rpt-info-50: #f0f9ff;
+  --rpt-info-100: #e0f2fe;
+  --rpt-info-600: #0ea5e9;
+
+  /* Modern background colors with subtle gradients */
   --rpt-bg-color: #ffffff;
-  --rpt-toolbar-bg: #ffffff;
-  --rpt-header-bg: #f8fafc;
+  --rpt-bg-subtle: #fafafa;
+  --rpt-toolbar-bg: rgba(255, 255, 255, 0.95);
+  --rpt-header-bg: linear-gradient(to bottom, #f8fafc, #f1f5f9);
   --rpt-footer-bg: #f8fafc;
   --rpt-row-bg: #ffffff;
-  --rpt-row-bg-alt: #f8fafc;
-  --rpt-row-hover-bg: #f1f5f9;
-  --rpt-row-selected-bg: #eff6ff;
-  --rpt-row-updated-bg: rgba(59, 130, 246, 0.08);
+  --rpt-row-bg-alt: #f9fafb;
+  --rpt-row-hover-bg: rgba(59, 130, 246, 0.04);
+  --rpt-row-selected-bg: rgba(59, 130, 246, 0.08);
+  --rpt-row-updated-bg: rgba(34, 197, 94, 0.06);
   
   /* Text colors */
-  --rpt-text-color: #1e293b;
-  --rpt-title-color: #0f172a;
-  --rpt-description-color: #64748b;
-  --rpt-header-text-color: #475569;
-  --rpt-muted-text: #64748b;
-  
+  --rpt-text-color: #111827;
+  --rpt-text-secondary: #6b7280;
+  --rpt-text-muted: #9ca3af;
+  --rpt-title-color: #111827;
+  --rpt-description-color: #6b7280;
+  --rpt-header-text-color: #374151;
+  --rpt-muted-text: #9ca3af;
+
   /* Border colors */
-  --rpt-border-color: #e2e8f0;
-  --rpt-border-hover-color: #cbd5e1;
-  --rpt-focus-color: rgba(59, 130, 246, 0.5);
-  --rpt-focus-shadow: rgba(59, 130, 246, 0.25);
+  --rpt-border-color: #e5e7eb;
+  --rpt-border-light: #f3f4f6;
+  --rpt-border-hover-color: #d1d5db;
+  --rpt-focus-color: rgba(37, 99, 235, 0.5);
+  --rpt-focus-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   
   /* Form element colors */
   --rpt-input-bg: #ffffff;
@@ -66,14 +91,44 @@
   --rpt-status-info-text: #1e3a8a;
   --rpt-status-neutral-bg: #f3f4f6;
   --rpt-status-neutral-text: #374151;
-  
-  /* Measurements */
+
+  /* Modern measurements and spacing */
+  --rpt-border-radius-sm: 0.25rem;
   --rpt-border-radius: 0.5rem;
+  --rpt-border-radius-lg: 0.75rem;
+  --rpt-border-radius-xl: 1rem;
   --rpt-border-width: 1px;
+
+  /* Modern shadows */
+  --rpt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --rpt-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  
+  --rpt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --rpt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --rpt-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Spacing system */
+  --rpt-space-1: 0.25rem;
+  --rpt-space-2: 0.5rem;
+  --rpt-space-3: 0.75rem;
+  --rpt-space-4: 1rem;
+  --rpt-space-6: 1.5rem;
+  --rpt-space-8: 2rem;
+
+  /* Typography scale */
+  --rpt-text-xs: 0.75rem;
+  --rpt-text-sm: 0.875rem;
+  --rpt-text-base: 1rem;
+  --rpt-text-lg: 1.125rem;
+  --rpt-text-xl: 1.25rem;
+
+  /* Line heights */
+  --rpt-leading-tight: 1.25;
+  --rpt-leading-normal: 1.5;
+  --rpt-leading-relaxed: 1.625;
+
   /* Transitions */
-  --rpt-transition-duration: 0.2s;
+  --rpt-transition-duration: 200ms;
+  --rpt-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Scrollbar variables - Updated for better control */
   --rpt-scrollbar-width: 6px;

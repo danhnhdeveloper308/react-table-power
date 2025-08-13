@@ -1274,27 +1274,92 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     
     return allActions;
   }, [builtInActions, actions, openViewDialog, openEditDialog, openDeleteDialog]);
+  // Default form components for when none are provided
+  const defaultFormComponents = useMemo(() => {
+    const CreateForm = React.forwardRef<any, any>(({ onClose }, ref) => (
+      <div className="p-4">
+        <p className="text-gray-700 mb-4">
+          No form component provided for creating new items.
+        </p>
+        <p className="text-sm text-gray-500">
+          Please provide a createFormComponent in builtInActions to enable create functionality.
+        </p>
+      </div>
+    ));
+    CreateForm.displayName = 'DefaultCreateForm';
+
+    const EditForm = React.forwardRef<any, any>(({ data, onClose }, ref) => (
+      <div className="p-4">
+        <p className="text-gray-700 mb-4">
+          No form component provided for editing items.
+        </p>
+        <p className="text-sm text-gray-500">
+          Please provide an editFormComponent in builtInActions to enable edit functionality.
+        </p>
+      </div>
+    ));
+    EditForm.displayName = 'DefaultEditForm';
+
+    const ViewForm = React.forwardRef<any, any>(({ data, onClose }, ref) => (
+      <div className="p-4">
+        <h4 className="font-semibold mb-3">Item Details</h4>
+        <div className="space-y-2">
+          {data && Object.entries(data).map(([key, value]) => (
+            <div key={key} className="flex justify-between">
+              <span className="font-medium text-gray-600">{key}:</span>
+              <span className="text-gray-900">{String(value)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ));
+    ViewForm.displayName = 'DefaultViewForm';
+
+    const DeleteForm = React.forwardRef<any, any>(({ data, onClose }, ref) => (
+      <div className="p-4">
+        <p className="text-gray-700 mb-4">
+          Are you sure you want to delete this item? This action cannot be undone.
+        </p>
+        {data && data.id && (
+          <p className="text-sm text-gray-500">
+            Item ID: {data.id}
+          </p>
+        )}
+      </div>
+    ));
+    DeleteForm.displayName = 'DefaultDeleteForm';
+
+    return {
+      create: CreateForm,
+      edit: EditForm,
+      view: ViewForm,
+      delete: DeleteForm,
+    };
+  }, []);
+
   // Extract form components from builtInActions with automatic wrapping
   const formComponents = useMemo(() => {
     if (!builtInActions) return {} as Record<DialogType, React.ComponentType<any> | undefined>;
-    
+
     const autoHandleSubmission = builtInActions.formHandling?.autoHandleFormSubmission;
     const skipInitialValidation = builtInActions.formHandling?.skipInitialValidation;
-    
+
     // Create wrapped components with proper typing
     const wrapComponent = <P extends DataTableFormProps>(
       Component: React.ComponentType<P> | undefined,
       type: DialogMode
     ) => {
-      if (!Component) return Component;
-      
+      // If no component provided, use default
+      const ComponentToWrap = Component || defaultFormComponents[type];
+      if (!ComponentToWrap) return undefined;
+
       // For components that don't need form handling, return as is
-      if (!autoHandleSubmission) return Component;
-      
+      if (!autoHandleSubmission) return ComponentToWrap;
+
       // Use withFormHandling HOC
-      return withFormHandling(Component, type);
+      return withFormHandling(ComponentToWrap, type);
     };
-    
+
     return {
       create: wrapComponent(builtInActions.createFormComponent, 'create'),
       edit: wrapComponent(builtInActions.editFormComponent, 'edit'),
@@ -1303,7 +1368,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       // Kiểm tra tồn tại của customFormComponent trước khi sử dụng
       ...(builtInActions.customFormComponent ? { custom: wrapComponent(builtInActions.customFormComponent, 'custom') } : {})
     } as Record<DialogType, React.ComponentType<any> | undefined>;
-  }, [builtInActions]);
+  }, [builtInActions, defaultFormComponents]);
 
   // Extract row actions if available through builtInActions
   const hasRowActions = rowActions.length > 0;

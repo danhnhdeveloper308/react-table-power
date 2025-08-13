@@ -218,4 +218,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 
 Checkbox.displayName = 'Checkbox';
 
-export default Checkbox;
+// Memoized version for performance
+const MemoizedCheckbox = React.memo(Checkbox);
+
+export default MemoizedCheckbox;
