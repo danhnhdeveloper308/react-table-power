@@ -48,17 +48,20 @@
   --rpt-row-updated-bg: rgba(34, 197, 94, 0.06);
   
   /* Text colors */
-  --rpt-text-color: #1e293b;
-  --rpt-title-color: #0f172a;
-  --rpt-description-color: #64748b;
-  --rpt-header-text-color: #475569;
-  --rpt-muted-text: #64748b;
-  
+  --rpt-text-color: #111827;
+  --rpt-text-secondary: #6b7280;
+  --rpt-text-muted: #9ca3af;
+  --rpt-title-color: #111827;
+  --rpt-description-color: #6b7280;
+  --rpt-header-text-color: #374151;
+  --rpt-muted-text: #9ca3af;
+
   /* Border colors */
-  --rpt-border-color: #e2e8f0;
-  --rpt-border-hover-color: #cbd5e1;
-  --rpt-focus-color: rgba(59, 130, 246, 0.5);
-  --rpt-focus-shadow: rgba(59, 130, 246, 0.25);
+  --rpt-border-color: #e5e7eb;
+  --rpt-border-light: #f3f4f6;
+  --rpt-border-hover-color: #d1d5db;
+  --rpt-focus-color: rgba(37, 99, 235, 0.5);
+  --rpt-focus-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   
   /* Form element colors */
   --rpt-input-bg: #ffffff;
