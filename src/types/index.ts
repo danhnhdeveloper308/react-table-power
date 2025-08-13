@@ -211,12 +211,21 @@ export interface TableProps<T extends BaseTableData = BaseTableData> extends Rea
 
 // ==================== FilterOptions ====================
 export interface FilterOption {
-  label: string;
-  value: string | number | boolean;
+  readonly label: string;
+  readonly value: string | number | boolean;
   /**
    * Whether this option is disabled
    */
-  disabled?: boolean;
+  readonly disabled?: boolean;
+}
+
+// ==================== Filter Preset ====================
+export interface FilterPreset {
+  readonly id: string;
+  readonly name: string;
+  readonly filters: Readonly<Record<string, any>>;
+  readonly createdAt: Date;
+  readonly isDefault?: boolean;
 }
 
 export interface FilterConfig {
