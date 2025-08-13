@@ -29,19 +29,22 @@ const columns = [
   { accessorKey: 'email', header: 'Email', sortable: true },
   { accessorKey: 'age', header: 'Age', sortable: true },
   { accessorKey: 'city', header: 'City', sortable: true },
-  { 
-    accessorKey: 'status', 
-    header: 'Status', 
+  {
+    accessorKey: 'status',
+    header: 'Status',
     sortable: true,
-    cell: ({ row }: any) => (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        row.original.status === 'active' ? 'bg-green-100 text-green-800' :
-        row.original.status === 'inactive' ? 'bg-red-100 text-red-800' :
-        'bg-yellow-100 text-yellow-800'
-      }`}>
-        {row.original.status}
-      </span>
-    )
+    cell: ({ row }: any) => {
+      const status = row?.original?.status || row?.getValue?.('status') || 'unknown';
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          status === 'active' ? 'bg-green-100 text-green-800' :
+          status === 'inactive' ? 'bg-red-100 text-red-800' :
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          {status}
+        </span>
+      );
+    }
   },
   { accessorKey: 'joinDate', header: 'Join Date', sortable: true },
 ]
