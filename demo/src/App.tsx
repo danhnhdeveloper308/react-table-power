@@ -754,6 +754,194 @@ function App() {
           font-size: 1.1rem;
         }
 
+        /* Form Styles */
+        .user-form {
+          padding: 1.5rem;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .form-group.full-width {
+          grid-column: 1 / -1;
+        }
+
+        .form-group label {
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+          color: #374151;
+          font-size: 0.875rem;
+        }
+
+        .form-input,
+        .form-textarea {
+          padding: 0.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+          background: white;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: flex-end;
+          padding-top: 1rem;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .btn {
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.5rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 1px solid transparent;
+          font-size: 0.875rem;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary:hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+          background: white;
+          color: #6b7280;
+          border-color: #d1d5db;
+        }
+
+        .btn-secondary:hover {
+          background: #f9fafb;
+          color: #374151;
+        }
+
+        .btn-danger {
+          background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+          color: white;
+        }
+
+        .btn-danger:hover {
+          background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+          transform: translateY(-1px);
+        }
+
+        /* View Form Styles */
+        .user-view {
+          padding: 1.5rem;
+        }
+
+        .view-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .view-item {
+          padding: 1rem;
+          background: #f9fafb;
+          border-radius: 0.5rem;
+          border: 1px solid #e5e7eb;
+        }
+
+        .view-item.full-width {
+          grid-column: 1 / -1;
+        }
+
+        .view-item label {
+          display: block;
+          font-weight: 600;
+          color: #6b7280;
+          margin-bottom: 0.375rem;
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+
+        .view-item p {
+          margin: 0;
+          color: #1f2937;
+          font-weight: 500;
+          font-size: 0.95rem;
+        }
+
+        .skills-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.375rem;
+        }
+
+        /* Delete Confirmation Styles */
+        .delete-confirmation {
+          padding: 1.5rem;
+          text-align: center;
+        }
+
+        .warning-icon {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+        }
+
+        .delete-confirmation h3 {
+          margin: 0 0 1rem 0;
+          color: #1f2937;
+          font-size: 1.25rem;
+        }
+
+        .delete-confirmation p {
+          margin-bottom: 1.5rem;
+          color: #6b7280;
+          line-height: 1.6;
+        }
+
+        .user-summary {
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.5rem;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          text-align: left;
+        }
+
+        .user-summary p {
+          margin: 0.5rem 0;
+          color: #374151;
+        }
+
         @media (max-width: 768px) {
           .page-header h1 {
             font-size: 2rem;
@@ -765,6 +953,15 @@ function App() {
 
           .demo-container {
             border-radius: 0.5rem;
+          }
+
+          .form-grid,
+          .view-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .form-actions {
+            flex-direction: column;
           }
         }
       `}</style>
