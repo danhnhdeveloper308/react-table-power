@@ -117,18 +117,18 @@ export const TableRow = <T extends BaseTableData = BaseTableData>({
     }
   }, [isSelected]);
   
-  // Animation variants
-  const rowVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: -10 
+  // Animation variants - memoized
+  const rowVariants = React.useMemo(() => ({
+    hidden: {
+      opacity: 0,
+      y: -10
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         type: 'spring',
-        stiffness: 500, 
+        stiffness: 500,
         damping: 30,
         mass: 1,
         delay: animationDelay * 0.05, // Staggered effect
@@ -138,23 +138,23 @@ export const TableRow = <T extends BaseTableData = BaseTableData>({
       backgroundColor: ['rgba(59, 130, 246, 0.1)', 'transparent'],
       transition: { duration: 1.5, ease: 'easeOut' }
     }
-  };
+  }), [animationDelay]);
 
-  // Event handlers
-  const handleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+  // Event handlers - memoized
+  const handleClick = React.useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
     if (clickable && rowData && rowIndex >= 0) {
       onClick?.(rowData, rowIndex, e);
     }
-  };
-  
-  const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+  }, [clickable, rowData, rowIndex, onClick]);
+
+  const handleDoubleClick = React.useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
     if (rowData && rowIndex >= 0) {
       onDoubleClick?.(rowData, rowIndex, e);
     }
-  };
+  }, [rowData, rowIndex, onDoubleClick]);
   
-  // Common props for both regular and motion tr elements
-  const commonProps = {
+  // Common props for both regular and motion tr elements - memoized
+  const commonProps = React.useMemo(() => ({
     ref: rowRef,
     className: cn(
       'rpt-row',
@@ -167,7 +167,7 @@ export const TableRow = <T extends BaseTableData = BaseTableData>({
     ),
     onClick: onClick ? handleClick : undefined,
     onDoubleClick: onDoubleClick ? handleDoubleClick : undefined,
-  };
+  }), [rowRef, highlightOnHover, clickable, isSelected, isExpanded, isUpdated, className, onClick, handleClick, onDoubleClick, handleDoubleClick]);
   
   // For performance reasons, only apply motion component if animations are enabled
   if (!animate) {
