@@ -3,7 +3,8 @@ import { DataTable } from 'react-table-power'
 import 'react-table-power/styles.ts'
 
 // Simple form components for CRUD operations
-function CreateUserForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void; onCancel: () => void }) {
+const CreateUserForm = React.forwardRef<HTMLDivElement, { onSubmit: (data: any) => void; onCancel: () => void }>((props, ref) => {
+  const { onSubmit, onCancel } = props;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,107 +26,109 @@ function CreateUserForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="user-form">
-      <div className="form-grid">
-        <div className="form-group">
-          <label>Name *</label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-            className="form-input"
-          />
+    <div ref={ref}>
+      <form onSubmit={handleSubmit} className="user-form">
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Name *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email *</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Age</label>
+            <input
+              type="number"
+              value={formData.age}
+              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+              min="18"
+              max="120"
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>City</label>
+            <input
+              type="text"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              className="form-input"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Department</label>
+            <input
+              type="text"
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group full-width">
+            <label>Join Date</label>
+            <input
+              type="date"
+              value={formData.joinDate}
+              onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group full-width">
+            <label>Bio</label>
+            <textarea
+              value={formData.bio}
+              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              className="form-textarea"
+              rows={3}
+            />
+          </div>
         </div>
 
-        <div className="form-group">
-          <label>Email *</label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-            className="form-input"
-          />
+        <div className="form-actions">
+          <button type="button" onClick={onCancel} className="btn btn-secondary">
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-primary">
+            Create User
+          </button>
         </div>
-
-        <div className="form-group">
-          <label>Age</label>
-          <input
-            type="number"
-            value={formData.age}
-            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-            min="18"
-            max="120"
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>City</label>
-          <input
-            type="text"
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Status</label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-            className="form-input"
-          >
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Department</label>
-          <input
-            type="text"
-            value={formData.department}
-            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group full-width">
-          <label>Join Date</label>
-          <input
-            type="date"
-            value={formData.joinDate}
-            onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group full-width">
-          <label>Bio</label>
-          <textarea
-            value={formData.bio}
-            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-            className="form-textarea"
-            rows={3}
-          />
-        </div>
-      </div>
-
-      <div className="form-actions">
-        <button type="button" onClick={onCancel} className="btn btn-secondary">
-          Cancel
-        </button>
-        <button type="submit" className="btn btn-primary">
-          Create User
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   )
-}
+})
 
 function EditUserForm({
   user,
