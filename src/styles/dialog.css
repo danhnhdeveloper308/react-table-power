@@ -1,495 +1,635 @@
-/**
- * React Power Table - Dialog Styles
- * Styling for modal dialogs and their content
- */
+/* Modern, accessible dialog styles for react-table-power */
 
-/* Backdrop overlay */
-.rpt-dialog-backdrop {
+/* CSS Custom Properties for theming */
+:root {
+  /* Colors */
+  --rtp-color-primary: #3b82f6;
+  --rtp-color-primary-hover: #2563eb;
+  --rtp-color-primary-focus: #1d4ed8;
+  --rtp-color-secondary: #6b7280;
+  --rtp-color-secondary-hover: #4b5563;
+  --rtp-color-destructive: #dc2626;
+  --rtp-color-destructive-hover: #b91c1c;
+  --rtp-color-success: #059669;
+  --rtp-color-warning: #d97706;
+  
+  /* Backgrounds */
+  --rtp-bg-primary: #ffffff;
+  --rtp-bg-secondary: #f9fafb;
+  --rtp-bg-overlay: rgba(0, 0, 0, 0.5);
+  --rtp-bg-error: #fef2f2;
+  --rtp-bg-success: #ecfdf5;
+  --rtp-bg-warning: #fffbeb;
+  
+  /* Text */
+  --rtp-text-primary: #111827;
+  --rtp-text-secondary: #6b7280;
+  --rtp-text-muted: #9ca3af;
+  --rtp-text-error: #dc2626;
+  --rtp-text-success: #059669;
+  --rtp-text-warning: #d97706;
+  
+  /* Borders */
+  --rtp-border-color: #e5e7eb;
+  --rtp-border-focus: #3b82f6;
+  --rtp-border-error: #fecaca;
+  --rtp-border-radius: 0.5rem;
+  --rtp-border-radius-sm: 0.375rem;
+  --rtp-border-radius-lg: 0.75rem;
+  
+  /* Shadows */
+  --rtp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --rtp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --rtp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --rtp-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --rtp-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Spacing */
+  --rtp-space-xs: 0.25rem;
+  --rtp-space-sm: 0.5rem;
+  --rtp-space-md: 1rem;
+  --rtp-space-lg: 1.5rem;
+  --rtp-space-xl: 2rem;
+  --rtp-space-2xl: 3rem;
+  
+  /* Typography */
+  --rtp-font-size-xs: 0.75rem;
+  --rtp-font-size-sm: 0.875rem;
+  --rtp-font-size-md: 1rem;
+  --rtp-font-size-lg: 1.125rem;
+  --rtp-font-size-xl: 1.25rem;
+  --rtp-font-size-2xl: 1.5rem;
+  --rtp-font-weight-normal: 400;
+  --rtp-font-weight-medium: 500;
+  --rtp-font-weight-semibold: 600;
+  --rtp-font-weight-bold: 700;
+  --rtp-line-height-tight: 1.25;
+  --rtp-line-height-normal: 1.5;
+  --rtp-line-height-relaxed: 1.625;
+  
+  /* Z-index scale */
+  --rtp-z-dropdown: 1000;
+  --rtp-z-sticky: 1020;
+  --rtp-z-fixed: 1030;
+  --rtp-z-modal-backdrop: 1040;
+  --rtp-z-modal: 1050;
+  --rtp-z-popover: 1060;
+  --rtp-z-tooltip: 1070;
+  --rtp-z-toast: 1080;
+  
+  /* Animation */
+  --rtp-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --rtp-transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --rtp-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Breakpoints */
+  --rtp-breakpoint-sm: 640px;
+  --rtp-breakpoint-md: 768px;
+  --rtp-breakpoint-lg: 1024px;
+  --rtp-breakpoint-xl: 1280px;
+  --rtp-breakpoint-2xl: 1536px;
+}
+
+/* Dark mode support */
+.dark {
+  --rtp-color-primary: #60a5fa;
+  --rtp-color-primary-hover: #3b82f6;
+  --rtp-color-primary-focus: #2563eb;
+  --rtp-color-secondary: #9ca3af;
+  --rtp-color-secondary-hover: #d1d5db;
+  
+  --rtp-bg-primary: #1f2937;
+  --rtp-bg-secondary: #111827;
+  --rtp-bg-overlay: rgba(0, 0, 0, 0.75);
+  --rtp-bg-error: #1f1b1b;
+  --rtp-bg-success: #0d1f1c;
+  --rtp-bg-warning: #1f1b0d;
+  
+  --rtp-text-primary: #f9fafb;
+  --rtp-text-secondary: #d1d5db;
+  --rtp-text-muted: #9ca3af;
+  
+  --rtp-border-color: #374151;
+  --rtp-border-focus: #60a5fa;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --rtp-border-color: #000000;
+    --rtp-text-secondary: #000000;
+    --rtp-shadow-md: 0 0 0 2px currentColor;
+  }
+  
+  .dark {
+    --rtp-border-color: #ffffff;
+    --rtp-text-secondary: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --rtp-transition-fast: 0ms;
+    --rtp-transition-normal: 0ms;
+    --rtp-transition-slow: 0ms;
+  }
+  
+  .rtp-dialog,
+  .rtp-dialog-backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Dialog backdrop */
+.rtp-dialog-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background-color: var(--rtp-bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9000; /* Giảm z-index để toast có thể hiển thị trên dialog */
-  padding: 1rem;
-  overflow-y: auto;
-  backdrop-filter: blur(2px);
-  transition: opacity 0.2s ease-out;
+  z-index: var(--rtp-z-modal-backdrop);
+  padding: var(--rtp-space-md);
+  transition: opacity var(--rtp-transition-fast);
+  
+  /* Accessibility: Prevent interaction with background */
+  overscroll-behavior: contain;
 }
 
-/* Dialog window */
-.rpt-dialog {
-  background-color: var(--rpt-bg-color);
-  border-radius: var(--rpt-border-radius);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
+/* Dialog container */
+.rtp-dialog {
+  position: relative;
+  background-color: var(--rtp-bg-primary);
+  border-radius: var(--rtp-border-radius);
+  box-shadow: var(--rtp-shadow-2xl);
   display: flex;
   flex-direction: column;
-  position: relative;
+  max-height: calc(100vh - 2 * var(--rtp-space-md));
+  max-width: calc(100vw - 2 * var(--rtp-space-md));
   overflow: hidden;
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-  z-index: 9001; /* Đảm bảo dialog có z-index thấp hơn toast */
+  z-index: var(--rtp-z-modal);
+  transition: all var(--rtp-transition-fast);
+  
+  /* Focus outline for accessibility */
+  outline: none;
 }
 
-/* Dialog animation states */
-.rpt-dialog-open {
-  animation: rpt-dialog-fade-in 0.2s ease-out;
+.rtp-dialog:focus-visible {
+  outline: 2px solid var(--rtp-border-focus);
+  outline-offset: 2px;
 }
 
-.rpt-dialog-closing {
-  animation: rpt-dialog-fade-out 0.2s ease-out;
+/* Dialog sizes */
+.rtp-dialog-xs {
+  width: 20rem;
+}
+
+.rtp-dialog-sm {
+  width: 24rem;
+}
+
+.rtp-dialog-md {
+  width: 32rem;
+}
+
+.rtp-dialog-lg {
+  width: 42rem;
+}
+
+.rtp-dialog-xl {
+  width: 56rem;
+}
+
+.rtp-dialog-full {
+  width: 95vw;
+  height: 95vh;
+  max-width: none;
+  max-height: none;
+}
+
+/* Responsive dialog sizing */
+@media (max-width: 640px) {
+  .rtp-dialog-backdrop {
+    padding: var(--rtp-space-sm);
+  }
+  
+  .rtp-dialog {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: var(--rtp-border-radius-sm);
+  }
+  
+  .rtp-dialog-full {
+    height: 100vh;
+    border-radius: 0;
+  }
 }
 
 /* Dialog header */
-.rpt-dialog-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--rpt-border-color);
+.rtp-dialog-header {
+  padding: var(--rtp-space-lg) var(--rtp-space-lg) var(--rtp-space-md);
+  border-bottom: 1px solid var(--rtp-border-color);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  position: relative;
+  gap: var(--rtp-space-md);
+  flex-shrink: 0;
 }
 
-/* Dialog title */
-.rpt-dialog-title {
+.rtp-dialog-title {
+  font-size: var(--rtp-font-size-xl);
+  font-weight: var(--rtp-font-weight-semibold);
+  color: var(--rtp-text-primary);
+  line-height: var(--rtp-line-height-tight);
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--rpt-title-color);
-  line-height: 1.4;
 }
 
-/* Dialog description */
-.rpt-dialog-description {
-  margin: 0.5rem 0 0 0;
-  font-size: 0.875rem;
-  color: var(--rpt-description-color);
-  line-height: 1.5;
+.rtp-dialog-description {
+  font-size: var(--rtp-font-size-sm);
+  color: var(--rtp-text-secondary);
+  line-height: var(--rtp-line-height-normal);
+  margin: var(--rtp-space-xs) 0 0 0;
 }
 
-/* Close button */
-.rpt-dialog-close {
-  padding: 0.5rem;
-  margin: -0.5rem;
-  background: transparent;
+.rtp-dialog-close {
+  background: none;
   border: none;
-  color: var(--rpt-muted-text);
+  color: var(--rtp-text-muted);
   cursor: pointer;
-  border-radius: var(--rpt-border-radius);
+  font-size: var(--rtp-font-size-xl);
+  line-height: 1;
+  padding: var(--rtp-space-xs);
+  border-radius: var(--rtp-border-radius-sm);
+  transition: all var(--rtp-transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, color 0.2s;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
 }
 
-.rpt-dialog-close:hover {
-  background-color: var(--rpt-row-hover-bg);
-  color: var(--rpt-text-color);
+.rtp-dialog-close:hover {
+  color: var(--rtp-text-secondary);
+  background-color: var(--rtp-bg-secondary);
 }
 
-.rpt-dialog-close:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
+.rtp-dialog-close:focus-visible {
+  outline: 2px solid var(--rtp-border-focus);
+  outline-offset: 2px;
 }
 
-/* Close icon */
-.rpt-dialog-close-icon {
-  width: 16px;
-  height: 16px;
+.rtp-dialog-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-/* Dialog content with improved scrollbar */
-.rpt-dialog-content {
-  padding: 1.5rem;
+/* Dialog content */
+.rtp-dialog-content {
+  flex: 1;
   overflow-y: auto;
-  flex-grow: 1;
-  max-height: calc(90vh - 150px);
-  scrollbar-width: thin;
-  scrollbar-color: var(--rpt-scrollbar-thumb-color) var(--rpt-scrollbar-bg);
-  transition: var(--rpt-scrollbar-transition);
+  padding: var(--rtp-space-lg);
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
 
-.rpt-dialog-content:hover {
-  scrollbar-width: auto;
-  scrollbar-color: var(--rpt-scrollbar-thumb-hover-color) var(--rpt-scrollbar-bg);
+/* Custom scrollbar */
+.rtp-dialog-content::-webkit-scrollbar {
+  width: 8px;
 }
 
-.rpt-dialog-content::-webkit-scrollbar {
-  width: var(--rpt-scrollbar-width);
-  background-color: var(--rpt-scrollbar-bg);
-  transition: var(--rpt-scrollbar-transition);
+.rtp-dialog-content::-webkit-scrollbar-track {
+  background: var(--rtp-bg-secondary);
+  border-radius: var(--rtp-border-radius-sm);
 }
 
-.rpt-dialog-content:hover::-webkit-scrollbar {
-  width: var(--rpt-scrollbar-hover-width);
+.rtp-dialog-content::-webkit-scrollbar-thumb {
+  background: var(--rtp-color-secondary);
+  border-radius: var(--rtp-border-radius-sm);
 }
 
-.rpt-dialog-content::-webkit-scrollbar-track {
-  background: var(--rpt-scrollbar-bg);
-  border-radius: 10px;
-}
-
-.rpt-dialog-content::-webkit-scrollbar-thumb {
-  background: var(--rpt-scrollbar-thumb-color);
-  border-radius: 10px;
-  transition: var(--rpt-scrollbar-transition);
-}
-
-.rpt-dialog-content::-webkit-scrollbar-thumb:hover {
-  background: var(--rpt-scrollbar-thumb-hover-color);
+.rtp-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: var(--rtp-color-secondary-hover);
 }
 
 /* Dialog footer */
-.rpt-dialog-footer {
-  padding: 1.25rem 1.5rem;
-  border-top: 1px solid var(--rpt-border-color);
-  background-color: var(--rpt-footer-bg);
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  flex-shrink: 0; /* Prevent footer from shrinking */
+.rtp-dialog-footer {
+  padding: var(--rtp-space-md) var(--rtp-space-lg) var(--rtp-space-lg);
+  border-top: 1px solid var(--rtp-border-color);
+  flex-shrink: 0;
+  background-color: var(--rtp-bg-secondary);
 }
 
-/* Dialog error message */
-.rpt-dialog-error {
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  background-color: var(--rpt-status-danger-bg);
-  color: var(--rpt-status-danger-text);
-  border-radius: var(--rpt-border-radius);
-  font-size: 0.875rem;
-  border-left: 4px solid var(--rpt-danger);
-}
-
-/* Dialog loading overlay */
-.rpt-dialog-loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.6);
+.rtp-dialog-actions {
   display: flex;
+  gap: var(--rtp-space-sm);
   align-items: center;
-  justify-content: center;
-  z-index: 10;
-  backdrop-filter: blur(1px);
 }
 
-.dark .rpt-dialog-loading-overlay {
-  background-color: rgba(15, 23, 42, 0.6);
-}
-
-/* Dialog spinner */
-.rpt-dialog-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(59, 130, 246, 0.2);
-  border-radius: 50%;
-  border-top-color: var(--rpt-primary);
-  animation: rpt-spin 0.8s linear infinite;
-}
-
-/* Delete confirmation dialog */
-.rpt-dialog-delete-confirmation {
-  text-align: center;
-  padding: 1rem 0.5rem;
-}
-
-.rpt-dialog-delete-warning {
-  color: var(--rpt-danger);
-  margin-top: 0.75rem;
-  font-weight: 500;
-}
-
-/* Dialog types */
-.rpt-dialog-create {
-  border-top: 4px solid var(--rpt-primary);
-}
-
-.rpt-dialog-edit {
-  border-top: 4px solid var(--rpt-info);
-}
-
-.rpt-dialog-delete {
-  border-top: 4px solid var(--rpt-danger);
-}
-
-.rpt-dialog-view {
-  border-top: 4px solid var(--rpt-success);
-}
-
-/* Dialog Form Styling */
-.rpt-dialog-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.rpt-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.rpt-form-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--rpt-text-color);
-}
-
-.rpt-form-input {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--rpt-text-color);
-  background-color: var(--rpt-input-bg);
-  border: 1px solid var(--rpt-input-border-color);
-  border-radius: var(--rpt-border-radius);
-  transition: border-color 0.2s, box-shadow 0.2s;
-  width: 100%;
-}
-
-.rpt-form-input::placeholder {
-  color: var(--rpt-input-placeholder-color);
-  opacity: 1;
-}
-
-.rpt-form-input:focus {
-  outline: none;
-  border-color: var(--rpt-primary);
-  box-shadow: 0 0 0 2px var(--rpt-focus-shadow);
-}
-
-.rpt-form-error {
-  font-size: 0.75rem;
-  color: var(--rpt-danger);
-  margin-top: 0.25rem;
-}
-
-/* Dialog actions - Fixed positioning at the bottom right */
-.rpt-dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  width: 100%;
-  position: relative; /* Ensure proper stacking context */
-}
-
-/* Button styles specific for dialog actions - Make buttons more prominent */
-.rpt-dialog-actions .rpt-btn {
-  min-width: 90px;
-  padding: 0.5rem 1rem;
-  border-radius: calc(var(--rpt-border-radius) - 2px);
-  font-weight: 500;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.15s ease;
-}
-
-.rpt-dialog-actions .rpt-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.rpt-dialog-actions .rpt-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* Dialog action positions */
-.rpt-dialog-actions--right {
-  justify-content: flex-end;
-}
-
-.rpt-dialog-actions--left {
+.rtp-dialog-actions-left {
   justify-content: flex-start;
 }
 
-.rpt-dialog-actions--center {
+.rtp-dialog-actions-center {
   justify-content: center;
 }
 
-.rpt-dialog-actions--split {
+.rtp-dialog-actions-right {
+  justify-content: flex-end;
+}
+
+.rtp-dialog-actions-between {
   justify-content: space-between;
 }
 
-/* Animation keyframes */
-@keyframes rpt-dialog-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+.rtp-dialog-actions-elevated .rtp-button {
+  box-shadow: var(--rtp-shadow-sm);
+}
+
+/* Error display */
+.rtp-dialog-error {
+  background-color: var(--rtp-bg-error);
+  border: 1px solid var(--rtp-border-error);
+  border-radius: var(--rtp-border-radius-sm);
+  padding: var(--rtp-space-md);
+  margin-bottom: var(--rtp-space-md);
+  color: var(--rtp-text-error);
+  font-size: var(--rtp-font-size-sm);
+  line-height: var(--rtp-line-height-normal);
+  
+  /* Accessibility */
+  role: alert;
+}
+
+.rtp-dialog-error:empty {
+  display: none;
+}
+
+/* Loading states */
+.rtp-dialog-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rtp-space-sm);
+  padding: var(--rtp-space-xl);
+  color: var(--rtp-text-secondary);
+  font-size: var(--rtp-font-size-sm);
+}
+
+.rtp-dialog-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rtp-space-sm);
+  z-index: 10;
+  
+  /* Dark mode */
+  .dark & {
+    background-color: rgba(31, 41, 55, 0.8);
   }
+}
+
+.rtp-dialog-loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--rtp-border-color);
+  border-top-color: var(--rtp-color-primary);
+  border-radius: 50%;
+  animation: rtp-spin 1s linear infinite;
+}
+
+@keyframes rtp-spin {
   to {
-    opacity: 1;
-    transform: scale(1);
+    transform: rotate(360deg);
   }
 }
 
-@keyframes rpt-dialog-fade-out {
-  from {
-    opacity: 1;
-    transform: scale(1);
+/* Form container */
+.rtp-dialog-form-container {
+  position: relative;
+}
+
+.rtp-dialog-form-container.rtp-dialog-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Delete confirmation specific styles */
+.rtp-dialog-delete-confirmation {
+  padding: var(--rtp-space-md) 0;
+  text-align: center;
+}
+
+.rtp-dialog-delete-confirmation p {
+  margin: 0;
+  color: var(--rtp-text-primary);
+  line-height: var(--rtp-line-height-normal);
+}
+
+/* Button styles */
+.rtp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rtp-space-xs);
+  padding: var(--rtp-space-sm) var(--rtp-space-md);
+  border: 1px solid transparent;
+  border-radius: var(--rtp-border-radius-sm);
+  font-size: var(--rtp-font-size-sm);
+  font-weight: var(--rtp-font-weight-medium);
+  line-height: var(--rtp-line-height-tight);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--rtp-transition-fast);
+  position: relative;
+  overflow: hidden;
+  
+  /* Prevent text selection */
+  user-select: none;
+  
+  /* Accessibility */
+  outline: none;
+}
+
+.rtp-button:focus-visible {
+  outline: 2px solid var(--rtp-border-focus);
+  outline-offset: 2px;
+}
+
+.rtp-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Button variants */
+.rtp-button-primary {
+  background-color: var(--rtp-color-primary);
+  color: white;
+  border-color: var(--rtp-color-primary);
+}
+
+.rtp-button-primary:hover:not(:disabled) {
+  background-color: var(--rtp-color-primary-hover);
+  border-color: var(--rtp-color-primary-hover);
+}
+
+.rtp-button-secondary {
+  background-color: transparent;
+  color: var(--rtp-text-secondary);
+  border-color: var(--rtp-border-color);
+}
+
+.rtp-button-secondary:hover:not(:disabled) {
+  background-color: var(--rtp-bg-secondary);
+  color: var(--rtp-text-primary);
+}
+
+.rtp-button-destructive {
+  background-color: var(--rtp-color-destructive);
+  color: white;
+  border-color: var(--rtp-color-destructive);
+}
+
+.rtp-button-destructive:hover:not(:disabled) {
+  background-color: var(--rtp-color-destructive-hover);
+  border-color: var(--rtp-color-destructive-hover);
+}
+
+/* Button sizes */
+.rtp-button-xs {
+  padding: calc(var(--rtp-space-xs) * 0.75) var(--rtp-space-sm);
+  font-size: var(--rtp-font-size-xs);
+}
+
+.rtp-button-sm {
+  padding: var(--rtp-space-xs) var(--rtp-space-sm);
+  font-size: var(--rtp-font-size-sm);
+}
+
+.rtp-button-md {
+  padding: var(--rtp-space-sm) var(--rtp-space-md);
+  font-size: var(--rtp-font-size-sm);
+}
+
+.rtp-button-lg {
+  padding: var(--rtp-space-sm) var(--rtp-space-lg);
+  font-size: var(--rtp-font-size-md);
+}
+
+.rtp-button-xl {
+  padding: var(--rtp-space-md) var(--rtp-space-xl);
+  font-size: var(--rtp-font-size-lg);
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .rtp-button {
+    border-width: 2px;
   }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
+  
+  .rtp-button:focus-visible {
+    outline-width: 3px;
   }
 }
 
-@keyframes rpt-spin {
-  to { transform: rotate(360deg); }
+/* Print styles */
+@media print {
+  .rtp-dialog-backdrop,
+  .rtp-dialog {
+    position: static !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  .rtp-dialog-close {
+    display: none !important;
+  }
+  
+  .rtp-dialog-footer {
+    display: none !important;
+  }
 }
 
-/* Dialog width variants */
-.rpt-dialog-sm {
-  max-width: 400px;
-}
-
-.rpt-dialog-md {
-  max-width: 500px;
-}
-
-.rpt-dialog-lg {
-  max-width: 640px;
-}
-
-.rpt-dialog-xl {
-  max-width: 768px;
-}
-
-.rpt-dialog-2xl {
-  max-width: 896px;
-}
-
-.rpt-dialog-full {
-  max-width: 96vw;
-}
-
-/* For mobile devices - improve responsive behavior */
+/* Mobile specific adjustments */
 @media (max-width: 640px) {
-  .rpt-dialog {
+  .rtp-dialog-header {
+    padding: var(--rtp-space-md);
+  }
+  
+  .rtp-dialog-content {
+    padding: var(--rtp-space-md);
+  }
+  
+  .rtp-dialog-footer {
+    padding: var(--rtp-space-md);
+  }
+  
+  .rtp-dialog-actions {
+    flex-direction: column-reverse;
+    gap: var(--rtp-space-sm);
+  }
+  
+  .rtp-button {
     width: 100%;
-    max-width: none !important;
-    height: 100vh;
-    margin: 0;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .rpt-dialog-backdrop{ 
-    padding: 0;
-    align-items: stretch;
-    justify-content: stretch;
-  }
-  
-  .rpt-dialog-header {
-    padding: 1rem;
-    position: sticky;
-    top: 0;
-    background-color: var(--rpt-bg-color);
-    z-index: 10;
-  }
-  
-  .rpt-dialog-content {
-    padding: 1rem;
-    max-height: none;
-    flex: 1;
-  }
-  
-  .rpt-dialog-footer {
-    padding: 1rem;
-    position: sticky;
-    bottom: 0;
-    background-color: var(--rpt-bg-color);
-    z-index: 10;
-    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-  
-  .rpt-dialog-actions {
-    justify-content: space-between !important;
-    width: 100%;
-  }
-  
-  .rpt-dialog-actions .rpt-btn {
-    flex: 1;
+    justify-content: center;
   }
 }
 
-/* Tablet optimization */
+/* Tablet adjustments */
 @media (min-width: 641px) and (max-width: 1024px) {
-  .rpt-dialog {
+  .rtp-dialog {
     max-width: 90vw;
   }
 }
 
-/* Fix for landscape mobile orientation */
-@media (max-width: 896px) and (orientation: landscape) {
-  .rpt-dialog {
-    max-height: 90vh;
-    height: auto;
-  }
-  
-  .rpt-dialog-content {
-    max-height: 60vh;
-  }
+/* Animation classes for JavaScript control */
+.rtp-dialog-enter {
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
 }
 
-/* RTL support */
-[dir="rtl"] .rpt-dialog-header,
-[dir="rtl"] .rpt-dialog-footer,
-[dir="rtl"] .rpt-dialog-actions {
-  flex-direction: row-reverse;
+.rtp-dialog-enter-active {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition: all var(--rtp-transition-fast);
 }
 
-[dir="rtl"] .rpt-dialog-actions--right {
-  justify-content: flex-start;
+.rtp-dialog-exit {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
-[dir="rtl"] .rpt-dialog-actions--left {
-  justify-content: flex-end;
+.rtp-dialog-exit-active {
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
+  transition: all var(--rtp-transition-fast);
 }
 
-/* Dialog with sticky footer */
-.rpt-dialog-with-footer .rpt-dialog-content {
-  max-height: calc(90vh - 210px);
+.rtp-backdrop-enter {
+  opacity: 0;
 }
 
-.rpt-dialog-footer--sticky {
-  position: sticky;
-  bottom: 0;
-  background-color: var(--rpt-bg-color);
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
-  z-index: 2;
+.rtp-backdrop-enter-active {
+  opacity: 1;
+  transition: opacity var(--rtp-transition-fast);
 }
 
-/* Make footer buttons better aligned always to the right */
-.rpt-dialog-footer {
-  justify-content: flex-end !important;
+.rtp-backdrop-exit {
+  opacity: 1;
 }
 
-/* High contrast mode */
-@media (forced-colors: active) {
-  .rpt-dialog {
-    border: 2px solid ButtonText;
-  }
-  
-  .rpt-dialog-close {
-    border: 1px solid ButtonText;
-  }
-}
-
-/* Dialog container - đảm bảo không conflict với toast */
-.rpt-dialog-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9000; /* Thấp hơn toast z-index */
+.rtp-backdrop-exit-active {
+  opacity: 0;
+  transition: opacity var(--rtp-transition-fast);
 }
