@@ -578,6 +578,10 @@ function App() {
               edit: true,
               delete: true,
               view: true,
+              createFormComponent: CreateUserForm,
+              editFormComponent: EditUserForm,
+              viewFormComponent: ViewUserForm,
+              deleteFormComponent: DeleteUserForm,
             }}
             bulkActions={[
               {
