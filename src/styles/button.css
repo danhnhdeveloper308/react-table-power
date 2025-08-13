@@ -8,21 +8,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--rpt-space-2);
   position: relative;
   border-radius: var(--rpt-border-radius);
-  font-size: 0.875rem;
+  font-size: var(--rpt-text-sm);
   font-weight: 500;
-  line-height: 1.5;
-  padding: 0.5rem 1rem;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+  line-height: var(--rpt-leading-normal);
+  padding: var(--rpt-space-2) var(--rpt-space-4);
+  transition: all var(--rpt-transition-duration) var(--rpt-transition-timing);
   cursor: pointer;
   outline: none;
-  border: 1px solid transparent;
+  border: var(--rpt-border-width) solid transparent;
   white-space: nowrap;
   text-decoration: none;
   user-select: none;
   overflow: hidden;
+  box-shadow: var(--rpt-shadow-sm);
+  backdrop-filter: blur(8px);
 }
 
 .rpt-btn:focus-visible {
