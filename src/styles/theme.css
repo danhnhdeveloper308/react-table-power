@@ -5,25 +5,47 @@
 
 /* Base theme variables - light theme by default */
 :root, [data-theme="light"] {
-  /* Colors */
-  --rpt-primary: #3b82f6;
-  --rpt-primary-light: #93c5fd;
-  --rpt-primary-dark: #2563eb;
-  --rpt-success: #10b981;
-  --rpt-warning: #f59e0b;
-  --rpt-danger: #ef4444;
-  --rpt-info: #3b82f6;
-  
-  /* Background colors */
+  /* Modern color palette */
+  --rpt-primary: #2563eb;
+  --rpt-primary-50: #eff6ff;
+  --rpt-primary-100: #dbeafe;
+  --rpt-primary-200: #bfdbfe;
+  --rpt-primary-500: #3b82f6;
+  --rpt-primary-600: #2563eb;
+  --rpt-primary-700: #1d4ed8;
+  --rpt-primary-900: #1e3a8a;
+
+  --rpt-success: #16a34a;
+  --rpt-success-50: #f0fdf4;
+  --rpt-success-100: #dcfce7;
+  --rpt-success-600: #16a34a;
+
+  --rpt-warning: #ca8a04;
+  --rpt-warning-50: #fefce8;
+  --rpt-warning-100: #fef3c7;
+  --rpt-warning-600: #ca8a04;
+
+  --rpt-danger: #dc2626;
+  --rpt-danger-50: #fef2f2;
+  --rpt-danger-100: #fee2e2;
+  --rpt-danger-600: #dc2626;
+
+  --rpt-info: #0ea5e9;
+  --rpt-info-50: #f0f9ff;
+  --rpt-info-100: #e0f2fe;
+  --rpt-info-600: #0ea5e9;
+
+  /* Modern background colors with subtle gradients */
   --rpt-bg-color: #ffffff;
-  --rpt-toolbar-bg: #ffffff;
-  --rpt-header-bg: #f8fafc;
+  --rpt-bg-subtle: #fafafa;
+  --rpt-toolbar-bg: rgba(255, 255, 255, 0.95);
+  --rpt-header-bg: linear-gradient(to bottom, #f8fafc, #f1f5f9);
   --rpt-footer-bg: #f8fafc;
   --rpt-row-bg: #ffffff;
-  --rpt-row-bg-alt: #f8fafc;
-  --rpt-row-hover-bg: #f1f5f9;
-  --rpt-row-selected-bg: #eff6ff;
-  --rpt-row-updated-bg: rgba(59, 130, 246, 0.08);
+  --rpt-row-bg-alt: #f9fafb;
+  --rpt-row-hover-bg: rgba(59, 130, 246, 0.04);
+  --rpt-row-selected-bg: rgba(59, 130, 246, 0.08);
+  --rpt-row-updated-bg: rgba(34, 197, 94, 0.06);
   
   /* Text colors */
   --rpt-text-color: #1e293b;
