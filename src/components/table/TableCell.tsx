@@ -49,41 +49,45 @@ export interface TableCellProps<T extends BaseTableData = BaseTableData> extends
   rowIndex?: number;
 }
 
-export const TableCell = React.forwardRef<
+export const TableCell = React.memo(React.forwardRef<
   HTMLTableCellElement,
   TableCellProps<any>
->(({ 
-  children, 
+>(({
+  children,
   isAction,
-  truncate, 
-  maxWidth, 
+  truncate,
+  maxWidth,
   align = 'left',
   className,
   value: _value, // Add but don't use directly (available for consumers)
   column: _column, // Add but don't use directly (available for consumers)
   rowData: _rowData, // Add but don't use directly (available for consumers)
   rowIndex: _rowIndex, // Add but don't use directly (available for consumers)
-  ...props 
+  ...props
 }, ref) => {
+  const styles = React.useMemo(() => ({
+    ...(truncate && maxWidth ? { maxWidth } : {}),
+  }), [truncate, maxWidth]);
+
+  const cellClassName = React.useMemo(() => cn(
+    'rpt-cell',
+    isAction && 'rpt-action-cell',
+    align !== 'left' && `rpt-align-${align}`,
+    truncate && 'rpt-cell-truncate',
+    className
+  ), [isAction, align, truncate, className]);
+
   return (
     <td
       ref={ref}
-      className={cn(
-        'rpt-cell',
-        isAction && 'rpt-action-cell',
-        align !== 'left' && `rpt-align-${align}`,
-        truncate && 'rpt-cell-truncate',
-        className
-      )}
-      style={{
-        ...(truncate && maxWidth ? { maxWidth } : {}),
-      }}
+      className={cellClassName}
+      style={styles}
       {...props}
     >
       {children}
     </td>
   );
-});
+}));
 
 TableCell.displayName = 'TableCell';
 
