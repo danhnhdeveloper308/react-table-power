@@ -1012,6 +1012,9 @@ export interface TableDialogProps {
   children?: React.ReactNode;
 }
 
+// Export utility types
+export * from './utilities';
+
 // New type for AppendableDialogProps
 export interface AppendableDialogProps<T extends BaseTableData = BaseTableData> extends Omit<TableDialogProps, 'open' | 'onClose' | 'type' | 'data' | 'onSubmit' | 'title' | 'description' | 'error'> {
   /**
