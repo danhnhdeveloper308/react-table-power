@@ -12,6 +12,19 @@ export { useAnimationPreference } from './useAnimationPreference';
 export { useSafeTableSettings } from './useSafeTableSettings';
 export { useLoadingStateManager } from './useLoadingStateManager';
 
+// Enhanced features
+export {
+  useVirtualization,
+  useAutoSizeRows,
+  createVirtualizedTable,
+  useVirtualizationPerformance
+} from './useVirtualization';
+export type {
+  VirtualizationConfig,
+  UseVirtualizationOptions,
+  UseVirtualizationReturn
+} from './useVirtualization';
+
 // CRITICAL FIX: Export safe requestAnimationFrame utility
 export const safeRequestAnimationFrame = (callback: () => void) => {
   if (typeof window !== 'undefined' && window.requestAnimationFrame) {
