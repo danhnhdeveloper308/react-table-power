@@ -576,6 +576,16 @@ function App() {
               delete: true,
               view: true,
             }}
+            formFields={[
+              { key: 'name', label: 'Name', type: 'text', required: true },
+              { key: 'email', label: 'Email', type: 'email', required: true },
+              { key: 'age', label: 'Age', type: 'number', min: 18, max: 120 },
+              { key: 'city', label: 'City', type: 'text' },
+              { key: 'status', label: 'Status', type: 'select', options: statusOptions },
+              { key: 'joinDate', label: 'Join Date', type: 'date' },
+              { key: 'department', label: 'Department', type: 'text' },
+              { key: 'bio', label: 'Bio', type: 'textarea', rows: 3 }
+            ]}
             bulkActions={[
               {
                 key: 'delete',
