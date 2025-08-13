@@ -91,14 +91,44 @@
   --rpt-status-info-text: #1e3a8a;
   --rpt-status-neutral-bg: #f3f4f6;
   --rpt-status-neutral-text: #374151;
-  
-  /* Measurements */
+
+  /* Modern measurements and spacing */
+  --rpt-border-radius-sm: 0.25rem;
   --rpt-border-radius: 0.5rem;
+  --rpt-border-radius-lg: 0.75rem;
+  --rpt-border-radius-xl: 1rem;
   --rpt-border-width: 1px;
+
+  /* Modern shadows */
+  --rpt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --rpt-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  
+  --rpt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --rpt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --rpt-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Spacing system */
+  --rpt-space-1: 0.25rem;
+  --rpt-space-2: 0.5rem;
+  --rpt-space-3: 0.75rem;
+  --rpt-space-4: 1rem;
+  --rpt-space-6: 1.5rem;
+  --rpt-space-8: 2rem;
+
+  /* Typography scale */
+  --rpt-text-xs: 0.75rem;
+  --rpt-text-sm: 0.875rem;
+  --rpt-text-base: 1rem;
+  --rpt-text-lg: 1.125rem;
+  --rpt-text-xl: 1.25rem;
+
+  /* Line heights */
+  --rpt-leading-tight: 1.25;
+  --rpt-leading-normal: 1.5;
+  --rpt-leading-relaxed: 1.625;
+
   /* Transitions */
-  --rpt-transition-duration: 0.2s;
+  --rpt-transition-duration: 200ms;
+  --rpt-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Scrollbar variables - Updated for better control */
   --rpt-scrollbar-width: 6px;
