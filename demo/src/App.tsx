@@ -88,24 +88,12 @@ function App() {
             enabled: true,
             type: 'checkbox',
           }}
-          actions={[
-            {
-              key: 'edit',
-              label: 'Edit',
-              onClick: (row: User) => {
-                console.log('Edit row:', row)
-              },
-              variant: 'outline',
-            },
-            {
-              key: 'delete',
-              label: 'Delete',
-              onClick: (row: User) => {
-                handleDelete(row.id)
-              },
-              variant: 'destructive',
-            },
-          ]}
+          builtInActions={{
+            create: true,
+            edit: true,
+            delete: true,
+            view: true,
+          }}
           bulkActions={[
             {
               key: 'delete',
