@@ -8,11 +8,14 @@
   width: 100%;
   overflow: hidden;
   border: var(--rpt-border-width) solid var(--rpt-border-color);
-  border-radius: var(--rpt-border-radius);
+  border-radius: var(--rpt-border-radius-lg);
   background-color: var(--rpt-bg-color);
+  box-shadow: var(--rpt-shadow-sm);
   min-width: 280px; /* Base minimum width */
   /* CRITICAL FIX: Establish stacking context */
   z-index: 1;
+  backdrop-filter: blur(8px);
+  background: var(--rpt-bg-color);
 }
 
 /* CRITICAL FIX: Loading state for table container */
