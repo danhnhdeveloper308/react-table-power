@@ -646,21 +646,21 @@ export interface TableThemeConfig {
 
 // ==================== Event Handlers ====================
 export interface EventHandlersConfig<T extends BaseTableData = BaseTableData> {
-  onRowClick?: (row: T, index: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
-  onRowDoubleClick?: (row: T, index: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
-  onCellClick?: (row: T, column: TableColumn<T>, event: React.MouseEvent<HTMLTableCellElement>) => void;
-  onPageChange?: (page: number, pageSize: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
-  onSortChange?: (sorting: SortConfig[]) => void;
-  onFilterChange?: (filters: Record<string, any>) => void;
-  onGlobalSearchChange?: (search: string) => void;
-  onColumnVisibilityChange?: (visibleColumns: string[]) => void;
-  onColumnReorder?: (columns: TableColumn<T>[]) => void;
-  onSelectionChange?: (selectedRowKeys: (string | number)[], selectedRows: T[]) => void;
-  onExpandChange?: (expandedRowKeys: (string | number)[], expandedRows: T[]) => void;
-  onRefresh?: () => void | Promise<void>;
-  onDataChange?: (data: T[]) => void;
-  onFilterPresetSave?: (preset: any) => void;
+  readonly onRowClick?: (row: T, index: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  readonly onRowDoubleClick?: (row: T, index: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  readonly onCellClick?: (row: T, column: TableColumn<T>, event: React.MouseEvent<HTMLTableCellElement>) => void;
+  readonly onPageChange?: (page: number, pageSize: number) => void;
+  readonly onPageSizeChange?: (pageSize: number) => void;
+  readonly onSortChange?: (sorting: readonly SortConfig[]) => void;
+  readonly onFilterChange?: (filters: Readonly<Record<string, any>>) => void;
+  readonly onGlobalSearchChange?: (search: string) => void;
+  readonly onColumnVisibilityChange?: (visibleColumns: readonly string[]) => void;
+  readonly onColumnReorder?: (columns: readonly TableColumn<T>[]) => void;
+  readonly onSelectionChange?: (selectedRowKeys: readonly (string | number)[], selectedRows: readonly T[]) => void;
+  readonly onExpandChange?: (expandedRowKeys: readonly (string | number)[], expandedRows: readonly T[]) => void;
+  readonly onRefresh?: () => void | Promise<void>;
+  readonly onDataChange?: (data: readonly T[]) => void;
+  readonly onFilterPresetSave?: (preset: FilterPreset) => void;
   
   // CRUD handlers with enhanced validation support
   onCreate?: (data: any) => Promise<boolean> | boolean;
