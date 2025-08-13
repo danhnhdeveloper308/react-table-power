@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DataTable } from 'react-table-power'
-import 'react-table-power/css'
+import '../src/styles.ts'
 
 interface User {
   id: number
