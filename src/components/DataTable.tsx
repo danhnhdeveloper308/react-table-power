@@ -1275,8 +1275,8 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
     return allActions;
   }, [builtInActions, actions, openViewDialog, openEditDialog, openDeleteDialog]);
   // Default form components for when none are provided
-  const defaultFormComponents = useMemo(() => ({
-    create: React.forwardRef<any, any>(({ onClose }, ref) => (
+  const defaultFormComponents = useMemo(() => {
+    const CreateForm = React.forwardRef<any, any>(({ onClose }, ref) => (
       <div className="p-4">
         <p className="text-gray-700 mb-4">
           No form component provided for creating new items.
@@ -1285,8 +1285,10 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           Please provide a createFormComponent in builtInActions to enable create functionality.
         </p>
       </div>
-    )),
-    edit: React.forwardRef<any, any>(({ data, onClose }, ref) => (
+    ));
+    CreateForm.displayName = 'DefaultCreateForm';
+
+    const EditForm = React.forwardRef<any, any>(({ data, onClose }, ref) => (
       <div className="p-4">
         <p className="text-gray-700 mb-4">
           No form component provided for editing items.
@@ -1295,8 +1297,10 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           Please provide an editFormComponent in builtInActions to enable edit functionality.
         </p>
       </div>
-    )),
-    view: React.forwardRef<any, any>(({ data, onClose }, ref) => (
+    ));
+    EditForm.displayName = 'DefaultEditForm';
+
+    const ViewForm = React.forwardRef<any, any>(({ data, onClose }, ref) => (
       <div className="p-4">
         <h4 className="font-semibold mb-3">Item Details</h4>
         <div className="space-y-2">
@@ -1308,8 +1312,10 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           ))}
         </div>
       </div>
-    )),
-    delete: React.forwardRef<any, any>(({ data, onClose }, ref) => (
+    ));
+    ViewForm.displayName = 'DefaultViewForm';
+
+    const DeleteForm = React.forwardRef<any, any>(({ data, onClose }, ref) => (
       <div className="p-4">
         <p className="text-gray-700 mb-4">
           Are you sure you want to delete this item? This action cannot be undone.
@@ -1320,8 +1326,16 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
           </p>
         )}
       </div>
-    )),
-  }), []);
+    ));
+    DeleteForm.displayName = 'DefaultDeleteForm';
+
+    return {
+      create: CreateForm,
+      edit: EditForm,
+      view: ViewForm,
+      delete: DeleteForm,
+    };
+  }, []);
 
   // Extract form components from builtInActions with automatic wrapping
   const formComponents = useMemo(() => {
