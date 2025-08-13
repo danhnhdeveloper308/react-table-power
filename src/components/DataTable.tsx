@@ -1354,7 +1354,7 @@ function DataTableInner<T extends BaseTableData = BaseTableData>({
       // Kiểm tra tồn tại của customFormComponent trước khi sử dụng
       ...(builtInActions.customFormComponent ? { custom: wrapComponent(builtInActions.customFormComponent, 'custom') } : {})
     } as Record<DialogType, React.ComponentType<any> | undefined>;
-  }, [builtInActions]);
+  }, [builtInActions, defaultFormComponents]);
 
   // Extract row actions if available through builtInActions
   const hasRowActions = rowActions.length > 0;
