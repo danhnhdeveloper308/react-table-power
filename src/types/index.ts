@@ -22,8 +22,13 @@ export type { ColumnFiltersState, VisibilityState, RowSelectionState, Pagination
 
 // ==================== Base Types ====================
 export interface BaseTableData {
-  id?: string | number;
+  readonly id?: string | number;
   [key: string]: any;
+}
+
+// Enhanced type for strict typing scenarios
+export interface StrictTableData extends BaseTableData {
+  readonly id: string | number;
 }
 
 export type TableSize = 'small' | 'medium' | 'large';
