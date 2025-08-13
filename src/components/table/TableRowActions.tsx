@@ -308,4 +308,7 @@ export const TableRowActions = <T extends BaseTableData = BaseTableData>({
   );
 };
 
-export default TableRowActions;
+// Memoized version for performance
+const MemoizedTableRowActions = React.memo(TableRowActions) as typeof TableRowActions;
+
+export default MemoizedTableRowActions;
