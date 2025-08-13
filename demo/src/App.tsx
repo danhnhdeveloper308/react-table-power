@@ -324,17 +324,14 @@ const ViewUserForm = React.forwardRef<HTMLDivElement, { user: User; onClose: () 
   )
 })
 
-function DeleteUserForm({
-  user,
-  onConfirm,
-  onCancel
-}: {
+const DeleteUserForm = React.forwardRef<HTMLDivElement, {
   user: User;
   onConfirm: () => void;
-  onCancel: () => void
-}) {
+  onCancel: () => void;
+}>((props, ref) => {
+  const { user, onConfirm, onCancel } = props;
   return (
-    <div className="delete-confirmation">
+    <div ref={ref} className="delete-confirmation">
       <div className="warning-icon">⚠️</div>
       <h3>Delete User</h3>
       <p>Are you sure you want to delete <strong>{user.name}</strong>? This action cannot be undone.</p>
@@ -355,7 +352,7 @@ function DeleteUserForm({
       </div>
     </div>
   )
-}
+})
 
 interface User {
   id: number
