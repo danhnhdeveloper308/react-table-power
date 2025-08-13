@@ -56,6 +56,27 @@ export type SpinnerType = 'spinner' | 'skeleton' | 'overlay' | 'blur' | 'fade' |
 export type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type LoadingType = 'spinner' | 'dots' | 'circle' | 'wave' | 'pulse' | 'progress';
 
+// ==================== Cell Render Props ====================
+export interface CellRenderProps<T extends BaseTableData = BaseTableData> {
+  readonly row: T;
+  readonly value: T[keyof T];
+  readonly index: number;
+  readonly column?: TableColumn<T>;
+}
+
+// ==================== Improved Type Guards ====================
+export const isStrictTableData = (data: BaseTableData): data is StrictTableData => {
+  return data.id !== undefined && data.id !== null;
+};
+
+export const isValidColumnKey = <T extends BaseTableData>(
+  key: string | keyof T,
+  data: T[]
+): key is keyof T => {
+  if (data.length === 0) return false;
+  return key in data[0];
+};
+
 // ==================== Column Configuration ====================
 export interface TableColumn<T extends BaseTableData = BaseTableData> {
   readonly id?: string | number;
