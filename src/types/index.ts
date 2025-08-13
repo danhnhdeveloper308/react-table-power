@@ -58,11 +58,11 @@ export type LoadingType = 'spinner' | 'dots' | 'circle' | 'wave' | 'pulse' | 'pr
 
 // ==================== Column Configuration ====================
 export interface TableColumn<T extends BaseTableData = BaseTableData> {
-  id?: string | number;
-  accessorKey?: string | keyof T;
-  header?: string | React.ReactNode;
-  cell?: (props: { row: T; value: any; index: number; column?: TableColumn<T> }) => React.ReactNode;
-  footer?: string | React.ReactNode;
+  readonly id?: string | number;
+  readonly accessorKey?: keyof T | string;
+  readonly header?: string | React.ReactNode;
+  readonly cell?: (props: CellRenderProps<T>) => React.ReactNode;
+  readonly footer?: string | React.ReactNode;
   enableSorting?: boolean;
   enableFiltering?: boolean;
   enableResizing?: boolean;
