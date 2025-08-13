@@ -261,9 +261,10 @@ const EditUserForm = React.forwardRef<HTMLDivElement, {
   )
 })
 
-function ViewUserForm({ user, onClose }: { user: User; onClose: () => void }) {
+const ViewUserForm = React.forwardRef<HTMLDivElement, { user: User; onClose: () => void }>((props, ref) => {
+  const { user, onClose } = props;
   return (
-    <div className="user-view">
+    <div ref={ref} className="user-view">
       <div className="view-grid">
         <div className="view-item">
           <label>Name</label>
@@ -321,7 +322,7 @@ function ViewUserForm({ user, onClose }: { user: User; onClose: () => void }) {
       </div>
     </div>
   )
-}
+})
 
 function DeleteUserForm({
   user,
