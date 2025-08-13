@@ -2,6 +2,358 @@ import React, { useState } from 'react'
 import { DataTable } from 'react-table-power'
 import 'react-table-power/styles.ts'
 
+// Simple form components for CRUD operations
+function CreateUserForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void; onCancel: () => void }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    age: '',
+    city: '',
+    status: 'pending' as const,
+    joinDate: new Date().toISOString().split('T')[0],
+    department: '',
+    bio: ''
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit({
+      ...formData,
+      age: parseInt(formData.age) || 0,
+      skills: []
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="user-form">
+      <div className="form-grid">
+        <div className="form-group">
+          <label>Name *</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Email *</label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Age</label>
+          <input
+            type="number"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            min="18"
+            max="120"
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>City</label>
+          <input
+            type="text"
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Status</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            className="form-input"
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Department</label>
+          <input
+            type="text"
+            value={formData.department}
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group full-width">
+          <label>Join Date</label>
+          <input
+            type="date"
+            value={formData.joinDate}
+            onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group full-width">
+          <label>Bio</label>
+          <textarea
+            value={formData.bio}
+            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+            className="form-textarea"
+            rows={3}
+          />
+        </div>
+      </div>
+
+      <div className="form-actions">
+        <button type="button" onClick={onCancel} className="btn btn-secondary">
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary">
+          Create User
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function EditUserForm({
+  user,
+  onSubmit,
+  onCancel
+}: {
+  user: User;
+  onSubmit: (data: any) => void;
+  onCancel: () => void
+}) {
+  const [formData, setFormData] = useState({
+    name: user.name || '',
+    email: user.email || '',
+    age: user.age?.toString() || '',
+    city: user.city || '',
+    status: user.status || 'pending',
+    joinDate: user.joinDate || '',
+    department: user.department || '',
+    bio: user.bio || ''
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit({
+      ...user,
+      ...formData,
+      age: parseInt(formData.age) || 0
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="user-form">
+      <div className="form-grid">
+        <div className="form-group">
+          <label>Name *</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Email *</label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Age</label>
+          <input
+            type="number"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            min="18"
+            max="120"
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>City</label>
+          <input
+            type="text"
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Status</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            className="form-input"
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Department</label>
+          <input
+            type="text"
+            value={formData.department}
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group full-width">
+          <label>Join Date</label>
+          <input
+            type="date"
+            value={formData.joinDate}
+            onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group full-width">
+          <label>Bio</label>
+          <textarea
+            value={formData.bio}
+            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+            className="form-textarea"
+            rows={3}
+          />
+        </div>
+      </div>
+
+      <div className="form-actions">
+        <button type="button" onClick={onCancel} className="btn btn-secondary">
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary">
+          Update User
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function ViewUserForm({ user, onClose }: { user: User; onClose: () => void }) {
+  return (
+    <div className="user-view">
+      <div className="view-grid">
+        <div className="view-item">
+          <label>Name</label>
+          <p>{user.name}</p>
+        </div>
+        <div className="view-item">
+          <label>Email</label>
+          <p>{user.email}</p>
+        </div>
+        <div className="view-item">
+          <label>Age</label>
+          <p>{user.age} years old</p>
+        </div>
+        <div className="view-item">
+          <label>City</label>
+          <p>{user.city}</p>
+        </div>
+        <div className="view-item">
+          <label>Status</label>
+          <p>
+            <span className={`status-badge ${user.status}`}>
+              {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+            </span>
+          </p>
+        </div>
+        <div className="view-item">
+          <label>Department</label>
+          <p>{user.department || 'Not assigned'}</p>
+        </div>
+        <div className="view-item">
+          <label>Join Date</label>
+          <p>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'Not set'}</p>
+        </div>
+        {user.skills && user.skills.length > 0 && (
+          <div className="view-item">
+            <label>Skills</label>
+            <div className="skills-list">
+              {user.skills.map((skill, index) => (
+                <span key={index} className="skill-tag">{skill}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {user.bio && (
+          <div className="view-item full-width">
+            <label>Bio</label>
+            <p>{user.bio}</p>
+          </div>
+        )}
+      </div>
+      <div className="form-actions">
+        <button onClick={onClose} className="btn btn-primary">
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DeleteUserForm({
+  user,
+  onConfirm,
+  onCancel
+}: {
+  user: User;
+  onConfirm: () => void;
+  onCancel: () => void
+}) {
+  return (
+    <div className="delete-confirmation">
+      <div className="warning-icon">⚠️</div>
+      <h3>Delete User</h3>
+      <p>Are you sure you want to delete <strong>{user.name}</strong>? This action cannot be undone.</p>
+
+      <div className="user-summary">
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Department:</strong> {user.department || 'Not assigned'}</p>
+        <p><strong>Status:</strong> {user.status}</p>
+      </div>
+
+      <div className="form-actions">
+        <button onClick={onCancel} className="btn btn-secondary">
+          Cancel
+        </button>
+        <button onClick={onConfirm} className="btn btn-danger">
+          Delete User
+        </button>
+      </div>
+    </div>
+  )
+}
+
 interface User {
   id: number
   name: string
