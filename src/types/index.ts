@@ -663,9 +663,9 @@ export interface EventHandlersConfig<T extends BaseTableData = BaseTableData> {
   readonly onFilterPresetSave?: (preset: FilterPreset) => void;
   
   // CRUD handlers with enhanced validation support
-  onCreate?: (data: any) => Promise<boolean> | boolean;
-  onUpdate?: (id: string | number, data: any) => Promise<boolean> | boolean;
-  onDelete?: (id: string | number) => Promise<boolean> | boolean;
+  readonly onCreate?: <TCreate extends Partial<T>>(data: TCreate) => Promise<boolean> | boolean;
+  readonly onUpdate?: <TUpdate extends Partial<T>>(id: T['id'], data: TUpdate) => Promise<boolean> | boolean;
+  readonly onDelete?: (id: T['id']) => Promise<boolean> | boolean;
   
   // Additional validation/transformation handlers
   onBeforeSubmit?: (type: DialogMode, data: any) => Promise<any | false> | (any | false);
